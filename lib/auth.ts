@@ -49,6 +49,9 @@ export async function loginUser(email: string, password: string): Promise<{ succ
       email: true,
       passwordHash: true,
       role: true,
+      department: {
+        select: { id: true }
+      },
       headedDepartment: {
         select: { id: true }
       }
@@ -68,7 +71,7 @@ export async function loginUser(email: string, password: string): Promise<{ succ
     name: user.name,
     email: user.email,
     role: user.role,
-    departmentId: user.headedDepartment?.id
+    departmentId: user.department?.id ?? user.headedDepartment?.id
   };
 
   await setSession(session);

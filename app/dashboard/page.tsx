@@ -23,11 +23,8 @@ export default async function DashboardPage() {
   
   // Requestor can only see their own department's requests
   if (session.role === 'REQUESTOR') {
-    const userDept = await prisma.department.findFirst({
-      where: { headId: session.id }
-    });
-    if (userDept) {
-      whereClause = { departmentId: userDept.id };
+    if (session.departmentId) {
+      whereClause = { departmentId: session.departmentId };
     } else {
       whereClause = { requestedById: session.id };
     }

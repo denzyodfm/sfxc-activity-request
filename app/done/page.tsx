@@ -14,13 +14,8 @@ export default async function DonePage() {
   let whereClause: any = { status: 'DONE' };
 
   if (session.role === 'REQUESTOR') {
-    const department = await prisma.department.findFirst({
-      where: { headId: session.id },
-      select: { id: true }
-    });
-
-    whereClause = department
-      ? { ...whereClause, departmentId: department.id }
+    whereClause = session.departmentId
+      ? { ...whereClause, departmentId: session.departmentId }
       : { ...whereClause, requestedById: session.id };
   }
 

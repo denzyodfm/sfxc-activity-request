@@ -19,6 +19,8 @@ model User {
   position          String?
   profilePictureUrl String?
   role              String
+  department        Department?        @relation("DepartmentEmployees", fields: [departmentId], references: [id])
+  departmentId      String?
   headedDepartment  Department?        @relation("DepartmentHead")
   approvedRequests  ActivityRequest[]  @relation("ApprovedBy")
   requests          ActivityRequest[]  @relation("RequestedBy")
@@ -32,6 +34,7 @@ model Department {
   name      String           @unique
   head      User?            @relation("DepartmentHead", fields: [headId], references: [id])
   headId    String?          @unique
+  employees User[]           @relation("DepartmentEmployees")
   requests  ActivityRequest[]
 }
 

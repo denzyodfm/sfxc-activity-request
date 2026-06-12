@@ -30,30 +30,16 @@ export async function PUT(request: NextRequest, { params }: UserRouteProps) {
       return NextResponse.json({ error: 'Department not found.' }, { status: 404 });
     }
 
-    if (department.headId && department.headId !== params.id) {
-      return NextResponse.json({ error: 'Department is already assigned to another user.' }, { status: 400 });
-    }
   }
 
-  const updatedUser = await prisma.$transaction(async (tx) => {
-    await tx.department.updateMany({
-      where: { headId: params.id },
-      data: { headId: null }
-    });
-
-    const user = await tx.user.update({
-      where: { id: params.id },
-      data: { name, email, role }
-    });
-
-    if (departmentId) {
-      await tx.department.update({
-        where: { id: departmentId },
-        data: { headId: params.id }
-      });
+  const updatedUser = await prisma.user.update({
+    where: { id: params.id },
+    data: {
+      name,
+      email,
+      role,
+      departmentId: departmentId || null
     }
-
-    return user;
   });
 
   return NextResponse.json({ user: updatedUser });
@@ -63,7 +49,6 @@ export async function DELETE(_request: NextRequest, { params }: UserRouteProps) 
   const existingUser = await prisma.user.findUnique({
     where: { id: params.id },
     include: {
-      headedDepartment: true,
       _count: {
         select: {
           requests: true,

@@ -34,6 +34,16 @@ async function main() {
     prisma.department.create({ data: { name: 'Student Affairs', headId: reviewer.id } })
   ]);
 
+  await Promise.all([
+    prisma.user.update({ where: { id: admin.id }, data: { departmentId: finance.id } }),
+    prisma.user.update({ where: { id: requestor.id }, data: { departmentId: academics.id } }),
+    prisma.user.update({ where: { id: fundOfficer.id }, data: { departmentId: finance.id } }),
+    prisma.user.update({ where: { id: reviewer.id }, data: { departmentId: studentAffairs.id } }),
+    prisma.user.update({ where: { id: endorser.id }, data: { departmentId: studentAffairs.id } }),
+    prisma.user.update({ where: { id: approverJMAPC.id }, data: { departmentId: academics.id } }),
+    prisma.user.update({ where: { id: approverJCA.id }, data: { departmentId: academics.id } })
+  ]);
+
   const [schoolFund, specialFund, trustFund] = await Promise.all([
     prisma.fundSource.create({ data: { name: 'School Fund', description: 'General operating fund' } }),
     prisma.fundSource.create({ data: { name: 'Special Fund', description: 'Project-specific allocations' } }),

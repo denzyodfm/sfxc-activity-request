@@ -13,12 +13,7 @@ export default async function AttachmentsPage() {
   let requestWhere = {};
 
   if (session.role === 'REQUESTOR') {
-    const department = await prisma.department.findFirst({
-      where: { headId: session.id },
-      select: { id: true }
-    });
-
-    requestWhere = department ? { departmentId: department.id } : { requestedById: session.id };
+    requestWhere = session.departmentId ? { departmentId: session.departmentId } : { requestedById: session.id };
   }
 
   const [requests, attachments] = await Promise.all([

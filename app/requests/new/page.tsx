@@ -10,10 +10,12 @@ export default async function NewRequestPage() {
     redirect('/login');
   }
 
-  const assignedDepartment = await prisma.department.findFirst({
-    where: { headId: session.id },
-    select: { id: true, name: true }
-  });
+  const assignedDepartment = session.departmentId
+    ? await prisma.department.findUnique({
+        where: { id: session.departmentId },
+        select: { id: true, name: true }
+      })
+    : null;
   const now = new Date();
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);

@@ -56,12 +56,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Attachment ${oversizedAttachment.name} must not exceed ${MAX_UPLOAD_SIZE_LABEL}.` }, { status: 422 });
   }
 
-  const department = await prisma.department.findFirst({
-    where: { headId: session.id },
-    select: { id: true }
-  });
-
-  if (!department) {
+  if (!session.departmentId) {
     return NextResponse.json({ error: 'Your account is not assigned to a department.' }, { status: 422 });
   }
 
@@ -80,7 +75,7 @@ export async function POST(request: NextRequest) {
     data: {
       controlNumber,
       date: now,
-      departmentId: department.id,
+      departmentId: session.departmentId,
       requestedById: session.id,
       particulars,
       amount: Number(amount),
@@ -123,12 +118,7 @@ export async function GET() {
   let whereClause: any = {};
 
   if (session?.role === 'REQUESTOR') {
-    const department = await prisma.department.findFirst({
-      where: { headId: session.id },
-      select: { id: true }
-    });
-
-    whereClause = department ? { departmentId: department.id } : { requestedById: session.id };
+    whereClause = session.departmentId ? { departmentId: session.departmentId } : { requestedById: session.id };
   }
 
   const requests = await prisma.activityRequest.findMany({

@@ -25,25 +25,16 @@ export async function POST(request: NextRequest) {
     if (!department) {
       return NextResponse.json({ error: 'Department not found.' }, { status: 404 });
     }
-
-    if (department.headId) {
-      return NextResponse.json({ error: 'Department is already assigned to another user.' }, { status: 400 });
-    }
   }
 
-  const newUser = await prisma.$transaction(async (tx) => {
-    const createdUser = await tx.user.create({
-      data: { name, email, role, passwordHash: hashPassword(password) }
-    });
-
-    if (departmentId) {
-      await tx.department.update({
-        where: { id: departmentId },
-        data: { headId: createdUser.id }
-      });
+  const newUser = await prisma.user.create({
+    data: {
+      name,
+      email,
+      role,
+      passwordHash: hashPassword(password),
+      departmentId: departmentId || null
     }
-
-    return createdUser;
   });
 
   return NextResponse.json({ user: newUser });

@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  department?: { id: string; name: string } | null;
   headedDepartment?: { id: string; name: string } | null;
 }
 
@@ -55,7 +56,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
     setEditingUserName(user.name);
     setEditingUserEmail(user.email);
     setEditingUserRole(user.role);
-    setEditingUserDepartment(user.headedDepartment?.id ?? '');
+    setEditingUserDepartment(user.department?.id ?? user.headedDepartment?.id ?? '');
   };
 
   const startEditDepartment = (department: Department) => {
@@ -316,8 +317,8 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                 >
                   <option value="">No Department Assigned</option>
                   {departments.map((department) => (
-                    <option key={department.id} value={department.id} disabled={Boolean(department.headId)}>
-                      {department.name}{department.headId ? ' (already assigned)' : ''}
+                    <option key={department.id} value={department.id}>
+                      {department.name}
                     </option>
                   ))}
                 </select>
@@ -378,12 +379,8 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                       >
                         <option value="">No Department Assigned</option>
                         {departments.map((department) => (
-                          <option
-                            key={department.id}
-                            value={department.id}
-                            disabled={Boolean(department.headId && department.headId !== user.id)}
-                          >
-                            {department.name}{department.headId && department.headId !== user.id ? ' (already assigned)' : ''}
+                          <option key={department.id} value={department.id}>
+                            {department.name}
                           </option>
                         ))}
                       </select>
@@ -399,7 +396,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                       <p className="font-semibold text-slate-900">{user.name}</p>
                       <p className="text-sm text-slate-600">{user.email}</p>
                       <p className="mt-1 text-sm text-slate-600">
-                        Department: {user.headedDepartment?.name ?? 'Unassigned'}
+                        Department: {user.department?.name ?? user.headedDepartment?.name ?? 'Unassigned'}
                       </p>
                       <p className="mt-1 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                         {user.role.replace(/_/g, ' ')}
@@ -498,7 +495,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                             value={user.id}
                             disabled={Boolean(user.headedDepartment && user.headedDepartment.id !== dept.id)}
                           >
-                            {user.name} ({user.email}){user.headedDepartment && user.headedDepartment.id !== dept.id ? ' - already assigned' : ''}
+                            {user.name} ({user.email}){user.headedDepartment && user.headedDepartment.id !== dept.id ? ' - already a department head' : ''}
                           </option>
                         ))}
                       </select>

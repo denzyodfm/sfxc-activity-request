@@ -58,11 +58,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (session.role === 'REQUESTOR') {
-    const department = await prisma.department.findFirst({
-      where: { headId: session.id },
-      select: { id: true }
-    });
-    const canAttach = targetRequest.requestedById === session.id || targetRequest.departmentId === department?.id;
+    const canAttach = targetRequest.requestedById === session.id || targetRequest.departmentId === session.departmentId;
 
     if (!canAttach) {
       return NextResponse.json({ error: 'You can only add attachments to your assigned department requests.' }, { status: 403 });
