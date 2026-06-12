@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+dist
+.env
+dev.db
+*.db
+/public/uploads/*
+*.log
+*.tsbuildinfo
+.DS_Store

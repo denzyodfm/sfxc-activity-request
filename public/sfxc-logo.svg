@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 150" role="img" aria-labelledby="title">
+  <title id="title">St. Francis Xavier College San Francisco Agusan del Sur</title>
+  <rect width="520" height="150" fill="#ffffff"/>
+
+  <g transform="translate(18 14)">
+    <path d="M60 3 106 22v40c0 33-19 58-46 71-27-13-46-38-46-71V22L60 3Z" fill="#d8b54a"/>
+    <path d="M60 14 96 29v34c0 25-14 45-36 56-22-11-36-31-36-56V29l36-15Z" fill="#0a5b31"/>
+    <path d="M60 14 96 29v34c0 25-14 45-36 56V14Z" fill="#f4c33d"/>
+    <path d="M60 68h36v-5c0 25-14 45-36 56V68Z" fill="#06395f"/>
+    <path d="M33 58h17V32h12v26h17v12H62v33H50V70H33V58Z" fill="#ffffff"/>
+    <path d="M78 36c10 0 18 6 20 15-8-4-14-4-20 1-6-5-12-5-20-1 2-9 10-15 20-15Z" fill="#ffffff"/>
+    <path d="M87 102c-5-14-4-28 3-43M73 102c5-14 4-28-3-43" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M15 96c26 10 64 10 90 0l-7 19c-10 8-24 15-38 20-14-5-28-12-38-20l-7-19Z" fill="#f4c33d"/>
+    <path d="M17 104c26 8 60 8 86 0" fill="none" stroke="#0a5b31" stroke-width="3"/>
+    <text x="60" y="118" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" font-weight="700" fill="#1e1e1e">DEO OPTIMO</text>
+  </g>
+
+  <g transform="translate(145 46)">
+    <text x="0" y="0" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#1e1e1e">
+      St. Francis Xavier College
+    </text>
+    <line x1="0" y1="14" x2="324" y2="14" stroke="#0a5b31" stroke-width="4"/>
+    <text x="162" y="40" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="1.2" fill="#1e1e1e">
+      SAN FRANCISCO · AGUSAN DEL SUR
+    </text>
+  </g>
+</svg>
