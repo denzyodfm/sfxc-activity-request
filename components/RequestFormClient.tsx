@@ -31,6 +31,20 @@ export default function RequestFormClient({ assignedDepartment, requester, reque
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
+  const handleAddAttachments = (files: FileList | null) => {
+    const selectedFiles = Array.from(files ?? []);
+    if (selectedFiles.length === 0) return;
+
+    setAttachments((currentAttachments) => [...currentAttachments, ...selectedFiles]);
+    if (attachmentsInputRef.current) {
+      attachmentsInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAttachment = (removeIndex: number) => {
+    setAttachments((currentAttachments) => currentAttachments.filter((_, index) => index !== removeIndex));
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus('saving');
@@ -179,24 +193,33 @@ export default function RequestFormClient({ assignedDepartment, requester, reque
           ref={attachmentsInputRef}
           type="file"
           multiple
-          onChange={(event) => setAttachments(Array.from(event.target.files ?? []))}
+          onChange={(event) => handleAddAttachments(event.target.files)}
           className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-slate-200 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 focus:border-sfxc-green"
         />
         <span className="block text-xs text-slate-500">
-          {attachments.length > 0 ? `${attachments.length} file${attachments.length === 1 ? '' : 's'} selected.` : 'Upload quotations, invoices, or other supporting files. Maximum 2MB per file.'}
+          {attachments.length > 0 ? `${attachments.length} file${attachments.length === 1 ? '' : 's'} selected. You can choose more files to add to this list.` : 'Upload quotations, invoices, or other supporting files. Maximum 2MB per file.'}
         </span>
         {attachments.length > 0 ? (
           <div className="space-y-2">
             {attachments.map((attachment, index) => (
               <div key={`${attachment.name}-${index}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
                 <span className="truncate text-sm font-medium text-slate-700">{attachment.name}</span>
-                <button
-                  type="button"
-                  onClick={() => handleViewFile(attachment)}
-                  className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-sfxc-green hover:border-sfxc-green"
-                >
-                  View
-                </button>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleViewFile(attachment)}
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-sfxc-green hover:border-sfxc-green"
+                  >
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAttachment(index)}
+                    className="rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             ))}
           </div>
