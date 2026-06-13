@@ -7,9 +7,9 @@ interface LogoMarkProps {
 }
 
 const sizeClasses = {
-  sm: 'h-12 w-52',
-  md: 'h-16 w-80 max-w-full',
-  lg: 'h-24 w-[28rem] max-w-full'
+  sm: 'h-20 w-28',
+  md: 'h-28 w-40 max-w-full',
+  lg: 'h-40 w-56 max-w-full'
 };
 
 export default function LogoMark({ size = 'md' }: LogoMarkProps) {

@@ -1,27 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 150" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 263 208" role="img" aria-labelledby="title">
   <title id="title">St. Francis Xavier College San Francisco Agusan del Sur</title>
-  <rect width="520" height="150" fill="#ffffff"/>
+  <rect width="263" height="208" fill="#064719"/>
 
-  <g transform="translate(18 14)">
-    <path d="M60 3 106 22v40c0 33-19 58-46 71-27-13-46-38-46-71V22L60 3Z" fill="#d8b54a"/>
-    <path d="M60 14 96 29v34c0 25-14 45-36 56-22-11-36-31-36-56V29l36-15Z" fill="#0a5b31"/>
-    <path d="M60 14 96 29v34c0 25-14 45-36 56V14Z" fill="#f4c33d"/>
-    <path d="M60 68h36v-5c0 25-14 45-36 56V68Z" fill="#06395f"/>
-    <path d="M33 58h17V32h12v26h17v12H62v33H50V70H33V58Z" fill="#ffffff"/>
-    <path d="M78 36c10 0 18 6 20 15-8-4-14-4-20 1-6-5-12-5-20-1 2-9 10-15 20-15Z" fill="#ffffff"/>
-    <path d="M87 102c-5-14-4-28 3-43M73 102c5-14 4-28-3-43" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
-    <path d="M15 96c26 10 64 10 90 0l-7 19c-10 8-24 15-38 20-14-5-28-12-38-20l-7-19Z" fill="#f4c33d"/>
-    <path d="M17 104c26 8 60 8 86 0" fill="none" stroke="#0a5b31" stroke-width="3"/>
-    <text x="60" y="118" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" font-weight="700" fill="#1e1e1e">DEO OPTIMO</text>
+  <g transform="translate(64 12)">
+    <path d="M67.5 2 87 15.5c9.5 1 18.5-1 26-5.5 9.5 21.5 8.5 45.5 1 65.5-7.5 20.2-24.8 37.2-46.5 49.2C45.8 112.7 28.5 95.7 21 75.5 13.5 55.5 12.5 31.5 22 10c7.5 4.5 16.5 6.5 26 5.5L67.5 2Z" fill="#d9ba55"/>
+    <path d="M67.5 10.5 84.2 22c7.3.7 14.2-.7 20.5-3.6 6.5 18 5.6 37.8-.9 54-6.4 16.2-19.8 30.1-36.3 40-16.5-9.9-29.9-23.8-36.3-40-6.5-16.2-7.4-36-.9-54 6.3 2.9 13.2 4.3 20.5 3.6l16.7-11.5Z" fill="#ffffff"/>
+    <path d="M67.5 17.5 84 28c5.4.7 10.2 0 15.2-1.7 4.3 15.6 3.4 31.8-2.2 45.5-5.7 13.9-16.5 25.8-29.5 34.3-13-8.5-23.8-20.4-29.5-34.3-5.6-13.7-6.5-29.9-2.2-45.5C40.8 28 45.6 28.7 51 28l16.5-10.5Z" fill="#0b5a32"/>
+    <path d="M67.5 17.5 84 28c5.4.7 10.2 0 15.2-1.7 3.2 11.7 3.5 23.8.9 35.1H67.5V17.5Z" fill="#f2c83e"/>
+    <path d="M67.5 61.4h32.6c-.7 3.6-1.7 7.1-3.1 10.4-5.7 13.9-16.5 25.8-29.5 34.3V61.4Z" fill="#0b3558"/>
+
+    <path d="M42 58h15V35h11v23h15v11H68v31H57V69H42V58Z" fill="#ffffff"/>
+    <path d="M79 39c11.5-6.5 22-1.6 26.5 8.5-9.2-4.3-17.8-4-26.5 2.2V39Z" fill="#ffffff"/>
+    <path d="M56 81c-6-7-10.5-12-18-13.8 6.2-.7 11.6.6 16.5 3.6-4.8-8.3-10-14-18-17 9.2 1 16.4 5.2 21.5 12.4V45h7v56h-7V77.5c-5.7-4.6-11.2-6.5-17.5-5.4C47 73.7 52.1 76.4 56 81Z" fill="#ffffff"/>
+    <path d="M89 100c-5.8-14.7-4.5-28.7 4-42M77 100c4.8-14.3 3.6-27.8-4-42" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+    <g fill="#ffffff">
+      <circle cx="90" cy="77" r="1.5"/><circle cx="95" cy="74" r="1.5"/><circle cx="99" cy="78" r="1.5"/>
+      <circle cx="84" cy="72" r="1.5"/><circle cx="88" cy="68" r="1.5"/><circle cx="93" cy="68" r="1.5"/>
+      <circle cx="79" cy="83" r="1.5"/><circle cx="84" cy="86" r="1.5"/><circle cx="90" cy="86" r="1.5"/>
+      <circle cx="96" cy="85" r="1.5"/><circle cx="101" cy="88" r="1.5"/><circle cx="87" cy="92" r="1.5"/>
+      <circle cx="94" cy="94" r="1.5"/><circle cx="101" cy="95" r="1.5"/>
+    </g>
+
+    <path d="M11 103c38 9.5 75 9.5 113 0l-9 21c-31 10.5-64 10.5-95 0l-9-21Z" fill="#f2c83e"/>
+    <path d="M16 108c34 7 69 7 103 0" fill="none" stroke="#ffffff" stroke-width="2"/>
+    <path d="M22 121c29 7.2 62 7.2 91 0" fill="none" stroke="#b08b1e" stroke-width="1.4"/>
+    <text x="67.5" y="120" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="9" font-weight="700" fill="#17220e" transform="rotate(-6 67.5 120)">DEO OPTIMO MAXIMO</text>
   </g>
 
-  <g transform="translate(145 46)">
-    <text x="0" y="0" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#1e1e1e">
-      St. Francis Xavier College
-    </text>
-    <line x1="0" y1="14" x2="324" y2="14" stroke="#0a5b31" stroke-width="4"/>
-    <text x="162" y="40" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="1.2" fill="#1e1e1e">
-      SAN FRANCISCO · AGUSAN DEL SUR
-    </text>
+  <g text-anchor="middle" font-family="Georgia, 'Times New Roman', serif">
+    <text x="131.5" y="176" font-size="19" font-variant="small-caps" fill="#f5f1d3" stroke="#d5c991" stroke-width=".35">St. Francis Xavier College</text>
+    <line x1="13" y1="181" x2="250" y2="181" stroke="#d5c991" stroke-width="1"/>
+    <text x="131.5" y="194" font-size="11" letter-spacing="1.2" fill="#f5f1d3">SAN FRANCISCO - AGUSAN DEL SUR</text>
   </g>
 </svg>
