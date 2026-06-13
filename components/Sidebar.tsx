@@ -58,13 +58,18 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
   ]
 };
 
-export default function Sidebar() {
+interface SidebarProps {
+  className?: string;
+  onNavigate?: () => void;
+}
+
+export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
   const { user } = useSession();
 
   const menuItems = user ? (roleMenus[user.role] ?? []) : [];
 
   return (
-    <aside className="hidden lg:flex lg:w-72 xl:w-80 flex-col gap-6 border-r border-slate-200/70 bg-white px-6 py-8 print:hidden">
+    <aside className={`flex w-72 max-w-[85vw] flex-col gap-6 border-r border-slate-200/70 bg-white px-6 py-8 print:hidden xl:w-80 ${className}`}>
       <div className="space-y-3">
         <LogoMark size="sm" />
         <div>
@@ -79,6 +84,7 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onNavigate}
                 className="rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
               >
                 {item.label}
