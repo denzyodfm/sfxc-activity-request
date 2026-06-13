@@ -8,6 +8,7 @@ import { useSession } from '@/lib/session-context';
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 1024px)');
@@ -67,7 +68,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
           <AccountPanel />
         </div>
-        {children}
+        <div className="min-h-[calc(100vh-10rem)]">{children}</div>
+        <footer className="mt-10 border-t border-slate-200/70 pt-6 text-center text-xs text-slate-500 print:hidden">
+          &copy; {currentYear} St. Francis Xavier College. All rights reserved.
+        </footer>
       </main>
     </div>
   );
