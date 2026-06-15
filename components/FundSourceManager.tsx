@@ -208,7 +208,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
             <section className="sfxc-card overflow-hidden">
               <div className="flex flex-col gap-4 border-b border-slate-200 p-6 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Source of Fund Details</p>
+                  <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Source of Fund</p>
                   <h2 className="mt-2 text-2xl font-semibold text-slate-900">{selectedSource.name}</h2>
                   {selectedSource.description ? <p className="mt-2 text-sm text-slate-600">{selectedSource.description}</p> : null}
                 </div>
