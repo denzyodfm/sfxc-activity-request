@@ -9,7 +9,8 @@ const stats = [
   { key: 'FOR_REVIEW', title: 'Pending Review', description: 'Ready for reviewer action' },
   { key: 'FOR_ENDORSEMENT', title: 'Pending Endorsement', description: 'Waiting for endorsement' },
   { key: 'FOR_APPROVAL', title: 'Pending Approval', description: 'Awaiting final approver' },
-  { key: 'APPROVED', title: 'For Voucher', description: 'Ready for voucher printing' }
+  { key: 'APPROVED', title: 'For Voucher', description: 'Ready for voucher printing' },
+  { key: 'DONE', title: 'Completed', description: 'Voucher request completed' }
 ];
 
 export default async function DashboardPage() {
@@ -60,7 +61,7 @@ export default async function DashboardPage() {
         ) : null}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
         <div className="sfxc-card p-6">
           <p className="text-sm text-slate-500">Requests in the system</p>
           <p className="mt-3 text-3xl font-semibold text-slate-900">{pendingCount}</p>

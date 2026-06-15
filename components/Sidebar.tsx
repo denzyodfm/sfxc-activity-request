@@ -10,38 +10,38 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/profile', label: 'Profile' },
     { href: '/requests/new', label: 'Make Request' },
     { href: '/attachments', label: 'Attachments' },
-    { href: '/done', label: 'Done' }
+    { href: '/done', label: 'Completed' }
   ],
   FUND_OFFICER: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/fund-availability', label: 'Fund Availability' },
-    { href: '/done', label: 'Done' }
+    { href: '/done', label: 'Completed' }
   ],
   REVIEWER: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/reviewer', label: 'Reviewer' },
     { href: '/for-voucher', label: 'For Voucher' },
-    { href: '/done', label: 'Done' }
+    { href: '/done', label: 'Completed' }
   ],
   ENDORSER: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/endorsement', label: 'Endorsed By' },
-    { href: '/done', label: 'Done' }
+    { href: '/done', label: 'Completed' }
   ],
   APPROVER_JMAPC: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/approval?approver=APPROVER_JMAPC', label: 'Final Approval' },
-    { href: '/done', label: 'Done' }
+    { href: '/done', label: 'Completed' }
   ],
   APPROVER_JCA: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/approval?approver=APPROVER_JCA', label: 'Final Approval' },
-    { href: '/done', label: 'Done' }
+    { href: '/done', label: 'Completed' }
   ],
   ADMIN: [
     { href: '/', label: 'Dashboard' },
@@ -53,7 +53,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/approval', label: 'Final Approval' },
     { href: '/attachments', label: 'Attachments' },
     { href: '/for-voucher', label: 'For Voucher' },
-    { href: '/done', label: 'Done' },
+    { href: '/done', label: 'Completed' },
     { href: '/admin', label: 'Admin Settings' }
   ]
 };
