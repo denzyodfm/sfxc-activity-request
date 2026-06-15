@@ -15,6 +15,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
   FUND_OFFICER: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
+    { href: '/funds', label: 'Source of Funds' },
     { href: '/fund-availability', label: 'Fund Availability' },
     { href: '/done', label: 'Completed' }
   ],
@@ -47,6 +48,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/requests/new', label: 'Make Request' },
+    { href: '/funds', label: 'Source of Funds' },
     { href: '/fund-availability', label: 'Fund Availability' },
     { href: '/reviewer', label: 'Reviewer' },
     { href: '/endorsement', label: 'Endorsed By' },

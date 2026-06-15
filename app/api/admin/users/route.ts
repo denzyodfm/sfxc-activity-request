@@ -4,7 +4,7 @@ import { hashPassword } from '@/lib/password';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { name, email, role, departmentId, password } = body;
+  const { name, email, role, departmentId, password, isDepartmentHead } = body;
 
   if (!name || !email || !role || !password) {
     return NextResponse.json({ error: 'Name, email, role, and password are required.' }, { status: 422 });
@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       name,
       email,
       role,
+      isDepartmentHead: Boolean(isDepartmentHead),
       passwordHash: hashPassword(password),
       departmentId: departmentId || null
     }

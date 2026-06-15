@@ -19,6 +19,7 @@ model User {
   position          String?
   profilePictureUrl String?
   role              String
+  isDepartmentHead  Boolean            @default(false)
   department        Department?        @relation("DepartmentEmployees", fields: [departmentId], references: [id])
   departmentId      String?
   headedDepartment  Department?        @relation("DepartmentHead")
@@ -26,6 +27,7 @@ model User {
   requests          ActivityRequest[]  @relation("RequestedBy")
   approvals         RequestApproval[]
   auditLogs         AuditLog[]
+  fundLedgerEntries FundLedgerEntry[]
   createdAt         DateTime           @default(now())
 }
 
@@ -39,10 +41,11 @@ model Department {
 }
 
 model FundSource {
-  id          String           @id @default(cuid())
-  name        String           @unique
-  description String?
-  requests    ActivityRequest[]
+  id            String             @id @default(cuid())
+  name          String             @unique
+  description   String?
+  requests      ActivityRequest[]
+  ledgerEntries FundLedgerEntry[]
 }
 
 model ActivityRequest {
@@ -61,6 +64,7 @@ model ActivityRequest {
   attachments              RequestAttachment[]
   approvals                RequestApproval[]
   auditLogs                AuditLog[]
+  fundLedgerEntries        FundLedgerEntry[]
   status                   String             @default("DRAFT")
   fundAvailable            Boolean?
   fundAvailabilityRemarks  String?
@@ -72,6 +76,24 @@ model ActivityRequest {
   approvedById             String?
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
+}
+
+model FundLedgerEntry {
+  id           String           @id @default(cuid())
+  fundSource   FundSource       @relation(fields: [fundSourceId], references: [id])
+  fundSourceId String
+  request      ActivityRequest? @relation(fields: [requestId], references: [id])
+  requestId    String?
+  actor        User?            @relation(fields: [actorId], references: [id])
+  actorId      String?
+  type         String
+  description  String
+  reference    String?
+  transactionDate DateTime         @default(now())
+  debit        Decimal          @default(0)
+  credit       Decimal          @default(0)
+  balanceAfter Decimal
+  createdAt    DateTime         @default(now())
 }
 
 model RequestAttachment {

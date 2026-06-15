@@ -24,6 +24,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Selected department head was not found.' }, { status: 404 });
     }
 
+    if (!headUser.isDepartmentHead) {
+      return NextResponse.json({ error: 'Selected user is not tagged as a department head.' }, { status: 400 });
+    }
+
     if (headUser.headedDepartment) {
       return NextResponse.json({ error: 'Selected user is already assigned to another department.' }, { status: 400 });
     }

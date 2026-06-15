@@ -25,6 +25,11 @@ export default function AccountPanel() {
       <span className="text-xs text-slate-500">Logged in as:</span>
       <span className="font-semibold text-slate-900">{user.name}</span>
       <span className="text-xs text-slate-600">{user.email}</span>
+      {user.departmentName ? (
+        <span className="text-xs text-slate-600">
+          Department: <span className="font-semibold text-slate-900">{user.departmentName}</span>
+        </span>
+      ) : null}
       <span className="rounded-full bg-sfxc-green px-3 py-1 text-xs font-semibold text-white">
         {user.role.replace(/_/g, ' ')}
       </span>

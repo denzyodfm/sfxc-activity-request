@@ -95,7 +95,8 @@ export async function PUT(request: NextRequest) {
     name: updatedUser.name,
     email: updatedUser.email,
     role: updatedUser.role,
-    departmentId: session.departmentId
+    departmentId: session.departmentId,
+    departmentName: session.departmentName
   };
 
   const response = NextResponse.json({ user: updatedUser, message: 'Profile updated.' });

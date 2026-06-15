@@ -33,6 +33,10 @@ export async function PUT(request: NextRequest, { params }: DepartmentRouteProps
       return NextResponse.json({ error: 'Selected department head was not found.' }, { status: 404 });
     }
 
+    if (!headUser.isDepartmentHead) {
+      return NextResponse.json({ error: 'Selected user is not tagged as a department head.' }, { status: 400 });
+    }
+
     if (headUser.headedDepartment && headUser.headedDepartment.id !== params.id) {
       return NextResponse.json({ error: 'Selected user is already assigned to another department.' }, { status: 400 });
     }

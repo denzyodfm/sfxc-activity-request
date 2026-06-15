@@ -15,7 +15,17 @@ export default async function FundAvailabilityPage() {
       orderBy: { date: 'desc' },
       include: { department: true, requestedBy: true, fundSource: true, attachments: true }
     }),
-    prisma.fundSource.findMany({ select: { id: true, name: true } })
+    prisma.fundSource.findMany({
+      select: {
+        id: true,
+        name: true,
+        ledgerEntries: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { balanceAfter: true }
+        }
+      }
+    })
   ]);
 
   return (
@@ -50,7 +60,11 @@ export default async function FundAvailabilityPage() {
                 }))
               }}
               fundSourceId={request.fundSourceId}
-              fundSources={fundSources}
+              fundSources={fundSources.map((source) => ({
+                id: source.id,
+                name: source.name,
+                balance: Number(source.ledgerEntries[0]?.balanceAfter ?? 0)
+              }))}
             />
           ))
         )}

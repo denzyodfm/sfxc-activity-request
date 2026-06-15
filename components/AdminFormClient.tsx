@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  isDepartmentHead: boolean;
   department?: { id: string; name: string } | null;
   headedDepartment?: { id: string; name: string } | null;
 }
@@ -29,6 +30,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState('REQUESTOR');
   const [newUserDepartment, setNewUserDepartment] = useState('');
+  const [newUserIsDepartmentHead, setNewUserIsDepartmentHead] = useState(false);
   const [newDeptName, setNewDeptName] = useState('');
   const [newDeptHead, setNewDeptHead] = useState('');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -36,6 +38,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
   const [editingUserEmail, setEditingUserEmail] = useState('');
   const [editingUserRole, setEditingUserRole] = useState('REQUESTOR');
   const [editingUserDepartment, setEditingUserDepartment] = useState('');
+  const [editingUserIsDepartmentHead, setEditingUserIsDepartmentHead] = useState(false);
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
   const [editingDeptName, setEditingDeptName] = useState('');
   const [editingDeptHead, setEditingDeptHead] = useState('');
@@ -43,6 +46,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
   const [message, setMessage] = useState('');
 
   const roles = ['REQUESTOR', 'FUND_OFFICER', 'REVIEWER', 'ENDORSER', 'APPROVER_JMAPC', 'APPROVER_JCA', 'ADMIN'];
+  const departmentHeadUsers = users.filter((user) => user.isDepartmentHead);
 
   const showStatus = (nextStatus: 'success' | 'error', nextMessage: string) => {
     setStatus(nextStatus);
@@ -57,6 +61,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
     setEditingUserEmail(user.email);
     setEditingUserRole(user.role);
     setEditingUserDepartment(user.department?.id ?? user.headedDepartment?.id ?? '');
+    setEditingUserIsDepartmentHead(user.isDepartmentHead);
   };
 
   const startEditDepartment = (department: Department) => {
@@ -79,6 +84,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
           email: newUserEmail,
           password: newUserPassword,
           role: newUserRole,
+          isDepartmentHead: newUserIsDepartmentHead,
           departmentId: newUserDepartment || null
         })
       });
@@ -97,6 +103,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
       setNewUserPassword('');
       setNewUserRole('REQUESTOR');
       setNewUserDepartment('');
+      setNewUserIsDepartmentHead(false);
       setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       setStatus('error');
@@ -119,6 +126,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
           name: editingUserName,
           email: editingUserEmail,
           role: editingUserRole,
+          isDepartmentHead: editingUserIsDepartmentHead,
           departmentId: editingUserDepartment || null
         })
       });
@@ -323,6 +331,15 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                   ))}
                 </select>
               </label>
+              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={newUserIsDepartmentHead}
+                  onChange={(e) => setNewUserIsDepartmentHead(e.target.checked)}
+                  className="h-4 w-4 accent-sfxc-green"
+                />
+                Department Head
+              </label>
               <button type="submit" className="sfxc-button w-full">
                 Create User
               </button>
@@ -384,6 +401,15 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                           </option>
                         ))}
                       </select>
+                      <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={editingUserIsDepartmentHead}
+                          onChange={(e) => setEditingUserIsDepartmentHead(e.target.checked)}
+                          className="h-4 w-4 accent-sfxc-green"
+                        />
+                        Department Head
+                      </label>
                       <div className="flex flex-wrap gap-2">
                         <button type="submit" className="sfxc-button">Save</button>
                         <button type="button" onClick={() => setEditingUserId(null)} className="sfxc-button-secondary">
@@ -401,6 +427,11 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                       <p className="mt-1 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                         {user.role.replace(/_/g, ' ')}
                       </p>
+                      {user.isDepartmentHead ? (
+                        <p className="ml-2 mt-1 inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+                          Department Head
+                        </p>
+                      ) : null}
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button type="button" onClick={() => startEditUser(user)} className="sfxc-button-secondary">
                           Edit
@@ -445,7 +476,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
                 >
                   <option value="">No Head Assigned</option>
-                  {users.map((user) => (
+                  {departmentHeadUsers.map((user) => (
                     <option key={user.id} value={user.id}>
                       {user.name} ({user.email})
                     </option>
@@ -489,7 +520,7 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                         className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
                       >
                         <option value="">No Head Assigned</option>
-                        {users.map((user) => (
+                        {departmentHeadUsers.map((user) => (
                           <option
                             key={user.id}
                             value={user.id}

@@ -8,6 +8,7 @@ interface UserSession {
   email: string;
   role: string;
   departmentId?: string;
+  departmentName?: string;
 }
 
 interface SessionContextType {

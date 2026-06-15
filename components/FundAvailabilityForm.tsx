@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
+import { formatMoney } from '@/lib/money';
 
 interface FundAvailabilityFormProps {
   requestId: string;
   request: RequestDetailsData;
   fundSourceId: string | null;
-  fundSources: { id: string; name: string }[];
+  fundSources: { id: string; name: string; balance: number }[];
 }
 
 export default function FundAvailabilityForm({ requestId, request, fundSourceId, fundSources }: FundAvailabilityFormProps) {
@@ -81,7 +82,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
           >
             {fundSources.map((source) => (
-              <option key={source.id} value={source.id}>{source.name}</option>
+              <option key={source.id} value={source.id}>{source.name} - {formatMoney(source.balance)}</option>
             ))}
           </select>
         </label>

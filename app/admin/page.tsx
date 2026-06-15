@@ -17,6 +17,7 @@ export default async function AdminPage() {
         name: true,
         email: true,
         role: true,
+        isDepartmentHead: true,
         department: { select: { id: true, name: true } },
         headedDepartment: { select: { id: true, name: true } }
       }

@@ -11,6 +11,7 @@ export interface UserSession {
   email: string;
   role: string;
   departmentId?: string;
+  departmentName?: string;
 }
 
 export async function getSession(): Promise<UserSession | null> {
@@ -46,10 +47,10 @@ export async function loginUser(email: string, password: string): Promise<{ succ
       passwordHash: true,
       role: true,
       department: {
-        select: { id: true }
+        select: { id: true, name: true }
       },
       headedDepartment: {
-        select: { id: true }
+        select: { id: true, name: true }
       }
     }
   });
@@ -62,12 +63,15 @@ export async function loginUser(email: string, password: string): Promise<{ succ
     return { success: false, error: 'Invalid password.' };
   }
 
+  const assignedDepartment = user.department ?? user.headedDepartment;
+
   const session: UserSession = {
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
-    departmentId: user.department?.id ?? user.headedDepartment?.id
+    departmentId: assignedDepartment?.id,
+    departmentName: assignedDepartment?.name
   };
 
   await setSession(session);
