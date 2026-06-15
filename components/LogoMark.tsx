@@ -7,9 +7,9 @@ interface LogoMarkProps {
 }
 
 const sizeClasses = {
-  sm: 'h-20 w-28',
-  md: 'h-28 w-40 max-w-full',
-  lg: 'h-40 w-56 max-w-full'
+  sm: 'h-16 w-16',
+  md: 'h-20 w-20',
+  lg: 'h-28 w-28'
 };
 
 export default function LogoMark({ size = 'md' }: LogoMarkProps) {
@@ -25,7 +25,7 @@ export default function LogoMark({ size = 'md' }: LogoMarkProps) {
 
   return (
     <img
-      src="/sfxc-logo.svg"
+      src="/sfxc_icon.png"
       alt="St. Francis Xavier College logo"
       onError={() => setHasImageError(true)}
       className={`${sizeClasses[size]} object-contain`}

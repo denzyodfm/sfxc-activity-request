@@ -44,7 +44,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-8 shadow-xl">
         <div className="text-center">
           <LogoMark />
-          <h1 className="mt-4 text-3xl font-semibold text-slate-900">SFXC Activity Request System</h1>
+          <h1 className="mt-4 whitespace-nowrap text-2xl font-semibold text-slate-900">SFXC Activity Request System</h1>
           <p className="mt-2 text-sm text-slate-600">St. Francis Xavier College</p>
         </div>
 

@@ -73,7 +73,7 @@ export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
       <div className="space-y-3">
         <LogoMark size="sm" />
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-500">SFXC Activity Request</p>
+          <p className="whitespace-nowrap text-sm uppercase tracking-[0.18em] text-slate-500">SFXC Activity Request</p>
         </div>
       </div>
 
