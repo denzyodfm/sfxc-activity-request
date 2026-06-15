@@ -10,7 +10,7 @@ const stats = [
   { key: 'FOR_ENDORSEMENT', title: 'Pending Endorsement', description: 'Waiting for endorsement' },
   { key: 'FOR_APPROVAL', title: 'Pending Approval', description: 'Awaiting final approver' },
   { key: 'APPROVED', title: 'For Voucher', description: 'Ready for voucher printing' },
-  { key: 'DONE', title: 'Completed', description: 'Voucher request completed' }
+  { key: 'COMPLETED', title: 'Completed', description: 'Voucher request completed' }
 ];
 
 export default async function DashboardPage() {

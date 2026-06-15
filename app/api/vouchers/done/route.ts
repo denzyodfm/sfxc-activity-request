@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (existing.status !== 'APPROVED') {
-    return NextResponse.json({ error: 'Only requests for voucher can be marked done.' }, { status: 400 });
+    return NextResponse.json({ error: 'Only requests for voucher can be marked completed.' }, { status: 400 });
   }
 
   if (existing.fundSourceId) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   await prisma.$transaction(async (tx) => {
     await tx.activityRequest.update({
       where: { id: requestId },
-      data: { status: 'DONE' }
+      data: { status: 'COMPLETED' }
     });
 
     if (existing.fundSourceId) {
@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
         requestId,
         actorId: session.id,
         role: session.role,
-        action: 'VOUCHER_DONE',
-        remarks: 'Voucher printing marked as done.'
+        action: 'VOUCHER_COMPLETED',
+        remarks: 'Voucher marked as completed.'
       }
     });
 
@@ -80,13 +80,13 @@ export async function POST(request: NextRequest) {
       data: {
         requestId,
         userId: session.id,
-        action: 'VOUCHER_DONE',
+        action: 'VOUCHER_COMPLETED',
         details: existing.fundSource
-          ? `Voucher printing marked as done and credited to ${existing.fundSource.name}.`
-          : 'Voucher printing marked as done.'
+          ? `Voucher marked as completed and deducted from ${existing.fundSource.name}.`
+          : 'Voucher marked as completed.'
       }
     });
   });
 
-  return NextResponse.json({ message: 'Request marked as done.' });
+  return NextResponse.json({ message: 'Request marked as completed.' });
 }

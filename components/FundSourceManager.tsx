@@ -121,7 +121,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
           <p className="mt-3 text-2xl font-semibold text-slate-900">{formatMoney(report.debit)}</p>
         </div>
         <div className="sfxc-card p-5">
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Completed Requests</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Voucher Deductions</p>
           <p className="mt-3 text-2xl font-semibold text-slate-900">{formatMoney(report.credit)}</p>
         </div>
         <div className="sfxc-card p-5">
@@ -175,7 +175,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                   <p className="mt-2 font-semibold text-slate-900">{formatMoney(source.totalDebit)}</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Completed</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deductions</p>
                   <p className="mt-2 font-semibold text-slate-900">{formatMoney(source.totalCredit)}</p>
                 </div>
                 <div className="rounded-2xl bg-emerald-50 p-4">
@@ -237,8 +237,8 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                     <th className="px-6 py-3 font-medium">Date</th>
                     <th className="px-6 py-3 font-medium">Reference</th>
                     <th className="px-6 py-3 font-medium">Description</th>
-                    <th className="px-6 py-3 font-medium">Debit</th>
-                    <th className="px-6 py-3 font-medium">Credit</th>
+                    <th className="px-6 py-3 font-medium">Deposit</th>
+                    <th className="px-6 py-3 font-medium">Deduction</th>
                     <th className="px-6 py-3 font-medium">Balance</th>
                   </tr>
                 </thead>

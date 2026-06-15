@@ -15,7 +15,7 @@ interface RequestDetailsProps {
 }
 
 export default function RequestDetails({ request }: RequestDetailsProps) {
-  const displayStatus = request.status.replace(/_/g, ' ');
+  const displayStatus = request.status === 'DONE' ? 'COMPLETED' : request.status.replace(/_/g, ' ');
 
   return (
     <div className="mt-5 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">

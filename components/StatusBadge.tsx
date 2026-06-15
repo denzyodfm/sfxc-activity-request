@@ -7,9 +7,12 @@ const statusStyles: Record<string, string> = {
   APPROVED: 'bg-emerald-500 text-white',
   DENIED: 'bg-rose-500 text-white',
   PRINTED: 'bg-slate-700 text-white',
+  COMPLETED: 'bg-slate-700 text-white',
   DONE: 'bg-slate-700 text-white'
 };
 
 export default function StatusBadge({ status }: { status: string }) {
-  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[status] ?? 'bg-slate-100 text-slate-700'}`}>{status.replace(/_/g, ' ')}</span>;
+  const label = status === 'DONE' ? 'COMPLETED' : status.replace(/_/g, ' ');
+
+  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[status] ?? 'bg-slate-100 text-slate-700'}`}>{label}</span>;
 }

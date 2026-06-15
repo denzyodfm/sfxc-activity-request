@@ -9,7 +9,7 @@ export default function MarkVoucherDoneButton({ requestId }: { requestId: string
   const [message, setMessage] = useState('');
 
   const handleClick = async () => {
-    const confirmed = window.confirm('Mark this voucher as done printing?');
+    const confirmed = window.confirm('Mark this voucher as completed?');
     if (!confirmed) return;
 
     setStatus('saving');
@@ -25,7 +25,7 @@ export default function MarkVoucherDoneButton({ requestId }: { requestId: string
 
       if (!response.ok) {
         setStatus('error');
-        setMessage(data.error || 'Unable to mark voucher as done.');
+        setMessage(data.error || 'Unable to mark voucher as completed.');
         return;
       }
 
@@ -44,7 +44,7 @@ export default function MarkVoucherDoneButton({ requestId }: { requestId: string
         disabled={status === 'saving'}
         className="sfxc-button-secondary"
       >
-        {status === 'saving' ? 'Marking Done...' : 'Done Printing'}
+        {status === 'saving' ? 'Completing...' : 'Complete Voucher'}
       </button>
       {status === 'error' ? <p className="text-sm text-rose-600">{message}</p> : null}
     </div>

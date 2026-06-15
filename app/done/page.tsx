@@ -11,7 +11,7 @@ export default async function DonePage() {
     redirect('/login');
   }
 
-  let whereClause: any = { status: 'DONE' };
+  let whereClause: any = { status: 'COMPLETED' };
 
   if (session.role === 'REQUESTOR') {
     whereClause = session.departmentId
@@ -28,7 +28,7 @@ export default async function DonePage() {
   return (
     <section className="space-y-8">
       <div>
-        <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Done</p>
+        <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Completed</p>
         <h1 className="mt-2 text-3xl font-semibold text-slate-900">Completed Voucher Requests</h1>
         <p className="mt-3 max-w-2xl text-slate-600">
           {session.role === 'REQUESTOR'
@@ -39,13 +39,13 @@ export default async function DonePage() {
 
       <div className="grid gap-6">
         {requests.length === 0 ? (
-          <div className="sfxc-card p-8 text-slate-600">No done requests yet.</div>
+          <div className="sfxc-card p-8 text-slate-600">No completed requests yet.</div>
         ) : (
           requests.map((request) => (
             <article key={request.id} className="sfxc-card p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm text-slate-500">Done Request</p>
+                  <p className="text-sm text-slate-500">Completed Request</p>
                   <h2 className="mt-1 text-lg font-semibold text-slate-900">{request.particulars}</h2>
                 </div>
                 <Link href={`/voucher/${request.id}`} className="sfxc-button">
