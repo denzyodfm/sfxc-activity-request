@@ -46,7 +46,8 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
   const [message, setMessage] = useState('');
 
   const roles = ['REQUESTOR', 'FUND_OFFICER', 'REVIEWER', 'ENDORSER', 'APPROVER_JMAPC', 'APPROVER_JCA', 'ADMIN'];
-  const departmentHeadUsers = users.filter((user) => user.isDepartmentHead);
+  const usersForDepartment = (departmentId?: string | null) =>
+    users.filter((user) => user.department?.id === departmentId || user.headedDepartment?.id === departmentId);
 
   const showStatus = (nextStatus: 'success' | 'error', nextMessage: string) => {
     setStatus(nextStatus);
@@ -476,9 +477,9 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
                 >
                   <option value="">No Head Assigned</option>
-                  {departmentHeadUsers.map((user) => (
+                  {users.map((user) => (
                     <option key={user.id} value={user.id}>
-                      {user.name} ({user.email})
+                      {user.name} ({user.email}){user.department?.name ? ` - ${user.department.name}` : ''}
                     </option>
                   ))}
                 </select>
@@ -520,16 +521,15 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
                         className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
                       >
                         <option value="">No Head Assigned</option>
-                        {departmentHeadUsers.map((user) => (
-                          <option
-                            key={user.id}
-                            value={user.id}
-                            disabled={Boolean(user.headedDepartment && user.headedDepartment.id !== dept.id)}
-                          >
-                            {user.name} ({user.email}){user.headedDepartment && user.headedDepartment.id !== dept.id ? ' - already a department head' : ''}
+                        {usersForDepartment(dept.id).map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.name} ({user.email})
                           </option>
                         ))}
                       </select>
+                      {usersForDepartment(dept.id).length === 0 ? (
+                        <p className="text-sm text-slate-500">Assign users to this department first before choosing a department head.</p>
+                      ) : null}
                       <div className="flex flex-wrap gap-2">
                         <button type="submit" className="sfxc-button">Save</button>
                         <button type="button" onClick={() => setEditingDeptId(null)} className="sfxc-button-secondary">

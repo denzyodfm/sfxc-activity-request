@@ -33,8 +33,8 @@ export async function PUT(request: NextRequest, { params }: DepartmentRouteProps
       return NextResponse.json({ error: 'Selected department head was not found.' }, { status: 404 });
     }
 
-    if (!headUser.isDepartmentHead) {
-      return NextResponse.json({ error: 'Selected user is not tagged as a department head.' }, { status: 400 });
+    if (headUser.departmentId !== params.id && headUser.headedDepartment?.id !== params.id) {
+      return NextResponse.json({ error: 'Selected user must belong to this department.' }, { status: 400 });
     }
 
     if (headUser.headedDepartment && headUser.headedDepartment.id !== params.id) {
@@ -42,9 +42,28 @@ export async function PUT(request: NextRequest, { params }: DepartmentRouteProps
     }
   }
 
-  const updatedDepartment = await prisma.department.update({
-    where: { id: params.id },
-    data: { name, headId: headId || null }
+  const updatedDepartment = await prisma.$transaction(async (tx) => {
+    if (existingDepartment.headId && existingDepartment.headId !== headId) {
+      await tx.user.update({
+        where: { id: existingDepartment.headId },
+        data: { isDepartmentHead: false }
+      });
+    }
+
+    if (headId) {
+      await tx.user.update({
+        where: { id: headId },
+        data: {
+          isDepartmentHead: true,
+          departmentId: params.id
+        }
+      });
+    }
+
+    return tx.department.update({
+      where: { id: params.id },
+      data: { name, headId: headId || null }
+    });
   });
 
   return NextResponse.json({ department: updatedDepartment });

@@ -24,17 +24,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Selected department head was not found.' }, { status: 404 });
     }
 
-    if (!headUser.isDepartmentHead) {
-      return NextResponse.json({ error: 'Selected user is not tagged as a department head.' }, { status: 400 });
-    }
-
     if (headUser.headedDepartment) {
       return NextResponse.json({ error: 'Selected user is already assigned to another department.' }, { status: 400 });
     }
   }
 
-  const newDept = await prisma.department.create({
-    data: { name, headId: headId || undefined }
+  const newDept = await prisma.$transaction(async (tx) => {
+    const department = await tx.department.create({
+      data: { name, headId: headId || undefined }
+    });
+
+    if (headId) {
+      await tx.user.update({
+        where: { id: headId },
+        data: {
+          isDepartmentHead: true,
+          departmentId: department.id
+        }
+      });
+    }
+
+    return department;
   });
 
   return NextResponse.json({ department: newDept });
