@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import RequestDetails from '@/components/RequestDetails';
 import MarkVoucherDoneButton from '@/components/MarkVoucherDoneButton';
+import RequestQueueItem from '@/components/RequestQueueItem';
 
 export default async function ForVoucherPage() {
   const session = await getSession();
@@ -42,9 +43,27 @@ export default async function ForVoucherPage() {
         {requests.length === 0 ? (
           <div className="sfxc-card p-8 text-slate-600">No requests are ready for voucher printing.</div>
         ) : (
-          requests.map((request) => (
-            <article key={request.id} className="sfxc-card p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          requests.map((request) => {
+            const requestDetails = {
+              controlNumber: request.controlNumber,
+              date: request.date.toISOString(),
+              departmentName: request.department.name,
+              requestedByName: request.requestedBy.name,
+              particulars: request.particulars,
+              amount: Number(request.amount),
+              status: request.status,
+              fundSourceName: request.fundSource?.name,
+              attachments: request.attachments.map((attachment) => ({
+                id: attachment.id,
+                fileName: attachment.fileName,
+                fileUrl: attachment.fileUrl
+              }))
+            };
+
+            return (
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Open Voucher">
+                <article className="sfxc-card p-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="text-sm text-slate-500">Ready for Voucher</p>
                   <h2 className="mt-1 text-lg font-semibold text-slate-900">{request.particulars}</h2>
@@ -58,24 +77,12 @@ export default async function ForVoucherPage() {
               </div>
 
               <RequestDetails
-                request={{
-                  controlNumber: request.controlNumber,
-                  date: request.date.toISOString(),
-                  departmentName: request.department.name,
-                  requestedByName: request.requestedBy.name,
-                  particulars: request.particulars,
-                  amount: Number(request.amount),
-                  status: request.status,
-                  fundSourceName: request.fundSource?.name,
-                  attachments: request.attachments.map((attachment) => ({
-                    id: attachment.id,
-                    fileName: attachment.fileName,
-                    fileUrl: attachment.fileUrl
-                  }))
-                }}
+                request={requestDetails}
               />
-            </article>
-          ))
+                </article>
+              </RequestQueueItem>
+            );
+          })
         )}
       </div>
     </section>

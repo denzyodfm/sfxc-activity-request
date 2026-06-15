@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import ApprovalForm from '@/components/ApprovalForm';
+import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
@@ -52,11 +53,8 @@ export default async function ApprovalPage({ searchParams }: ApprovalPageProps) 
         {requests.length === 0 ? (
           <div className="sfxc-card p-8 text-slate-600">No requests are ready for final approval right now.</div>
         ) : (
-          requests.map((request) => (
-            <ApprovalForm
-              key={request.id}
-              requestId={request.id}
-              request={{
+          requests.map((request) => {
+            const requestDetails = {
                 controlNumber: request.controlNumber,
                 date: request.date.toISOString(),
                 departmentName: request.department.name,
@@ -70,10 +68,18 @@ export default async function ApprovalPage({ searchParams }: ApprovalPageProps) 
                   fileName: attachment.fileName,
                   fileUrl: attachment.fileUrl
                 }))
-              }}
-              finalApproverLabel={approverLabels[request.finalApprover ?? 'APPROVER_JMAPC'] ?? 'TBD'}
-            />
-          ))
+              };
+
+            return (
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Approve">
+                <ApprovalForm
+                  requestId={request.id}
+                  request={requestDetails}
+                  finalApproverLabel={approverLabels[request.finalApprover ?? 'APPROVER_JMAPC'] ?? 'TBD'}
+                />
+              </RequestQueueItem>
+            );
+          })
         )}
       </div>
     </section>

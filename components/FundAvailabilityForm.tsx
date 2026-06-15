@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 import { formatMoney } from '@/lib/money';
 
@@ -12,6 +13,7 @@ interface FundAvailabilityFormProps {
 }
 
 export default function FundAvailabilityForm({ requestId, request, fundSourceId, fundSources }: FundAvailabilityFormProps) {
+  const router = useRouter();
   const [selectedSource, setSelectedSource] = useState(fundSourceId ?? fundSources[0]?.id ?? '');
   const [available, setAvailable] = useState<'true' | 'false'>('true');
   const [remarks, setRemarks] = useState('');
@@ -48,6 +50,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
 
       setStatus('success');
       setMessage(data.message || 'Fund availability updated.');
+      router.refresh();
     } catch (error) {
       setStatus('error');
       setMessage('Fund service unavailable.');

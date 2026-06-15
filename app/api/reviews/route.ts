@@ -20,7 +20,20 @@ export async function POST(request: NextRequest) {
   const status = approved ? 'FOR_ENDORSEMENT' : 'DENIED';
   const action = approved ? 'REVIEW_APPROVED' : 'REVIEW_DENIED';
 
-  const updated = await prisma.activityRequest.update({
+  const existing = await prisma.activityRequest.findUnique({
+    where: { id: requestId },
+    select: { status: true }
+  });
+
+  if (!existing) {
+    return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
+  }
+
+  if (existing.status !== 'FOR_REVIEW') {
+    return NextResponse.json({ error: 'This request is already past review.' }, { status: 400 });
+  }
+
+  await prisma.activityRequest.update({
     where: { id: requestId },
     data: {
       reviewRemarks: remarks,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 
 interface EndorsementFormProps {
@@ -9,6 +10,7 @@ interface EndorsementFormProps {
 }
 
 export default function EndorsementForm({ requestId, request }: EndorsementFormProps) {
+  const router = useRouter();
   const [approver, setApprover] = useState<'APPROVER_JMAPC' | 'APPROVER_JCA'>('APPROVER_JMAPC');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -35,6 +37,7 @@ export default function EndorsementForm({ requestId, request }: EndorsementFormP
 
       setStatus('success');
       setMessage(data.message || 'Request endorsed successfully.');
+      router.refresh();
     } catch (error) {
       setStatus('error');
       setMessage('Endorsement service unavailable.');

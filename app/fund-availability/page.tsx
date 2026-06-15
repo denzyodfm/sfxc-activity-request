@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import FundAvailabilityForm from '@/components/FundAvailabilityForm';
+import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
@@ -12,6 +13,7 @@ export default async function FundAvailabilityPage() {
 
   const [requests, fundSources] = await Promise.all([
     prisma.activityRequest.findMany({
+      where: { status: 'FOR_FUND_AVAILABILITY' },
       orderBy: { date: 'desc' },
       include: { department: true, requestedBy: true, fundSource: true, attachments: true }
     }),
@@ -40,11 +42,8 @@ export default async function FundAvailabilityPage() {
         {requests.length === 0 ? (
           <div className="sfxc-card p-8 text-slate-600">No requests are available yet.</div>
         ) : (
-          requests.map((request) => (
-            <FundAvailabilityForm
-              key={request.id}
-              requestId={request.id}
-              request={{
+          requests.map((request) => {
+            const requestDetails = {
                 controlNumber: request.controlNumber,
                 date: request.date.toISOString(),
                 departmentName: request.department.name,
@@ -58,15 +57,23 @@ export default async function FundAvailabilityPage() {
                   fileName: attachment.fileName,
                   fileUrl: attachment.fileUrl
                 }))
-              }}
-              fundSourceId={request.fundSourceId}
-              fundSources={fundSources.map((source) => ({
-                id: source.id,
-                name: source.name,
-                balance: Number(source.ledgerEntries[0]?.balanceAfter ?? 0)
-              }))}
-            />
-          ))
+              };
+
+            return (
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Review Funds">
+                <FundAvailabilityForm
+                  requestId={request.id}
+                  request={requestDetails}
+                  fundSourceId={request.fundSourceId}
+                  fundSources={fundSources.map((source) => ({
+                    id: source.id,
+                    name: source.name,
+                    balance: Number(source.ledgerEntries[0]?.balanceAfter ?? 0)
+                  }))}
+                />
+              </RequestQueueItem>
+            );
+          })
         )}
       </div>
     </section>

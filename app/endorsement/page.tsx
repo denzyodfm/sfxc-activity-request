@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import EndorsementForm from '@/components/EndorsementForm';
+import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
@@ -28,11 +29,8 @@ export default async function EndorsementPage() {
         {requests.length === 0 ? (
           <div className="sfxc-card p-8 text-slate-600">No requests need endorsement at this time.</div>
         ) : (
-          requests.map((request) => (
-            <EndorsementForm
-              key={request.id}
-              requestId={request.id}
-              request={{
+          requests.map((request) => {
+            const requestDetails = {
                 controlNumber: request.controlNumber,
                 date: request.date.toISOString(),
                 departmentName: request.department.name,
@@ -46,9 +44,14 @@ export default async function EndorsementPage() {
                   fileName: attachment.fileName,
                   fileUrl: attachment.fileUrl
                 }))
-              }}
-            />
-          ))
+              };
+
+            return (
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Endorse">
+                <EndorsementForm requestId={request.id} request={requestDetails} />
+              </RequestQueueItem>
+            );
+          })
         )}
       </div>
     </section>

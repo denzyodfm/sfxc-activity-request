@@ -23,11 +23,15 @@ export async function POST(request: NextRequest) {
 
   const existing = await prisma.activityRequest.findUnique({
     where: { id: requestId },
-    select: { amount: true }
+    select: { amount: true, status: true }
   });
 
   if (!existing) {
     return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
+  }
+
+  if (existing.status !== 'FOR_FUND_AVAILABILITY') {
+    return NextResponse.json({ error: 'This request is already past fund availability review.' }, { status: 400 });
   }
 
   if (fundAvailable && fundSourceId) {
@@ -40,7 +44,7 @@ export async function POST(request: NextRequest) {
   const action = fundAvailable ? 'FUND_AVAILABLE' : 'FUND_NOT_AVAILABLE';
   const status = fundAvailable ? 'FOR_REVIEW' : 'DENIED';
 
-  const updated = await prisma.activityRequest.update({
+  await prisma.activityRequest.update({
     where: { id: requestId },
     data: {
       fundSourceId,

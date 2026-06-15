@@ -16,7 +16,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Request ID and approver selection are required.' }, { status: 422 });
   }
 
-  const updated = await prisma.activityRequest.update({
+  const existing = await prisma.activityRequest.findUnique({
+    where: { id: requestId },
+    select: { status: true }
+  });
+
+  if (!existing) {
+    return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
+  }
+
+  if (existing.status !== 'FOR_ENDORSEMENT') {
+    return NextResponse.json({ error: 'This request is already past endorsement.' }, { status: 400 });
+  }
+
+  await prisma.activityRequest.update({
     where: { id: requestId },
     data: {
       finalApprover: approver,

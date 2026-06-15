@@ -4,6 +4,11 @@ import { getSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
+
+  if (!session || !['APPROVER_JMAPC', 'APPROVER_JCA', 'ADMIN'].includes(session.role)) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
   const body = await request.json();
   const { requestId, decision, remarks } = body;
 
@@ -20,12 +25,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
   }
 
-  const approver =
-    session && ['APPROVER_JMAPC', 'APPROVER_JCA', 'ADMIN'].includes(session.role)
-      ? await prisma.user.findUnique({ where: { id: session.id } })
-      : await prisma.user.findFirst({ where: { role: existing.finalApprover ?? 'APPROVER_JMAPC' } });
+  if (existing.status !== 'FOR_APPROVAL') {
+    return NextResponse.json({ error: 'This request is already past final approval.' }, { status: 400 });
+  }
 
-  const updated = await prisma.activityRequest.update({
+  if (session.role !== 'ADMIN' && existing.finalApprover && session.role !== existing.finalApprover) {
+    return NextResponse.json({ error: 'This request is assigned to a different approver.' }, { status: 403 });
+  }
+
+  const approver = await prisma.user.findUnique({ where: { id: session.id } });
+
+  await prisma.activityRequest.update({
     where: { id: requestId },
     data: {
       approvalRemarks: remarks,
@@ -38,7 +48,7 @@ export async function POST(request: NextRequest) {
     data: {
       requestId,
       actorId: approver?.id ?? existing.requestedById,
-      role: session?.role === 'ADMIN' ? existing.finalApprover ?? 'ADMIN' : session?.role ?? existing.finalApprover ?? 'APPROVER_JMAPC',
+      role: session.role === 'ADMIN' ? existing.finalApprover ?? 'ADMIN' : session.role,
       action,
       remarks
     }
@@ -47,6 +57,7 @@ export async function POST(request: NextRequest) {
   await prisma.auditLog.create({
     data: {
       requestId,
+      userId: session.id,
       action,
       details: `Final approval: ${approved ? 'approved' : 'denied'}`
     }

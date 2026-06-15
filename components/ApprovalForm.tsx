@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 
 interface ApprovalFormProps {
@@ -10,6 +11,7 @@ interface ApprovalFormProps {
 }
 
 export default function ApprovalForm({ requestId, request, finalApproverLabel }: ApprovalFormProps) {
+  const router = useRouter();
   const [decision, setDecision] = useState<'approve' | 'deny'>('approve');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -36,6 +38,7 @@ export default function ApprovalForm({ requestId, request, finalApproverLabel }:
 
       setStatus('success');
       setMessage(data.message || 'Approval decision recorded.');
+      router.refresh();
     } catch (error) {
       setStatus('error');
       setMessage('Approval service unavailable.');

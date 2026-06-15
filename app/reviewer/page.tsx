@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import ReviewForm from '@/components/ReviewForm';
+import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
@@ -28,11 +29,8 @@ export default async function ReviewerPage() {
         {requests.length === 0 ? (
           <div className="sfxc-card p-8 text-slate-600">No requests currently need review.</div>
         ) : (
-          requests.map((request) => (
-            <ReviewForm
-              key={request.id}
-              requestId={request.id}
-              request={{
+          requests.map((request) => {
+            const requestDetails = {
                 controlNumber: request.controlNumber,
                 date: request.date.toISOString(),
                 departmentName: request.department.name,
@@ -46,9 +44,14 @@ export default async function ReviewerPage() {
                   fileName: attachment.fileName,
                   fileUrl: attachment.fileUrl
                 }))
-              }}
-            />
-          ))
+              };
+
+            return (
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Review">
+                <ReviewForm requestId={request.id} request={requestDetails} />
+              </RequestQueueItem>
+            );
+          })
         )}
       </div>
     </section>

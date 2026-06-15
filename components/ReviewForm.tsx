@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 
 interface ReviewFormProps {
@@ -9,6 +10,7 @@ interface ReviewFormProps {
 }
 
 export default function ReviewForm({ requestId, request }: ReviewFormProps) {
+  const router = useRouter();
   const [decision, setDecision] = useState<'approve' | 'deny'>('approve');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -35,6 +37,7 @@ export default function ReviewForm({ requestId, request }: ReviewFormProps) {
 
       setStatus('success');
       setMessage(data.message || 'Review updated.');
+      router.refresh();
     } catch (error) {
       setStatus('error');
       setMessage('Review service unavailable.');
