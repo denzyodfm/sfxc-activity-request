@@ -18,7 +18,7 @@ interface LedgerEntry {
   controlNumber?: string;
 }
 
-interface FundSourceSummary {
+export interface FundSourceSummary {
   id: string;
   name: string;
   description?: string | null;
@@ -35,6 +35,7 @@ interface FundSourceManagerProps {
 export default function FundSourceManager({ fundSources }: FundSourceManagerProps) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
   const [sourceName, setSourceName] = useState('');
   const [sourceDescription, setSourceDescription] = useState('');
   const [depositAmounts, setDepositAmounts] = useState<Record<string, string>>({});
@@ -54,6 +55,8 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
       { balance: 0, debit: 0, credit: 0 }
     );
   }, [fundSources]);
+
+  const selectedSource = fundSources.find((source) => source.id === selectedSourceId);
 
   const createSource = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -160,40 +163,80 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
         </div>
       ) : null}
 
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {fundSources.map((source) => (
-          <section key={source.id} className="sfxc-card overflow-hidden">
-            <div className="flex flex-col gap-4 border-b border-slate-200 p-6 lg:flex-row lg:items-start lg:justify-between">
+          <article key={source.id} className="sfxc-card p-5">
+            <div className="grid gap-4 lg:grid-cols-[1fr_160px_160px_160px_auto] lg:items-center">
               <div>
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Source of Fund</p>
-                <h2 className="mt-2 text-2xl font-semibold text-slate-900">{source.name}</h2>
+                <h2 className="mt-2 text-xl font-semibold text-slate-900">{source.name}</h2>
                 {source.description ? <p className="mt-2 text-sm text-slate-600">{source.description}</p> : null}
               </div>
-              <div className="grid gap-3 text-sm sm:grid-cols-3 lg:min-w-[520px]">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deposits</p>
-                  <p className="mt-2 font-semibold text-slate-900">{formatMoney(source.totalDebit)}</p>
-                </div>
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deductions</p>
-                  <p className="mt-2 font-semibold text-slate-900">{formatMoney(source.totalCredit)}</p>
-                </div>
-                <div className="rounded-2xl bg-emerald-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-emerald-700">Balance</p>
-                  <p className="mt-2 font-semibold text-emerald-900">{formatMoney(source.balance)}</p>
-                </div>
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deposits</p>
+                <p className="mt-2 font-semibold text-slate-900">{formatMoney(source.totalDebit)}</p>
               </div>
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deductions</p>
+                <p className="mt-2 font-semibold text-slate-900">{formatMoney(source.totalCredit)}</p>
+              </div>
+              <div className="rounded-2xl bg-emerald-50 p-4 text-sm">
+                <p className="text-xs uppercase tracking-[0.18em] text-emerald-700">Balance</p>
+                <p className="mt-2 font-semibold text-emerald-900">{formatMoney(source.balance)}</p>
+              </div>
+              <button type="button" onClick={() => setSelectedSourceId(source.id)} className="sfxc-button">
+                View
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {selectedSource ? (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div className="mt-8 w-full max-w-6xl">
+            <div className="mb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedSourceId(null)}
+                className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
+              >
+                Close
+              </button>
             </div>
 
-            <form className="grid gap-4 border-b border-slate-200 p-6 md:grid-cols-2 xl:grid-cols-[160px_170px_1fr_1fr_auto]" onSubmit={(event) => postDeposit(event, source.id)}>
+            <section className="sfxc-card overflow-hidden">
+              <div className="flex flex-col gap-4 border-b border-slate-200 p-6 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Source of Fund Details</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-900">{selectedSource.name}</h2>
+                  {selectedSource.description ? <p className="mt-2 text-sm text-slate-600">{selectedSource.description}</p> : null}
+                </div>
+                <div className="grid gap-3 text-sm sm:grid-cols-3 lg:min-w-[520px]">
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deposits</p>
+                    <p className="mt-2 font-semibold text-slate-900">{formatMoney(selectedSource.totalDebit)}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deductions</p>
+                    <p className="mt-2 font-semibold text-slate-900">{formatMoney(selectedSource.totalCredit)}</p>
+                  </div>
+                  <div className="rounded-2xl bg-emerald-50 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-emerald-700">Balance</p>
+                    <p className="mt-2 font-semibold text-emerald-900">{formatMoney(selectedSource.balance)}</p>
+                  </div>
+                </div>
+              </div>
+
+            <form className="grid gap-4 border-b border-slate-200 p-6 md:grid-cols-2 xl:grid-cols-[160px_170px_1fr_1fr_auto]" onSubmit={(event) => postDeposit(event, selectedSource.id)}>
               <label className="space-y-2 text-sm text-slate-700">
                 Deposit Amount
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={depositAmounts[source.id] ?? ''}
-                  onChange={(event) => setDepositAmounts((current) => ({ ...current, [source.id]: event.target.value }))}
+                  value={depositAmounts[selectedSource.id] ?? ''}
+                  onChange={(event) => setDepositAmounts((current) => ({ ...current, [selectedSource.id]: event.target.value }))}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
                   placeholder="0.00"
                 />
@@ -202,16 +245,16 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                 Deposit Date
                 <input
                   type="date"
-                  value={depositDates[source.id] ?? today}
-                  onChange={(event) => setDepositDates((current) => ({ ...current, [source.id]: event.target.value }))}
+                  value={depositDates[selectedSource.id] ?? today}
+                  onChange={(event) => setDepositDates((current) => ({ ...current, [selectedSource.id]: event.target.value }))}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
                 />
               </label>
               <label className="space-y-2 text-sm text-slate-700">
                 Reference
                 <input
-                  value={depositReferences[source.id] ?? ''}
-                  onChange={(event) => setDepositReferences((current) => ({ ...current, [source.id]: event.target.value }))}
+                  value={depositReferences[selectedSource.id] ?? ''}
+                  onChange={(event) => setDepositReferences((current) => ({ ...current, [selectedSource.id]: event.target.value }))}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
                   placeholder="OR / check / bank ref."
                 />
@@ -219,8 +262,8 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
               <label className="space-y-2 text-sm text-slate-700">
                 Deposit Description
                 <input
-                  value={depositDescriptions[source.id] ?? ''}
-                  onChange={(event) => setDepositDescriptions((current) => ({ ...current, [source.id]: event.target.value }))}
+                  value={depositDescriptions[selectedSource.id] ?? ''}
+                  onChange={(event) => setDepositDescriptions((current) => ({ ...current, [selectedSource.id]: event.target.value }))}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
                   placeholder="Example: Monthly deposit"
                 />
@@ -243,12 +286,12 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {source.ledgerEntries.length === 0 ? (
+                  {selectedSource.ledgerEntries.length === 0 ? (
                     <tr>
                       <td className="px-6 py-5 text-slate-500" colSpan={6}>No ledger entries yet.</td>
                     </tr>
                   ) : (
-                    source.ledgerEntries.map((entry) => (
+                    selectedSource.ledgerEntries.map((entry) => (
                       <tr key={entry.id}>
                         <td className="px-6 py-4 text-slate-600">{new Date(entry.transactionDate).toLocaleDateString()}</td>
                         <td className="px-6 py-4 text-slate-600">{entry.reference || '-'}</td>
@@ -266,8 +309,9 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
               </table>
             </div>
           </section>
-        ))}
-      </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

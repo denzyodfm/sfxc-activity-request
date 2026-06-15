@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import FundSourceManager, { FundSourceSummary } from './FundSourceManager';
 
 interface User {
   id: string;
@@ -21,10 +22,11 @@ interface Department {
 interface AdminFormProps {
   users: User[];
   departments: Department[];
+  fundSources: FundSourceSummary[];
 }
 
-export default function AdminFormClient({ users, departments }: AdminFormProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'departments'>('users');
+export default function AdminFormClient({ users, departments, fundSources }: AdminFormProps) {
+  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds'>('users');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
@@ -264,6 +266,12 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
           className={`px-4 py-2 text-sm font-semibold ${activeTab === 'departments' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
         >
           Manage Departments
+        </button>
+        <button
+          onClick={() => setActiveTab('funds')}
+          className={`px-4 py-2 text-sm font-semibold ${activeTab === 'funds' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
+        >
+          Source of Fund
         </button>
       </div>
 
@@ -563,6 +571,8 @@ export default function AdminFormClient({ users, departments }: AdminFormProps) 
           </div>
         </div>
       )}
+
+      {activeTab === 'funds' && <FundSourceManager fundSources={fundSources} />}
     </div>
   );
 }

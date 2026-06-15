@@ -1,6 +1,5 @@
 import prisma from '@/lib/prisma';
 import AdminFormClient from '@/components/AdminFormClient';
-import FundSourceManager from '@/components/FundSourceManager';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
@@ -84,8 +83,7 @@ export default async function AdminPage() {
         <h1 className="mt-2 text-3xl font-semibold text-slate-900">Manage Users, Departments, and Funds</h1>
         <p className="mt-3 max-w-2xl text-slate-600">Create users, assign roles, manage departments, and maintain source of fund accounts.</p>
       </div>
-      <AdminFormClient users={users} departments={departments} />
-      <FundSourceManager fundSources={fundSummaries} />
+      <AdminFormClient users={users} departments={departments} fundSources={fundSummaries} />
     </section>
   );
 }
