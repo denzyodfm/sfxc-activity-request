@@ -3,6 +3,7 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession, UserSession } from '@/lib/auth';
+import { getSessionCookieOptions } from '@/lib/session-cookie';
 import { hashPassword, verifyPassword } from '@/lib/password';
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '@/lib/upload-limits';
 
@@ -93,16 +94,12 @@ export async function PUT(request: NextRequest) {
     id: updatedUser.id,
     name: updatedUser.name,
     email: updatedUser.email,
-    role: updatedUser.role
+    role: updatedUser.role,
+    departmentId: session.departmentId
   };
 
   const response = NextResponse.json({ user: updatedUser, message: 'Profile updated.' });
-  response.cookies.set('session', JSON.stringify(nextSession), {
-    maxAge: 7 * 24 * 60 * 60,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
-  });
+  response.cookies.set('session', JSON.stringify(nextSession), getSessionCookieOptions());
 
   return response;
 }

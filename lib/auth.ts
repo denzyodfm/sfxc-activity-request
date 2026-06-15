@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { verifyPassword } from '@/lib/password';
+import { getSessionCookieOptions } from '@/lib/session-cookie';
 
 export interface UserSession {
   id: string;
@@ -27,12 +28,7 @@ export async function getSession(): Promise<UserSession | null> {
 
 export async function setSession(user: UserSession) {
   const cookieStore = await cookies();
-  cookieStore.set('session', JSON.stringify(user), {
-    maxAge: 7 * 24 * 60 * 60,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
-  });
+  cookieStore.set('session', JSON.stringify(user), getSessionCookieOptions());
 }
 
 export async function clearSession() {
