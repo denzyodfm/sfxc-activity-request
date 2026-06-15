@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LogoMark from '@/components/LogoMark';
+import { useSession } from '@/lib/session-context';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setUser } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -32,7 +34,8 @@ export default function LoginPage() {
 
       setStatus('success');
       setMessage('Login successful. Redirecting...');
-      setTimeout(() => router.push('/'), 1500);
+      setUser(data.user);
+      router.push('/');
     } catch (error) {
       setStatus('error');
       setMessage('Authentication service unavailable.');
@@ -44,7 +47,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-8 shadow-xl">
         <div className="text-center">
           <LogoMark />
-          <h1 className="mt-4 whitespace-nowrap text-2xl font-semibold text-slate-900">SFXC Activity Request System</h1>
+          <h1 className="mt-4 whitespace-nowrap text-2xl font-semibold text-slate-900">Activity Request System</h1>
           <p className="mt-2 text-sm text-slate-600">St. Francis Xavier College</p>
         </div>
 

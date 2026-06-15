@@ -28,7 +28,7 @@ export default function LogoMark({ size = 'md' }: LogoMarkProps) {
       src="/sfxc_icon.png"
       alt="St. Francis Xavier College logo"
       onError={() => setHasImageError(true)}
-      className={`${sizeClasses[size]} object-contain`}
+      className={`${sizeClasses[size]} mx-auto object-contain`}
     />
   );
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/session-context';
 
 export default function AccountPanel() {
-  const { user } = useSession();
+  const { user, setUser } = useSession();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -16,6 +16,7 @@ export default function AccountPanel() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
     router.push('/login');
   };
 

@@ -13,9 +13,14 @@ interface UserSession {
 interface SessionContextType {
   user: UserSession | null;
   isLoading: boolean;
+  setUser: (user: UserSession | null) => void;
 }
 
-const SessionContext = createContext<SessionContextType>({ user: null, isLoading: true });
+const SessionContext = createContext<SessionContextType>({
+  user: null,
+  isLoading: true,
+  setUser: () => {}
+});
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSession | null>(null);
@@ -40,7 +45,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SessionContext.Provider value={{ user, isLoading }}>
+    <SessionContext.Provider value={{ user, isLoading, setUser }}>
       {children}
     </SessionContext.Provider>
   );
