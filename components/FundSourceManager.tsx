@@ -120,7 +120,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
         <div className="sfxc-card p-5">
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Deposits</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Funds</p>
           <p className="mt-3 text-2xl font-semibold text-slate-900">{formatMoney(report.debit)}</p>
         </div>
         <div className="sfxc-card p-5">
@@ -173,7 +173,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                 {source.description ? <p className="mt-2 text-sm text-slate-600">{source.description}</p> : null}
               </div>
               <div className="rounded-2xl bg-slate-50 p-4 text-sm">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deposits</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Funds</p>
                 <p className="mt-2 font-semibold text-slate-900">{formatMoney(source.totalDebit)}</p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4 text-sm">
@@ -214,7 +214,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                 </div>
                 <div className="grid gap-3 text-sm sm:grid-cols-3 lg:min-w-[520px]">
                   <div className="rounded-2xl bg-slate-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Deposits</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Funds</p>
                     <p className="mt-2 font-semibold text-slate-900">{formatMoney(selectedSource.totalDebit)}</p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 p-4">
