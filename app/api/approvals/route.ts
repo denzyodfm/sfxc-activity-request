@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { generateApprovalCode } from '@/lib/approval-code';
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -34,6 +35,16 @@ export async function POST(request: NextRequest) {
   }
 
   const approver = await prisma.user.findUnique({ where: { id: session.id } });
+  const actorId = approver?.id ?? existing.requestedById;
+  const role = session.role === 'ADMIN' ? existing.finalApprover ?? 'ADMIN' : session.role;
+  const approvedAt = new Date();
+  const approvalCode = generateApprovalCode({
+    requestId,
+    actorId,
+    role,
+    action,
+    approvedAt
+  });
 
   await prisma.activityRequest.update({
     where: { id: requestId },
@@ -47,10 +58,12 @@ export async function POST(request: NextRequest) {
   await prisma.requestApproval.create({
     data: {
       requestId,
-      actorId: approver?.id ?? existing.requestedById,
-      role: session.role === 'ADMIN' ? existing.finalApprover ?? 'ADMIN' : session.role,
+      actorId,
+      role,
       action,
-      remarks
+      approvalCode,
+      remarks,
+      createdAt: approvedAt
     }
   });
 

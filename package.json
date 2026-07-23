@@ -10,6 +10,7 @@
     "prisma": "prisma",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
+    "db:backfill-approval-codes": "node scripts/backfill-approval-codes.js",
     "db:backfill-completed": "node scripts/backfill-completed-vouchers.js",
     "prepare": "prisma generate"
   },

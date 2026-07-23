@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { generateApprovalCode } from '@/lib/approval-code';
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -33,6 +34,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'This request is already past review.' }, { status: 400 });
   }
 
+  const approvedAt = new Date();
+  const approvalCode = generateApprovalCode({
+    requestId,
+    actorId: session.id,
+    role: 'REVIEWER',
+    action,
+    approvedAt
+  });
+
   await prisma.activityRequest.update({
     where: { id: requestId },
     data: {
@@ -47,7 +57,9 @@ export async function POST(request: NextRequest) {
       actorId: session.id,
       role: 'REVIEWER',
       action,
-      remarks
+      approvalCode,
+      remarks,
+      createdAt: approvedAt
     }
   });
 

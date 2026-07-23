@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { getFundSourceBalance } from '@/lib/fund-ledger';
+import { generateApprovalCode } from '@/lib/approval-code';
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -43,6 +44,14 @@ export async function POST(request: NextRequest) {
 
   const action = fundAvailable ? 'FUND_AVAILABLE' : 'FUND_NOT_AVAILABLE';
   const status = fundAvailable ? 'FOR_REVIEW' : 'DENIED';
+  const approvedAt = new Date();
+  const approvalCode = generateApprovalCode({
+    requestId,
+    actorId: session.id,
+    role: 'FUND_OFFICER',
+    action,
+    approvedAt
+  });
 
   await prisma.activityRequest.update({
     where: { id: requestId },
@@ -60,7 +69,9 @@ export async function POST(request: NextRequest) {
       actorId: session.id,
       role: 'FUND_OFFICER',
       action,
-      remarks
+      approvalCode,
+      remarks,
+      createdAt: approvedAt
     }
   });
 

@@ -10,7 +10,13 @@ interface VoucherPrintProps {
     approvedBy?: { name: string } | null;
     fundSource?: { name: string } | null;
     attachments: { id: string; fileName: string; fileUrl: string }[];
-    approvals: { role: string; action: string; actor: { name: string; role: string } }[];
+    approvals: {
+      role: string;
+      action: string;
+      approvalCode: string | null;
+      createdAt: Date;
+      actor: { name: string; role: string };
+    }[];
   };
   fallbackReviewerName?: string;
   fallbackEndorserName?: string;
@@ -30,13 +36,25 @@ export default function VoucherPrint({ request, fallbackReviewerName, fallbackEn
     APPROVER_JMAPC: 'JMAPC Approver',
     APPROVER_JCA: 'JCA Approver'
   };
+  const fundRecord = request.approvals.find(
+    (approval) => approval.role === 'FUND_OFFICER' && approval.action === 'FUND_AVAILABLE'
+  );
   const reviewRecord = request.approvals.find((approval) => approval.role === 'REVIEWER' && approval.action === 'REVIEW_APPROVED');
   const endorsementRecord = request.approvals.find((approval) => approval.role === 'ENDORSER' && approval.action === 'ENDORSED');
+  const finalApprovalRecord = request.approvals.find(
+    (approval) => ['APPROVER_JMAPC', 'APPROVER_JCA', 'ADMIN'].includes(approval.role) && approval.action === 'APPROVED'
+  );
   const reviewedByName =
     reviewRecord?.actor.role === 'REVIEWER' ? reviewRecord.actor.name : request.reviewRemarks ? fallbackReviewerName : null;
   const endorsedByName =
     endorsementRecord?.actor.role === 'ENDORSER' ? endorsementRecord.actor.name : request.endorsementRemarks ? fallbackEndorserName : null;
   const approvedByName = request.approvedBy?.name ?? (request.finalApprover ? approverLabels[request.finalApprover] : null);
+  const routingRecords = [
+    { label: 'Fund Availability', record: fundRecord },
+    { label: 'Reviewer', record: reviewRecord },
+    { label: 'Endorsed By', record: endorsementRecord },
+    { label: 'Final Approval', record: finalApprovalRecord }
+  ];
   const handlePrintAttachment = (fileUrl: string) => {
     const printWindow = window.open(fileUrl, '_blank', 'noopener,noreferrer');
 
@@ -81,6 +99,23 @@ export default function VoucherPrint({ request, fallbackReviewerName, fallbackEn
           <Field label="Reviewed By">{reviewedByName ?? 'Pending'}</Field>
           <Field label="Endorsed By">{endorsedByName ?? 'Pending'}</Field>
           <Field label="Approved By">{approvedByName ?? 'Pending'}</Field>
+        </div>
+
+        <div className="mt-3 grid gap-3 md:grid-cols-4 print:mt-2 print:grid-cols-4 print:gap-2">
+          {routingRecords.map(({ label, record }) => (
+            <Field key={label} label={`${label} Code`}>
+              {record?.approvalCode ? (
+                <div>
+                  <p className="font-mono font-bold tracking-[0.14em]">{record.approvalCode}</p>
+                  <p className="mt-1 text-xs font-normal text-slate-500 print:text-[9px]">
+                    {new Date(record.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              ) : (
+                'Pending'
+              )}
+            </Field>
+          ))}
         </div>
 
         <div className="mt-3 print:mt-2">

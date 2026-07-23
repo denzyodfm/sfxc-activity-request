@@ -113,6 +113,7 @@ model RequestApproval {
   actorId    String
   role       String
   action     String
+  approvalCode String?      @unique
   remarks    String?
   createdAt  DateTime       @default(now())
 }
