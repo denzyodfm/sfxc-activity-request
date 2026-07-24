@@ -76,5 +76,9 @@ export async function POST(request: NextRequest) {
     }
   });
 
-  return NextResponse.json({ message: `Request has been ${approved ? 'approved' : 'denied'}.` });
+  return NextResponse.json({
+    message: `Request has been ${approved ? 'approved' : 'denied'}.`,
+    approvalCode,
+    approvedAt: approvedAt.toISOString()
+  });
 }

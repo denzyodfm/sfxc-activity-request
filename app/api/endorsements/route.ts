@@ -69,5 +69,9 @@ export async function POST(request: NextRequest) {
     }
   });
 
-  return NextResponse.json({ message: 'Request endorsed and sent to final approval.' });
+  return NextResponse.json({
+    message: 'Request endorsed and sent to final approval.',
+    approvalCode,
+    approvedAt: approvedAt.toISOString()
+  });
 }

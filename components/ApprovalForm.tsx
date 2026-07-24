@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
+import ApprovalCodeReceipt from './ApprovalCodeReceipt';
 
 interface ApprovalFormProps {
   requestId: string;
@@ -16,6 +17,7 @@ export default function ApprovalForm({ requestId, request, finalApproverLabel }:
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [receipt, setReceipt] = useState<{ approvalCode: string; approvedAt: string } | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -38,7 +40,7 @@ export default function ApprovalForm({ requestId, request, finalApproverLabel }:
 
       setStatus('success');
       setMessage(data.message || 'Approval decision recorded.');
-      router.refresh();
+      setReceipt({ approvalCode: data.approvalCode, approvedAt: data.approvedAt });
     } catch (error) {
       setStatus('error');
       setMessage('Approval service unavailable.');
@@ -84,14 +86,23 @@ export default function ApprovalForm({ requestId, request, finalApproverLabel }:
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-slate-500">A final approval moves the request to For Voucher.</div>
-        <button type="submit" className="sfxc-button">Submit Approval</button>
+        <button type="submit" disabled={status === 'saving' || status === 'success'} className="sfxc-button">
+          {status === 'saving' ? 'Submitting...' : 'Submit Approval'}
+        </button>
       </div>
 
-      {status !== 'idle' && (
+      {status === 'success' && receipt ? (
+        <ApprovalCodeReceipt
+          message={message}
+          approvalCode={receipt.approvalCode}
+          approvedAt={receipt.approvedAt}
+          onContinue={() => router.refresh()}
+        />
+      ) : status !== 'idle' ? (
         <div className={`mt-4 rounded-3xl border px-4 py-3 text-sm ${status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
           {message}
         </div>
-      )}
+      ) : null}
     </form>
   );
 }

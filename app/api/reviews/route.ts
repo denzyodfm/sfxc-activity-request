@@ -72,5 +72,9 @@ export async function POST(request: NextRequest) {
     }
   });
 
-  return NextResponse.json({ message: `Request marked ${approved ? 'for endorsement' : 'denied'}.` });
+  return NextResponse.json({
+    message: `Request marked ${approved ? 'for endorsement' : 'denied'}.`,
+    approvalCode,
+    approvedAt: approvedAt.toISOString()
+  });
 }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 import { formatMoney } from '@/lib/money';
+import ApprovalCodeReceipt from './ApprovalCodeReceipt';
 
 interface FundAvailabilityFormProps {
   requestId: string;
@@ -19,6 +20,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [receipt, setReceipt] = useState<{ approvalCode: string; approvedAt: string } | null>(null);
   const canUpdate = request.status === 'FOR_FUND_AVAILABILITY';
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -50,7 +52,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
 
       setStatus('success');
       setMessage(data.message || 'Fund availability updated.');
-      router.refresh();
+      setReceipt({ approvalCode: data.approvalCode, approvedAt: data.approvedAt });
     } catch (error) {
       setStatus('error');
       setMessage('Fund service unavailable.');
@@ -117,16 +119,23 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-slate-500">Completing this step moves the request to review or denies it.</div>
-        <button type="submit" disabled={!canUpdate || status === 'saving'} className="sfxc-button">
+        <button type="submit" disabled={!canUpdate || status === 'saving' || status === 'success'} className="sfxc-button">
           {status === 'saving' ? 'Updating...' : 'Update Availability'}
         </button>
       </div>
 
-      {status !== 'idle' && (
+      {status === 'success' && receipt ? (
+        <ApprovalCodeReceipt
+          message={message}
+          approvalCode={receipt.approvalCode}
+          approvedAt={receipt.approvedAt}
+          onContinue={() => router.refresh()}
+        />
+      ) : status !== 'idle' ? (
         <div className={`mt-4 rounded-3xl border px-4 py-3 text-sm ${status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
           {message}
         </div>
-      )}
+      ) : null}
     </form>
   );
 }

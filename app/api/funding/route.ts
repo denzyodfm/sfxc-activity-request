@@ -84,5 +84,9 @@ export async function POST(request: NextRequest) {
     }
   });
 
-  return NextResponse.json({ message: `Request status updated to ${status}.` });
+  return NextResponse.json({
+    message: `Request status updated to ${status}.`,
+    approvalCode,
+    approvedAt: approvedAt.toISOString()
+  });
 }
