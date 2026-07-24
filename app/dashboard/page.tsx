@@ -1,17 +1,9 @@
 import prisma from '@/lib/prisma';
 import RequestCard from '@/components/RequestCard';
+import DashboardRequestBrowser from '@/components/DashboardRequestBrowser';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-
-const stats = [
-  { key: 'FOR_FUND_AVAILABILITY', title: 'Pending Fund', description: 'Awaiting fund availability review' },
-  { key: 'FOR_REVIEW', title: 'Pending Review', description: 'Ready for reviewer action' },
-  { key: 'FOR_ENDORSEMENT', title: 'Pending Endorsement', description: 'Waiting for endorsement' },
-  { key: 'FOR_APPROVAL', title: 'Pending Approval', description: 'Awaiting final approver' },
-  { key: 'APPROVED', title: 'For Voucher', description: 'Ready for voucher printing' },
-  { key: 'COMPLETED', title: 'Completed', description: 'Voucher request completed' }
-];
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -31,20 +23,30 @@ export default async function DashboardPage() {
     }
   }
 
-  const counts = await prisma.activityRequest.groupBy({
-    by: ['status'],
-    _count: { status: true },
-    where: whereClause
-  });
-
-  const recent = await prisma.activityRequest.findMany({
-    take: 5,
+  const requests = await prisma.activityRequest.findMany({
     orderBy: { createdAt: 'desc' },
-    include: { department: true, requestedBy: true, attachments: true },
+    include: { department: true, requestedBy: true, fundSource: true, attachments: true },
     where: whereClause
   });
 
-  const pendingCount = counts.reduce((sum, item) => sum + item._count.status, 0);
+  const dashboardRequests = requests.map((request) => ({
+    id: request.id,
+    createdAt: request.createdAt.toISOString(),
+    controlNumber: request.controlNumber,
+    date: request.date.toISOString(),
+    departmentName: request.department.name,
+    requestedByName: request.requestedBy.name,
+    particulars: request.particulars,
+    amount: Number(request.amount),
+    status: request.status,
+    fundSourceName: request.fundSource?.name,
+    attachments: request.attachments.map((attachment) => ({
+      id: attachment.id,
+      fileName: attachment.fileName,
+      fileUrl: attachment.fileUrl
+    }))
+  }));
+  const recent = requests.slice(0, 5);
 
   return (
     <section className="space-y-8">
@@ -61,23 +63,7 @@ export default async function DashboardPage() {
         ) : null}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
-        <div className="sfxc-card p-6">
-          <p className="text-sm text-slate-500">Requests in the system</p>
-          <p className="mt-3 text-3xl font-semibold text-slate-900">{pendingCount}</p>
-          <p className="mt-2 text-sm text-slate-500">Open activity requests awaiting workflow actions</p>
-        </div>
-        {stats.map((item) => {
-          const stat = counts.find((count) => count.status === item.key);
-          return (
-            <div key={item.key} className="sfxc-card p-6">
-              <p className="text-sm uppercase tracking-[0.24em] text-slate-500">{item.title}</p>
-              <p className="mt-3 text-3xl font-semibold text-slate-900">{stat?._count.status ?? 0}</p>
-              <p className="mt-2 text-sm text-slate-500">{item.description}</p>
-            </div>
-          );
-        })}
-      </div>
+      <DashboardRequestBrowser requests={dashboardRequests} />
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
         <div className="sfxc-card p-6">
