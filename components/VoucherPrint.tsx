@@ -31,6 +31,32 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function ApproverField({
+  label,
+  name,
+  record
+}: {
+  label: string;
+  name: string | null | undefined;
+  record?: { approvalCode: string | null; createdAt: Date };
+}) {
+  return (
+    <Field label={label}>
+      <p>{name ?? 'Pending'}</p>
+      {record?.approvalCode ? (
+        <div className="mt-2 border-t border-slate-100 pt-2">
+          <p className="font-mono text-xs font-bold tracking-[0.14em] text-slate-700 print:text-[9px]">
+            {record.approvalCode}
+          </p>
+          <p className="mt-1 text-xs font-normal text-slate-500 print:text-[8px]">
+            {new Date(record.createdAt).toLocaleString()}
+          </p>
+        </div>
+      ) : null}
+    </Field>
+  );
+}
+
 export default function VoucherPrint({ request, fallbackReviewerName, fallbackEndorserName }: VoucherPrintProps) {
   const approverLabels: Record<string, string> = {
     APPROVER_JMAPC: 'JMAPC Approver',
@@ -44,17 +70,13 @@ export default function VoucherPrint({ request, fallbackReviewerName, fallbackEn
   const finalApprovalRecord = request.approvals.find(
     (approval) => ['APPROVER_JMAPC', 'APPROVER_JCA', 'ADMIN'].includes(approval.role) && approval.action === 'APPROVED'
   );
-  const reviewedByName =
-    reviewRecord?.actor.role === 'REVIEWER' ? reviewRecord.actor.name : request.reviewRemarks ? fallbackReviewerName : null;
-  const endorsedByName =
-    endorsementRecord?.actor.role === 'ENDORSER' ? endorsementRecord.actor.name : request.endorsementRemarks ? fallbackEndorserName : null;
-  const approvedByName = request.approvedBy?.name ?? (request.finalApprover ? approverLabels[request.finalApprover] : null);
-  const routingRecords = [
-    { label: 'Fund Availability', record: fundRecord },
-    { label: 'Reviewer', record: reviewRecord },
-    { label: 'Endorsed By', record: endorsementRecord },
-    { label: 'Final Approval', record: finalApprovalRecord }
-  ];
+  const fundOfficerName = fundRecord?.actor.name;
+  const reviewedByName = reviewRecord?.actor.name ?? (request.reviewRemarks ? fallbackReviewerName : null);
+  const endorsedByName = endorsementRecord?.actor.name ?? (request.endorsementRemarks ? fallbackEndorserName : null);
+  const approvedByName =
+    finalApprovalRecord?.actor.name ??
+    request.approvedBy?.name ??
+    (request.finalApprover ? approverLabels[request.finalApprover] : null);
   const handlePrintAttachment = (fileUrl: string) => {
     const printWindow = window.open(fileUrl, '_blank', 'noopener,noreferrer');
 
@@ -95,27 +117,11 @@ export default function VoucherPrint({ request, fallbackReviewerName, fallbackEn
           </Field>
         </div>
 
-        <div className="mt-3 grid gap-3 md:grid-cols-3 print:mt-2 print:grid-cols-3 print:gap-2">
-          <Field label="Reviewed By">{reviewedByName ?? 'Pending'}</Field>
-          <Field label="Endorsed By">{endorsedByName ?? 'Pending'}</Field>
-          <Field label="Approved By">{approvedByName ?? 'Pending'}</Field>
-        </div>
-
         <div className="mt-3 grid gap-3 md:grid-cols-4 print:mt-2 print:grid-cols-4 print:gap-2">
-          {routingRecords.map(({ label, record }) => (
-            <Field key={label} label={`${label} Code`}>
-              {record?.approvalCode ? (
-                <div>
-                  <p className="font-mono font-bold tracking-[0.14em]">{record.approvalCode}</p>
-                  <p className="mt-1 text-xs font-normal text-slate-500 print:text-[9px]">
-                    {new Date(record.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              ) : (
-                'Pending'
-              )}
-            </Field>
-          ))}
+          <ApproverField label="Fund Availability By" name={fundOfficerName} record={fundRecord} />
+          <ApproverField label="Reviewed By" name={reviewedByName} record={reviewRecord} />
+          <ApproverField label="Endorsed By" name={endorsedByName} record={endorsementRecord} />
+          <ApproverField label="Approved By" name={approvedByName} record={finalApprovalRecord} />
         </div>
 
         <div className="mt-3 print:mt-2">
