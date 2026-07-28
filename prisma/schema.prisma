@@ -3,14 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id                String             @id @default(cuid())
+  id                String            @id @default(cuid())
   name              String
-  email             String             @unique
+  email             String            @unique
   passwordHash      String?
   firstName         String?
   middleName        String?
@@ -19,112 +19,112 @@ model User {
   position          String?
   profilePictureUrl String?
   role              String
-  isDepartmentHead  Boolean            @default(false)
-  department        Department?        @relation("DepartmentEmployees", fields: [departmentId], references: [id])
+  isDepartmentHead  Boolean           @default(false)
+  department        Department?       @relation("DepartmentEmployees", fields: [departmentId], references: [id])
   departmentId      String?
-  headedDepartment  Department?        @relation("DepartmentHead")
-  approvedRequests  ActivityRequest[]  @relation("ApprovedBy")
-  requests          ActivityRequest[]  @relation("RequestedBy")
+  headedDepartment  Department?       @relation("DepartmentHead")
+  approvedRequests  ActivityRequest[] @relation("ApprovedBy")
+  requests          ActivityRequest[] @relation("RequestedBy")
   approvals         RequestApproval[]
   auditLogs         AuditLog[]
   fundLedgerEntries FundLedgerEntry[]
-  createdAt         DateTime           @default(now())
+  createdAt         DateTime          @default(now())
 }
 
 model Department {
-  id        String           @id @default(cuid())
-  name      String           @unique
-  head      User?            @relation("DepartmentHead", fields: [headId], references: [id])
-  headId    String?          @unique
-  employees User[]           @relation("DepartmentEmployees")
+  id        String            @id @default(cuid())
+  name      String            @unique
+  head      User?             @relation("DepartmentHead", fields: [headId], references: [id])
+  headId    String?           @unique
+  employees User[]            @relation("DepartmentEmployees")
   requests  ActivityRequest[]
 }
 
 model FundSource {
-  id            String             @id @default(cuid())
-  name          String             @unique
+  id            String            @id @default(cuid())
+  name          String            @unique
   description   String?
   requests      ActivityRequest[]
   ledgerEntries FundLedgerEntry[]
 }
 
 model ActivityRequest {
-  id                       String             @id @default(cuid())
-  controlNumber            String             @unique
-  date                     DateTime
-  department               Department         @relation(fields: [departmentId], references: [id])
-  departmentId             String
-  requestedBy              User               @relation("RequestedBy", fields: [requestedById], references: [id])
-  requestedById            String
-  particulars              String
-  preApprovalNotes         String?
-  amount                   Decimal
-  fundSource               FundSource?        @relation(fields: [fundSourceId], references: [id])
-  fundSourceId             String?
-  attachments              RequestAttachment[]
-  approvals                RequestApproval[]
-  auditLogs                AuditLog[]
-  fundLedgerEntries        FundLedgerEntry[]
-  status                   String             @default("DRAFT")
-  fundAvailable            Boolean?
-  fundAvailabilityRemarks  String?
-  reviewRemarks            String?
-  endorsementRemarks       String?
-  approvalRemarks          String?
-  finalApprover            String?
-  approvedBy              User?              @relation("ApprovedBy", fields: [approvedById], references: [id])
-  approvedById             String?
-  createdAt                DateTime           @default(now())
-  updatedAt                DateTime           @updatedAt
+  id                      String              @id @default(cuid())
+  controlNumber           String              @unique
+  date                    DateTime
+  department              Department          @relation(fields: [departmentId], references: [id])
+  departmentId            String
+  requestedBy             User                @relation("RequestedBy", fields: [requestedById], references: [id])
+  requestedById           String
+  particulars             String
+  preApprovalNotes        String?
+  amount                  Decimal
+  fundSource              FundSource?         @relation(fields: [fundSourceId], references: [id])
+  fundSourceId            String?
+  attachments             RequestAttachment[]
+  approvals               RequestApproval[]
+  auditLogs               AuditLog[]
+  fundLedgerEntries       FundLedgerEntry[]
+  status                  String              @default("DRAFT")
+  fundAvailable           Boolean?
+  fundAvailabilityRemarks String?
+  reviewRemarks           String?
+  endorsementRemarks      String?
+  approvalRemarks         String?
+  finalApprover           String?
+  approvedBy              User?               @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedById            String?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 }
 
 model FundLedgerEntry {
-  id           String           @id @default(cuid())
-  fundSource   FundSource       @relation(fields: [fundSourceId], references: [id])
-  fundSourceId String
-  request      ActivityRequest? @relation(fields: [requestId], references: [id])
-  requestId    String?
-  actor        User?            @relation(fields: [actorId], references: [id])
-  actorId      String?
-  type         String
-  description  String
-  reference    String?
+  id              String           @id @default(cuid())
+  fundSource      FundSource       @relation(fields: [fundSourceId], references: [id])
+  fundSourceId    String
+  request         ActivityRequest? @relation(fields: [requestId], references: [id])
+  requestId       String?
+  actor           User?            @relation(fields: [actorId], references: [id])
+  actorId         String?
+  type            String
+  description     String
+  reference       String?
   transactionDate DateTime         @default(now())
-  debit        Decimal          @default(0)
-  credit       Decimal          @default(0)
-  balanceAfter Decimal
-  createdAt    DateTime         @default(now())
+  debit           Decimal          @default(0)
+  credit          Decimal          @default(0)
+  balanceAfter    Decimal
+  createdAt       DateTime         @default(now())
 }
 
 model RequestAttachment {
-  id         String   @id @default(cuid())
-  request    ActivityRequest @relation(fields: [requestId], references: [id])
-  requestId  String
-  fileName   String
-  fileUrl    String
-  createdAt  DateTime @default(now())
+  id        String          @id @default(cuid())
+  request   ActivityRequest @relation(fields: [requestId], references: [id])
+  requestId String
+  fileName  String
+  fileUrl   String
+  createdAt DateTime        @default(now())
 }
 
 model RequestApproval {
-  id         String         @id @default(cuid())
-  request    ActivityRequest @relation(fields: [requestId], references: [id])
-  requestId  String
-  actor      User           @relation(fields: [actorId], references: [id])
-  actorId    String
-  role       String
-  action     String
-  approvalCode String?      @unique
-  remarks    String?
-  createdAt  DateTime       @default(now())
+  id           String          @id @default(cuid())
+  request      ActivityRequest @relation(fields: [requestId], references: [id])
+  requestId    String
+  actor        User            @relation(fields: [actorId], references: [id])
+  actorId      String
+  role         String
+  action       String
+  approvalCode String?         @unique
+  remarks      String?
+  createdAt    DateTime        @default(now())
 }
 
 model AuditLog {
-  id         String           @id @default(cuid())
-  request    ActivityRequest? @relation(fields: [requestId], references: [id])
-  requestId  String?
-  user       User?            @relation(fields: [userId], references: [id])
-  userId     String?
-  action     String
-  details    String?
-  createdAt  DateTime         @default(now())
+  id        String           @id @default(cuid())
+  request   ActivityRequest? @relation(fields: [requestId], references: [id])
+  requestId String?
+  user      User?            @relation(fields: [userId], references: [id])
+  userId    String?
+  action    String
+  details   String?
+  createdAt DateTime         @default(now())
 }
