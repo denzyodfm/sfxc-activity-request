@@ -44,27 +44,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => setIsSidebarOpen((current) => !current)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-sfxc-green hover:text-sfxc-green"
+            className={`inline-flex items-center justify-center bg-white text-slate-700 transition hover:text-sfxc-green ${
+              isSidebarOpen
+                ? 'h-11 w-11 rounded-full border border-slate-200 shadow-sm hover:border-sfxc-green'
+                : 'h-16 w-16 rounded-2xl border border-slate-200 shadow-sm hover:border-sfxc-green'
+            }`}
             aria-pressed={!isSidebarOpen}
             aria-label={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
           >
-            <span className="relative block h-4 w-5" aria-hidden="true">
-              <span
-                className={`absolute left-0 h-0.5 w-5 rounded-full bg-current transition ${
-                  isSidebarOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-0'
-                }`}
-              />
-              <span
-                className={`absolute left-0 top-1/2 h-0.5 w-5 -translate-y-1/2 rounded-full bg-current transition ${
-                  isSidebarOpen ? 'opacity-0' : 'opacity-100'
-                }`}
-              />
-              <span
-                className={`absolute left-0 h-0.5 w-5 rounded-full bg-current transition ${
-                  isSidebarOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'bottom-0'
-                }`}
-              />
-            </span>
+            {isSidebarOpen ? (
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <circle cx="5" cy="12" r="1.8" />
+                <circle cx="12" cy="12" r="1.8" />
+                <circle cx="19" cy="12" r="1.8" />
+              </svg>
+            ) : (
+              <img src="/sfxc_icon.png" alt="" className="h-12 w-12 object-contain" aria-hidden="true" />
+            )}
           </button>
           <AccountPanel />
         </div>
