@@ -6,6 +6,7 @@ import { getSession, UserSession } from '@/lib/auth';
 import { getSessionCookieOptions } from '@/lib/session-cookie';
 import { hashPassword, verifyPassword } from '@/lib/password';
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '@/lib/upload-limits';
+import { recordActivity } from '@/lib/activity-log';
 
 function buildName(firstName: string, middleName: string, lastName: string, fallback: string) {
   const fullName = [firstName, middleName, lastName].map((part) => part.trim()).filter(Boolean).join(' ');
@@ -98,6 +99,12 @@ export async function PUT(request: NextRequest) {
     departmentId: session.departmentId,
     departmentName: session.departmentName
   };
+
+  await recordActivity({
+    userId: session.id,
+    action: 'PROFILE_UPDATED',
+    details: newPassword ? 'Updated profile information and password.' : 'Updated profile information.'
+  });
 
   const response = NextResponse.json({ user: updatedUser, message: 'Profile updated.' });
   response.cookies.set('session', JSON.stringify(nextSession), getSessionCookieOptions());

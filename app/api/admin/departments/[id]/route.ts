@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { recordActivity } from '@/lib/activity-log';
 
 interface DepartmentRouteProps {
   params: { id: string };
 }
 
 export async function PUT(request: NextRequest, { params }: DepartmentRouteProps) {
+  const session = await getSession();
+  if (!session || session.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
   const body = await request.json();
   const { name, headId } = body;
 
@@ -66,10 +73,21 @@ export async function PUT(request: NextRequest, { params }: DepartmentRouteProps
     });
   });
 
+  await recordActivity({
+    userId: session.id,
+    action: 'DEPARTMENT_UPDATED',
+    details: `Updated department: ${updatedDepartment.name}.`
+  });
+
   return NextResponse.json({ department: updatedDepartment });
 }
 
 export async function DELETE(_request: NextRequest, { params }: DepartmentRouteProps) {
+  const session = await getSession();
+  if (!session || session.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
   const existingDepartment = await prisma.department.findUnique({
     where: { id: params.id },
     include: { _count: { select: { requests: true } } }
@@ -84,6 +102,12 @@ export async function DELETE(_request: NextRequest, { params }: DepartmentRouteP
   }
 
   await prisma.department.delete({ where: { id: params.id } });
+
+  await recordActivity({
+    userId: session.id,
+    action: 'DEPARTMENT_DELETED',
+    details: `Deleted department: ${existingDepartment.name}.`
+  });
 
   return NextResponse.json({ message: 'Department deleted.' });
 }

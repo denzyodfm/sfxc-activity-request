@@ -102,6 +102,15 @@ function MenuIcon({ href }: { href: string }) {
     );
   }
 
+  if (href.startsWith('/activity-logs')) {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h14v18H5V3Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 8h8M8 12h8M8 16h5" />
+      </svg>
+    );
+  }
+
   return (
     <svg {...common}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
@@ -160,6 +169,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/attachments', label: 'Attachments' },
     { href: '/for-voucher', label: 'For Voucher' },
     { href: '/done', label: 'Completed' },
+    { href: '/activity-logs', label: 'Activity Logs' },
     { href: '/admin', label: 'Admin Settings' }
   ]
 };

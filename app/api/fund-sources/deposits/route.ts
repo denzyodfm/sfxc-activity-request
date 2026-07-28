@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { createFundLedgerEntry } from '@/lib/fund-ledger';
+import { recordActivity } from '@/lib/activity-log';
 
 function canManageFunds(role: string) {
   return ['ADMIN', 'FUND_OFFICER'].includes(role);
@@ -51,6 +52,12 @@ export async function POST(request: NextRequest) {
     reference,
     transactionDate: depositDate,
     debit: amount
+  });
+
+  await recordActivity({
+    userId: session.id,
+    action: 'FUND_DEPOSIT_POSTED',
+    details: `Posted PHP ${amount.toLocaleString()} to ${fundSource.name}${reference ? ` (Reference: ${reference})` : ''}.`
   });
 
   return NextResponse.json({ entry, message: 'Deposit posted to ledger.' });

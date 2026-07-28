@@ -3,6 +3,7 @@ import path from 'path';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { recordActivity } from '@/lib/activity-log';
 
 const contentTypes: Record<string, string> = {
   '.gif': 'image/gif',
@@ -30,6 +31,7 @@ export async function GET(
     select: {
       fileName: true,
       fileUrl: true,
+      requestId: true,
       request: {
         select: {
           departmentId: true,
@@ -58,6 +60,13 @@ export async function GET(
     const file = await fs.readFile(filePath);
     const extension = path.extname(storedName).toLowerCase();
     const encodedName = encodeURIComponent(attachment.fileName);
+
+    await recordActivity({
+      userId: session.id,
+      requestId: attachment.requestId,
+      action: 'ATTACHMENT_VIEWED',
+      details: `Viewed attachment: ${attachment.fileName}.`
+    });
 
     return new NextResponse(file, {
       headers: {

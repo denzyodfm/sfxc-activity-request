@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { hashPassword } from '@/lib/password';
+import { getSession } from '@/lib/auth';
+import { recordActivity } from '@/lib/activity-log';
 
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session || session.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
   const body = await request.json();
   const { name, email, role, departmentId, password, isDepartmentHead } = body;
 
@@ -36,6 +43,12 @@ export async function POST(request: NextRequest) {
       passwordHash: hashPassword(password),
       departmentId: departmentId || null
     }
+  });
+
+  await recordActivity({
+    userId: session.id,
+    action: 'USER_CREATED',
+    details: `Created user ${newUser.name} (${newUser.email}) with role ${newUser.role}.`
   });
 
   return NextResponse.json({ user: newUser });

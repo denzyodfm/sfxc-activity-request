@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { recordActivity } from '@/lib/activity-log';
 
 interface UserRouteProps {
   params: { id: string };
 }
 
 export async function PUT(request: NextRequest, { params }: UserRouteProps) {
+  const session = await getSession();
+  if (!session || session.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
   const body = await request.json();
   const { name, email, role, departmentId, isDepartmentHead } = body;
 
@@ -50,10 +57,21 @@ export async function PUT(request: NextRequest, { params }: UserRouteProps) {
     }
   });
 
+  await recordActivity({
+    userId: session.id,
+    action: 'USER_UPDATED',
+    details: `Updated user ${updatedUser.name} (${updatedUser.email}); role: ${updatedUser.role}.`
+  });
+
   return NextResponse.json({ user: updatedUser });
 }
 
 export async function DELETE(_request: NextRequest, { params }: UserRouteProps) {
+  const session = await getSession();
+  if (!session || session.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
   const existingUser = await prisma.user.findUnique({
     where: { id: params.id },
     include: {
@@ -91,6 +109,12 @@ export async function DELETE(_request: NextRequest, { params }: UserRouteProps) 
     });
 
     await tx.user.delete({ where: { id: params.id } });
+  });
+
+  await recordActivity({
+    userId: session.id,
+    action: 'USER_DELETED',
+    details: `Deleted user ${existingUser.name} (${existingUser.email}).`
   });
 
   return NextResponse.json({ message: 'User deleted.' });

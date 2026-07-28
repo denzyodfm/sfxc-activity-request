@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { recordActivity } from '@/lib/activity-log';
 
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session || session.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
   const body = await request.json();
   const { name, headId } = body;
 
@@ -45,6 +52,12 @@ export async function POST(request: NextRequest) {
     }
 
     return department;
+  });
+
+  await recordActivity({
+    userId: session.id,
+    action: 'DEPARTMENT_CREATED',
+    details: `Created department: ${newDept.name}.`
   });
 
   return NextResponse.json({ department: newDept });

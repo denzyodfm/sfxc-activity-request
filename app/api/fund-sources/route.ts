@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { recordActivity } from '@/lib/activity-log';
 
 function canManageFunds(role: string) {
   return ['ADMIN', 'FUND_OFFICER'].includes(role);
@@ -23,6 +24,12 @@ export async function POST(request: NextRequest) {
 
   const fundSource = await prisma.fundSource.create({
     data: { name, description }
+  });
+
+  await recordActivity({
+    userId: session.id,
+    action: 'FUND_SOURCE_CREATED',
+    details: `Created source of fund: ${fundSource.name}.`
   });
 
   return NextResponse.json({ fundSource, message: 'Source of fund created.' });
