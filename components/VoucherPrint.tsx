@@ -133,7 +133,7 @@ export default function VoucherPrint({ request, fallbackReviewerName, fallbackEn
                 {request.attachments.slice(0, 8).map((attachment) => (
                   <div key={attachment.id} className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2 print:block print:border-0 print:p-0">
                     <a
-                      href={attachment.fileUrl}
+                      href={`/api/attachments/${attachment.id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="truncate text-sfxc-green hover:underline print:text-[10px]"
@@ -142,7 +142,7 @@ export default function VoucherPrint({ request, fallbackReviewerName, fallbackEn
                     </a>
                     <div className="flex shrink-0 items-center gap-2 print:hidden">
                       <a
-                        href={attachment.fileUrl}
+                        href={`/api/attachments/${attachment.id}`}
                         target="_blank"
                         rel="noreferrer"
                         className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:border-sfxc-green hover:text-sfxc-green"
@@ -151,7 +151,7 @@ export default function VoucherPrint({ request, fallbackReviewerName, fallbackEn
                       </a>
                       <button
                         type="button"
-                        onClick={() => handlePrintAttachment(attachment.fileUrl)}
+                        onClick={() => handlePrintAttachment(`/api/attachments/${attachment.id}`)}
                         className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-sfxc-green hover:border-sfxc-green"
                       >
                         Print

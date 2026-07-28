@@ -29,7 +29,7 @@ export default function RequestCard({ request }: RequestCardProps) {
             {request.attachments.map((attachment) => (
               <a
                 key={attachment.id}
-                href={attachment.fileUrl}
+                href={`/api/attachments/${attachment.id}`}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-sfxc-green hover:border-sfxc-green"

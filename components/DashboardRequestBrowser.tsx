@@ -13,47 +13,128 @@ export interface DashboardRequestData extends RequestDetailsData {
 const categories = [
   {
     key: 'ALL',
+    icon: 'requests',
     title: 'Requests in the system',
     description: 'Open the complete request list',
     statuses: [] as string[]
   },
   {
     key: 'FOR_FUND_AVAILABILITY',
+    icon: 'fund',
     title: 'Pending Fund',
     description: 'Awaiting fund availability review',
     statuses: ['FOR_FUND_AVAILABILITY']
   },
   {
     key: 'FOR_REVIEW',
+    icon: 'review',
     title: 'Pending Review',
     description: 'Ready for reviewer action',
     statuses: ['FOR_REVIEW']
   },
   {
     key: 'FOR_ENDORSEMENT',
+    icon: 'endorsement',
     title: 'Pending Endorsement',
     description: 'Waiting for endorsement',
     statuses: ['FOR_ENDORSEMENT']
   },
   {
     key: 'FOR_APPROVAL',
+    icon: 'approval',
     title: 'Pending Approval',
     description: 'Awaiting final approver',
     statuses: ['FOR_APPROVAL']
   },
   {
     key: 'APPROVED',
+    icon: 'voucher',
     title: 'For Voucher',
     description: 'Ready for voucher printing',
     statuses: ['APPROVED']
   },
   {
     key: 'COMPLETED',
+    icon: 'completed',
     title: 'Completed',
     description: 'Voucher request completed',
     statuses: ['COMPLETED', 'DONE']
   }
 ];
+
+function CategoryIcon({ icon }: { icon: string }) {
+  const commonProps = {
+    className: 'h-6 w-6',
+    fill: 'none',
+    viewBox: '0 0 24 24',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true
+  };
+
+  if (icon === 'fund') {
+    return (
+      <svg {...commonProps}>
+        <path d="M3 7.5h15.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-12A1.5 1.5 0 0 1 4.5 4H17" />
+        <path d="M16 13h5M17.5 13h.01" />
+      </svg>
+    );
+  }
+
+  if (icon === 'review') {
+    return (
+      <svg {...commonProps}>
+        <path d="M9 5h6M9 3h6v4H9zM7 5H5.5A1.5 1.5 0 0 0 4 6.5v13A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 18.5 5H17" />
+        <path d="m8 14 2.2 2.2L16.5 10" />
+      </svg>
+    );
+  }
+
+  if (icon === 'endorsement') {
+    return (
+      <svg {...commonProps}>
+        <path d="M4 20h16M7 16h10l-1-4a4.1 4.1 0 0 0-8 0l-1 4Z" />
+        <path d="M9 8V5a3 3 0 0 1 6 0v3M6 16v2h12v-2" />
+      </svg>
+    );
+  }
+
+  if (icon === 'approval') {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 3 5 6v5c0 4.6 2.9 8 7 10 4.1-2 7-5.4 7-10V6l-7-3Z" />
+        <path d="m8.5 12 2.2 2.2 4.8-5" />
+      </svg>
+    );
+  }
+
+  if (icon === 'voucher') {
+    return (
+      <svg {...commonProps}>
+        <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+        <path d="M9 8h6M9 12h6M9 16h3" />
+      </svg>
+    );
+  }
+
+  if (icon === 'completed') {
+    return (
+      <svg {...commonProps}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="m8 12 2.7 2.7L16.5 9" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...commonProps}>
+      <path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+      <path d="M7 9h10M7 13h10M7 17h6" />
+    </svg>
+  );
+}
 
 export default function DashboardRequestBrowser({ requests }: { requests: DashboardRequestData[] }) {
   const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number] | null>(null);
@@ -91,10 +172,13 @@ export default function DashboardRequestBrowser({ requests }: { requests: Dashbo
               key={category.key}
               type="button"
               onClick={() => openCategory(category)}
-              className="sfxc-card p-6 text-left transition hover:-translate-y-0.5 hover:border-sfxc-green hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sfxc-green/40"
+              className="group relative sfxc-card p-6 text-left transition hover:-translate-y-0.5 hover:border-sfxc-green hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sfxc-green/40"
               aria-label={`View ${category.title} requests`}
             >
-              <p className={`${category.key === 'ALL' ? 'normal-case tracking-normal' : 'uppercase tracking-[0.24em]'} text-sm text-slate-500`}>
+              <div className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-sfxc-green transition group-hover:border-sfxc-green group-hover:bg-sfxc-green group-hover:text-white">
+                <CategoryIcon icon={category.icon} />
+              </div>
+              <p className={`${category.key === 'ALL' ? 'normal-case tracking-normal' : 'uppercase tracking-[0.24em]'} min-h-10 pr-11 text-sm text-slate-500`}>
                 {category.title}
               </p>
               <p className="mt-3 text-3xl font-semibold text-slate-900">{count}</p>
