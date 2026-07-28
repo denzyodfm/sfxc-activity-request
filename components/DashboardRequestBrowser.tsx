@@ -172,17 +172,17 @@ export default function DashboardRequestBrowser({ requests }: { requests: Dashbo
               key={category.key}
               type="button"
               onClick={() => openCategory(category)}
-              className="group relative sfxc-card p-6 text-left transition hover:-translate-y-0.5 hover:border-sfxc-green hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sfxc-green/40"
+              className="group relative flex h-full flex-col sfxc-card p-6 text-left transition hover:-translate-y-0.5 hover:border-sfxc-green hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sfxc-green/40"
               aria-label={`View ${category.title} requests`}
             >
               <div className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-sfxc-green transition group-hover:border-sfxc-green group-hover:bg-sfxc-green group-hover:text-white">
                 <CategoryIcon icon={category.icon} />
               </div>
-              <p className={`${category.key === 'ALL' ? 'normal-case tracking-normal' : 'uppercase tracking-[0.24em]'} min-h-10 pr-11 text-sm text-slate-500`}>
+              <p className={`${category.key === 'ALL' ? 'normal-case tracking-normal' : 'uppercase tracking-[0.24em]'} min-h-[4.5rem] pr-11 text-sm text-slate-500`}>
                 {category.title}
               </p>
+              <p className="min-h-[4.5rem] text-sm text-slate-500">{category.description}</p>
               <p className="mt-3 text-3xl font-semibold text-slate-900">{count}</p>
-              <p className="mt-2 text-sm text-slate-500">{category.description}</p>
             </button>
           );
         })}
