@@ -17,9 +17,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Request ID and decision are required.' }, { status: 422 });
   }
 
+  if (!['approve', 'return', 'deny'].includes(decision)) {
+    return NextResponse.json({ error: 'Invalid approval decision.' }, { status: 422 });
+  }
+
+  if (decision === 'return' && !remarks?.trim()) {
+    return NextResponse.json({ error: 'Remarks are required when sending a request back.' }, { status: 422 });
+  }
+
   const approved = decision === 'approve';
-  const status = approved ? 'APPROVED' : 'DENIED';
-  const action = approved ? 'APPROVED' : 'DENIED';
+  const returned = decision === 'return';
+  const status = approved ? 'APPROVED' : returned ? 'FOR_ENDORSEMENT' : 'DENIED';
+  const action = approved ? 'APPROVED' : returned ? 'APPROVAL_RETURNED' : 'DENIED';
 
   const existing = await prisma.activityRequest.findUnique({ where: { id: requestId } });
   if (!existing) {
@@ -51,7 +60,8 @@ export async function POST(request: NextRequest) {
     data: {
       approvalRemarks: remarks,
       status,
-      approvedById: approved ? approver?.id ?? null : null
+      approvedById: approved ? approver?.id ?? null : null,
+      finalApprover: returned ? null : existing.finalApprover
     }
   });
 
@@ -72,12 +82,14 @@ export async function POST(request: NextRequest) {
       requestId,
       userId: session.id,
       action,
-      details: `Final approval: ${approved ? 'approved' : 'denied'}`
+      details: `Final approval: ${approved ? 'approved' : returned ? 'sent back to endorser' : 'denied'}`
     }
   });
 
   return NextResponse.json({
-    message: `Request has been ${approved ? 'approved' : 'denied'}.`,
+    message: returned
+      ? 'Request sent back to the endorser.'
+      : `Request has been ${approved ? 'approved' : 'denied'}.`,
     approvalCode,
     approvedAt: approvedAt.toISOString()
   });

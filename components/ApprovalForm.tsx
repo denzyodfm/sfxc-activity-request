@@ -13,7 +13,7 @@ interface ApprovalFormProps {
 
 export default function ApprovalForm({ requestId, request, finalApproverLabel }: ApprovalFormProps) {
   const router = useRouter();
-  const [decision, setDecision] = useState<'approve' | 'deny'>('approve');
+  const [decision, setDecision] = useState<'approve' | 'return' | 'deny'>('approve');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -65,10 +65,11 @@ export default function ApprovalForm({ requestId, request, finalApproverLabel }:
           Decision
           <select
             value={decision}
-            onChange={(event) => setDecision(event.target.value as 'approve' | 'deny')}
+            onChange={(event) => setDecision(event.target.value as 'approve' | 'return' | 'deny')}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
           >
             <option value="approve">Approve</option>
+            <option value="return">Send Back to Endorser</option>
             <option value="deny">Deny</option>
           </select>
         </label>
@@ -78,14 +79,16 @@ export default function ApprovalForm({ requestId, request, finalApproverLabel }:
           <textarea
             value={remarks}
             onChange={(event) => setRemarks(event.target.value)}
+            required={decision === 'return'}
             rows={3}
+            placeholder={decision === 'return' ? 'Explain what attachment, information, or correction is required.' : 'Optional remarks'}
             className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
           />
         </label>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-slate-500">A final approval moves the request to For Voucher.</div>
+        <div className="text-sm text-slate-500">Approve, deny, or send the request back to the endorser with a required explanation.</div>
         <button type="submit" disabled={status === 'saving' || status === 'success'} className="sfxc-button">
           {status === 'saving' ? 'Submitting...' : 'Submit Approval'}
         </button>

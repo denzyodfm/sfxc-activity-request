@@ -17,9 +17,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Request ID and decision are required.' }, { status: 422 });
   }
 
+  if (!['approve', 'return', 'deny'].includes(decision)) {
+    return NextResponse.json({ error: 'Invalid review decision.' }, { status: 422 });
+  }
+
+  if (decision === 'return' && !remarks?.trim()) {
+    return NextResponse.json({ error: 'Remarks are required when sending a request back.' }, { status: 422 });
+  }
+
   const approved = decision === 'approve';
-  const status = approved ? 'FOR_ENDORSEMENT' : 'DENIED';
-  const action = approved ? 'REVIEW_APPROVED' : 'REVIEW_DENIED';
+  const returned = decision === 'return';
+  const status = approved ? 'FOR_ENDORSEMENT' : returned ? 'FOR_FUND_AVAILABILITY' : 'DENIED';
+  const action = approved ? 'REVIEW_APPROVED' : returned ? 'REVIEW_RETURNED' : 'REVIEW_DENIED';
 
   const existing = await prisma.activityRequest.findUnique({
     where: { id: requestId },
@@ -68,12 +77,14 @@ export async function POST(request: NextRequest) {
       requestId,
       userId: session.id,
       action,
-      details: `Review decision recorded: ${approved ? 'approved' : 'denied'}`
+      details: `Review decision recorded: ${approved ? 'approved' : returned ? 'sent back to fund availability' : 'denied'}`
     }
   });
 
   return NextResponse.json({
-    message: `Request marked ${approved ? 'for endorsement' : 'denied'}.`,
+    message: returned
+      ? 'Request sent back to fund availability.'
+      : `Request marked ${approved ? 'for endorsement' : 'denied'}.`,
     approvalCode,
     approvedAt: approvedAt.toISOString()
   });

@@ -11,10 +11,18 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { requestId, approver, remarks } = body;
+  const { requestId, decision = 'endorse', approver, remarks } = body;
 
-  if (!requestId || !approver) {
+  if (!requestId || (decision === 'endorse' && !approver)) {
     return NextResponse.json({ error: 'Request ID and approver selection are required.' }, { status: 422 });
+  }
+
+  if (!['endorse', 'return'].includes(decision)) {
+    return NextResponse.json({ error: 'Invalid endorsement decision.' }, { status: 422 });
+  }
+
+  if (decision === 'return' && !remarks?.trim()) {
+    return NextResponse.json({ error: 'Remarks are required when sending a request back.' }, { status: 422 });
   }
 
   const existing = await prisma.activityRequest.findUnique({
@@ -30,21 +38,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'This request is already past endorsement.' }, { status: 400 });
   }
 
+  const returned = decision === 'return';
+  const action = returned ? 'ENDORSEMENT_RETURNED' : 'ENDORSED';
   const approvedAt = new Date();
   const approvalCode = generateApprovalCode({
     requestId,
     actorId: session.id,
     role: 'ENDORSER',
-    action: 'ENDORSED',
+    action,
     approvedAt
   });
 
   await prisma.activityRequest.update({
     where: { id: requestId },
     data: {
-      finalApprover: approver,
+      finalApprover: returned ? null : approver,
       endorsementRemarks: remarks,
-      status: 'FOR_APPROVAL'
+      status: returned ? 'FOR_REVIEW' : 'FOR_APPROVAL'
     }
   });
 
@@ -53,7 +63,7 @@ export async function POST(request: NextRequest) {
       requestId,
       actorId: session.id,
       role: 'ENDORSER',
-      action: 'ENDORSED',
+      action,
       approvalCode,
       remarks,
       createdAt: approvedAt
@@ -64,13 +74,17 @@ export async function POST(request: NextRequest) {
     data: {
       requestId,
       userId: session.id,
-      action: 'ENDORSED',
-      details: `Endorsed for ${approver === 'APPROVER_JMAPC' ? 'JMAPC' : 'JCA'}.`
+      action,
+      details: returned
+        ? 'Sent back to reviewer for corrections.'
+        : `Endorsed for ${approver === 'APPROVER_JMAPC' ? 'JMAPC' : 'JCA'}.`
     }
   });
 
   return NextResponse.json({
-    message: 'Request endorsed and sent to final approval.',
+    message: returned
+      ? 'Request sent back to the reviewer.'
+      : 'Request endorsed and sent to final approval.',
     approvalCode,
     approvedAt: approvedAt.toISOString()
   });

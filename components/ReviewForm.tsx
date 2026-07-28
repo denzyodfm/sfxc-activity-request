@@ -12,7 +12,7 @@ interface ReviewFormProps {
 
 export default function ReviewForm({ requestId, request }: ReviewFormProps) {
   const router = useRouter();
-  const [decision, setDecision] = useState<'approve' | 'deny'>('approve');
+  const [decision, setDecision] = useState<'approve' | 'return' | 'deny'>('approve');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -63,10 +63,11 @@ export default function ReviewForm({ requestId, request }: ReviewFormProps) {
           Decision
           <select
             value={decision}
-            onChange={(event) => setDecision(event.target.value as 'approve' | 'deny')}
+            onChange={(event) => setDecision(event.target.value as 'approve' | 'return' | 'deny')}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
           >
             <option value="approve">Approve</option>
+            <option value="return">Send Back to Fund Availability</option>
             <option value="deny">Deny</option>
           </select>
         </label>
@@ -75,14 +76,16 @@ export default function ReviewForm({ requestId, request }: ReviewFormProps) {
           <textarea
             value={remarks}
             onChange={(event) => setRemarks(event.target.value)}
+            required={decision === 'return'}
             rows={3}
+            placeholder={decision === 'return' ? 'Explain what attachment, information, or correction is required.' : 'Optional remarks'}
             className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
           />
         </label>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-slate-500">A reviewer decision determines whether the request proceeds to endorsement.</div>
+        <div className="text-sm text-slate-500">You may approve, deny, or send the request back with a required explanation.</div>
         <button type="submit" disabled={status === 'saving' || status === 'success'} className="sfxc-button">
           {status === 'saving' ? 'Saving...' : 'Save Review'}
         </button>

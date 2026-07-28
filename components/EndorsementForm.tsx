@@ -12,6 +12,7 @@ interface EndorsementFormProps {
 
 export default function EndorsementForm({ requestId, request }: EndorsementFormProps) {
   const router = useRouter();
+  const [decision, setDecision] = useState<'endorse' | 'return'>('endorse');
   const [approver, setApprover] = useState<'APPROVER_JMAPC' | 'APPROVER_JCA'>('APPROVER_JMAPC');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -27,7 +28,7 @@ export default function EndorsementForm({ requestId, request }: EndorsementFormP
       const response = await fetch('/api/endorsements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId, approver, remarks })
+        body: JSON.stringify({ requestId, decision, approver, remarks })
       });
       const data = await response.json();
 
@@ -60,10 +61,23 @@ export default function EndorsementForm({ requestId, request }: EndorsementFormP
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <label className="space-y-2 text-sm text-slate-700">
+          Decision
+          <select
+            value={decision}
+            onChange={(event) => setDecision(event.target.value as 'endorse' | 'return')}
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
+          >
+            <option value="endorse">Endorse</option>
+            <option value="return">Send Back to Reviewer</option>
+          </select>
+        </label>
+
+        <label className="space-y-2 text-sm text-slate-700">
           Choose Approver
           <select
             value={approver}
             onChange={(event) => setApprover(event.target.value as 'APPROVER_JMAPC' | 'APPROVER_JCA')}
+            disabled={decision === 'return'}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
           >
             <option value="APPROVER_JMAPC">JMAPC</option>
@@ -71,21 +85,23 @@ export default function EndorsementForm({ requestId, request }: EndorsementFormP
           </select>
         </label>
 
-        <label className="space-y-2 text-sm text-slate-700">
+        <label className="space-y-2 text-sm text-slate-700 md:col-span-2">
           Endorsement Remarks
           <textarea
             value={remarks}
             onChange={(event) => setRemarks(event.target.value)}
+            required={decision === 'return'}
             rows={3}
+            placeholder={decision === 'return' ? 'Explain what attachment, information, or correction is required.' : 'Optional remarks'}
             className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
           />
         </label>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-slate-500">Select the correct final approver before moving to approval stage.</div>
+        <div className="text-sm text-slate-500">Endorse the request or send it back to the reviewer with a required explanation.</div>
         <button type="submit" disabled={status === 'saving' || status === 'success'} className="sfxc-button">
-          {status === 'saving' ? 'Endorsing...' : 'Endorse Request'}
+          {status === 'saving' ? 'Saving...' : decision === 'return' ? 'Send Back' : 'Endorse Request'}
         </button>
       </div>
 
