@@ -68,48 +68,41 @@ export default function FundAvailabilityForm({
   };
 
   return (
-    <form className="sfxc-card p-6" onSubmit={handleSubmit}>
-      <div className="flex justify-end">
-        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Fund Availability</span>
-      </div>
+    <form className="sfxc-card grid gap-3 p-3 md:grid-cols-[180px_1fr_auto] md:items-end" onSubmit={handleSubmit}>
 
       {showRequestDetails ? <RequestDetails request={request} /> : null}
 
-      <label className="mt-5 block space-y-2 text-sm text-slate-700">
+      <label className="block space-y-1 text-sm text-slate-700">
         Availability
         <select
           value={available}
           onChange={(event) => setAvailable(event.target.value as 'true' | 'false')}
           disabled={!canUpdate}
-          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green md:max-w-sm"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sfxc-green"
         >
           <option value="true">Available</option>
           <option value="false">Not Available</option>
         </select>
       </label>
 
-      <label className="mt-4 block text-sm text-slate-700">
+      <label className="block text-sm text-slate-700">
         Remarks
         <textarea
           value={remarks}
           onChange={(event) => setRemarks(event.target.value)}
           disabled={!canUpdate}
-          rows={3}
-          className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
+          rows={1}
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sfxc-green"
         />
       </label>
 
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="text-sm text-slate-500">Completing this step moves the request to review or denies it.</div>
-          {status === 'saving' ? <p className="mt-1 text-sm font-semibold text-sfxc-green">Assigning source of fund...</p> : null}
-        </div>
+      <div>
         <button type="submit" disabled={!canUpdate || !selectedSub || status === 'saving' || status === 'success'} className="sfxc-button">
           {status === 'saving' ? 'Updating...' : 'Update Availability'}
         </button>
       </div>
 
-      <div ref={resultRef}>
+      <div ref={resultRef} className="md:col-span-3">
         {status === 'success' && receipt ? (
           <ApprovalCodeReceipt
             message={message}

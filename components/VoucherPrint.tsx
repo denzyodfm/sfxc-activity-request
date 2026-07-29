@@ -286,7 +286,7 @@ export default function VoucherPrint({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-3 print:hidden">
+      <div className="fixed right-24 top-4 z-[60] flex flex-wrap gap-2 print:hidden">
         {canEdit ? (
           <button type="button" onClick={saveVoucher} disabled={saveStatus === 'saving'} className="sfxc-button">
             {saveStatus === 'saving' ? 'Saving...' : 'Save Voucher'}
@@ -296,8 +296,8 @@ export default function VoucherPrint({
         <button type="button" onClick={downloadExcel} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green hover:bg-emerald-50">
           Download Excel
         </button>
-        {saveMessage ? <p className={`self-center text-sm ${saveStatus === 'error' ? 'text-rose-700' : 'text-emerald-700'}`}>{saveMessage}</p> : null}
       </div>
+      {saveMessage ? <p className={`mt-2 text-sm print:hidden ${saveStatus === 'error' ? 'text-rose-700' : 'text-emerald-700'}`}>{saveMessage}</p> : null}
     </div>
   );
 }

@@ -43,7 +43,7 @@ export default function FundAvailabilityVoucherReview({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <VoucherPrint
         request={request}
         signatories={signatories}
