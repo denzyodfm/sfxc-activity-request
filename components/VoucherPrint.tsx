@@ -152,8 +152,7 @@ export default function VoucherPrint({
     link.click();
     URL.revokeObjectURL(url);
   };
-  const saveVoucher = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const saveVoucher = async () => {
     setSaveStatus('saving');
     setSaveMessage('');
     const response = await fetch(`/api/vouchers/${request.id}`, {
@@ -174,30 +173,6 @@ export default function VoucherPrint({
 
   return (
     <div className="mx-auto max-w-[900px] text-[12px] text-black">
-      {canEdit ? (
-        <form onSubmit={saveVoucher} className="mb-6 grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 text-sm print:hidden md:grid-cols-2">
-          <div className="md:col-span-2">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Voucher Preparation</p>
-            <h1 className="mt-2 text-xl font-semibold text-slate-900">Enter voucher details</h1>
-          </div>
-          <label className="space-y-2 text-slate-700">Pay To / Payee
-            <input required value={payTo} onChange={(event) => setPayTo(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
-          </label>
-          <label className="space-y-2 text-slate-700">Address
-            <input required value={address} onChange={(event) => setAddress(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
-          </label>
-          <label className="space-y-2 text-slate-700">Voucher No. / Control No.
-            <input required value={voucherNumber} onChange={(event) => setVoucherNumber(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
-          </label>
-          <label className="space-y-2 text-slate-700 md:col-span-2">Particulars
-            <textarea required rows={4} value={voucherParticulars} onChange={(event) => setVoucherParticulars(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
-          </label>
-          <div className="flex items-center gap-3 md:col-span-2">
-            <button disabled={saveStatus === 'saving'} className="sfxc-button">{saveStatus === 'saving' ? 'Saving...' : 'Save Voucher Details'}</button>
-            {saveMessage ? <p className={saveStatus === 'error' ? 'text-rose-700' : 'text-emerald-700'}>{saveMessage}</p> : null}
-          </div>
-        </form>
-      ) : null}
       <div className="bg-white p-4 print:p-0">
         <div className="grid grid-cols-[90px_1fr_90px] items-center border border-black p-2 text-center">
           <img src="/sfxc_icon.png" alt="SFXC logo" className="mx-auto h-16 w-16 object-contain" />
@@ -211,11 +186,23 @@ export default function VoucherPrint({
 
         <div className="grid grid-cols-[1fr_225px] border-x border-black">
           <div className="border-r border-black p-2">
-            <p>Pay to: <span className="ml-2 font-bold uppercase underline">{payee}</span></p>
-            <p className="mt-1">Address: <span className="ml-2 font-bold uppercase underline">{address}</span></p>
+            <div className="flex items-center gap-2">Pay to:
+              {canEdit ? (
+                <input required value={payTo} onChange={(event) => setPayTo(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 font-bold uppercase outline-none" />
+              ) : <span className="font-bold uppercase underline">{payee}</span>}
+            </div>
+            <div className="mt-1 flex items-center gap-2">Address:
+              {canEdit ? (
+                <input required value={address} onChange={(event) => setAddress(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 font-bold uppercase outline-none" />
+              ) : <span className="font-bold uppercase underline">{address}</span>}
+            </div>
           </div>
           <div className="p-2">
-            <p>Voucher No.: <span className="float-right font-bold">{voucherNumber}</span></p>
+            <div className="flex items-center gap-2">Voucher No.:
+              {canEdit ? (
+                <input required value={voucherNumber} onChange={(event) => setVoucherNumber(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 text-right font-bold outline-none" />
+              ) : <span className="ml-auto font-bold">{voucherNumber}</span>}
+            </div>
             <p className="mt-1">Date: <span className="float-right font-bold">{new Date(request.date).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</span></p>
           </div>
         </div>
@@ -223,7 +210,15 @@ export default function VoucherPrint({
         <div className="border border-black p-3 text-center">
           <p className="font-bold">PARTICULARS</p>
           <p className="mt-5">To release an amount of <strong>{amountInWords(amount)},</strong></p>
-          <p className="mx-auto mt-2 max-w-3xl whitespace-pre-wrap">{voucherParticulars},</p>
+          {canEdit ? (
+            <textarea
+              required
+              rows={3}
+              value={voucherParticulars}
+              onChange={(event) => setVoucherParticulars(event.target.value)}
+              className="mx-auto mt-2 block w-full max-w-3xl resize-y border-b border-black bg-transparent p-1 text-center outline-none"
+            />
+          ) : <p className="mx-auto mt-2 max-w-3xl whitespace-pre-wrap">{voucherParticulars},</p>}
           <p>as per attached approved request.</p>
         </div>
 
@@ -285,10 +280,16 @@ export default function VoucherPrint({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 print:hidden">
+        {canEdit ? (
+          <button type="button" onClick={saveVoucher} disabled={saveStatus === 'saving'} className="sfxc-button">
+            {saveStatus === 'saving' ? 'Saving...' : 'Save Voucher'}
+          </button>
+        ) : null}
         <button type="button" onClick={() => window.print()} className="sfxc-button">Print Voucher</button>
         <button type="button" onClick={downloadExcel} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green hover:bg-emerald-50">
           Download Excel
         </button>
+        {saveMessage ? <p className={`self-center text-sm ${saveStatus === 'error' ? 'text-rose-700' : 'text-emerald-700'}`}>{saveMessage}</p> : null}
       </div>
     </div>
   );
