@@ -13,7 +13,7 @@ export default async function ForVoucherPage() {
     redirect('/login');
   }
 
-  if (session.role !== 'ADMIN' && session.role !== 'REVIEWER') {
+  if (!['ADMIN', 'REVIEWER', 'FUND_OFFICER'].includes(session.role)) {
     return (
       <section className="space-y-6">
         <div className="sfxc-card p-8 text-center">

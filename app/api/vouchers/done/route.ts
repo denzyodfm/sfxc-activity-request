@@ -6,7 +6,7 @@ import { createFundLedgerEntry, getFundSourceBalance } from '@/lib/fund-ledger';
 export async function POST(request: NextRequest) {
   const session = await getSession();
 
-  if (!session || !['ADMIN', 'REVIEWER'].includes(session.role)) {
+  if (!session || !['ADMIN', 'REVIEWER', 'FUND_OFFICER'].includes(session.role)) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 

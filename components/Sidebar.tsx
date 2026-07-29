@@ -131,6 +131,8 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/fund-availability', label: 'Fund Availability' },
+    { href: '/funds', label: 'Source of Fund' },
+    { href: '/for-voucher', label: 'For Voucher' },
     { href: '/done', label: 'Completed' }
   ],
   REVIEWER: [
