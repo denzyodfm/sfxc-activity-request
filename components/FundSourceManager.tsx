@@ -48,7 +48,10 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
   const [depositDescriptions, setDepositDescriptions] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
   const [message, setMessage] = useState('');
-  const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
+  const [expandedMainId, setExpandedMainId] = useState<string | null>(() => {
+    const firstSubAccount = fundSources.find((source) => source.parentId);
+    return firstSubAccount?.parentId ?? null;
+  });
   const [subAccountNames, setSubAccountNames] = useState<Record<string, string>>({});
   const [subAccountDescriptions, setSubAccountDescriptions] = useState<Record<string, string>>({});
 
