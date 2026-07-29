@@ -3,22 +3,24 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  const trustFund = await prisma.fundSource.findUnique({ where: { name: 'Trust Fund' } });
+  const accounts = await prisma.fundSource.findMany();
+  const normalize = (value) => value.replace(/\p{Cf}/gu, '').trim().toLowerCase();
+  const trustFund = accounts.find((account) => normalize(account.name) === 'trust fund');
   if (!trustFund) throw new Error('Trust Fund main account was not found.');
 
-  const names = ['Test', 'CCJE', 'CCJE Department Fee'];
-  const result = await prisma.fundSource.updateMany({
-    where: { name: { in: names } },
-    data: { parentId: trustFund.id }
-  });
-  const accounts = await prisma.fundSource.findMany({
-    where: { name: { in: names } },
-    include: { parent: { select: { name: true } } },
-    orderBy: { name: 'asc' }
-  });
+  const targetNames = new Set(['test', 'ccje', 'ccje department fee']);
+  const targets = accounts.filter((account) => targetNames.has(normalize(account.name)));
+  await prisma.$transaction(
+    targets.map((account) =>
+      prisma.fundSource.update({
+        where: { id: account.id },
+        data: { name: account.name.replace(/\p{Cf}/gu, '').trim(), parentId: trustFund.id }
+      })
+    )
+  );
 
-  console.log(`Updated ${result.count} account(s).`);
-  accounts.forEach((account) => console.log(`${account.name} -> ${account.parent?.name ?? 'No main account'}`));
+  console.log(`Updated ${targets.length} account(s).`);
+  targets.forEach((account) => console.log(`${JSON.stringify(account.name)} -> ${trustFund.name}`));
 }
 
 main()
