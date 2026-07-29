@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSession } from '@/lib/session-context';
 import LogoMark from './LogoMark';
 
@@ -183,6 +184,7 @@ interface SidebarProps {
 
 export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
   const { user } = useSession();
+  const pathname = usePathname();
 
   const menuItems = user ? (roleMenus[user.role] ?? []) : [];
 
@@ -191,24 +193,30 @@ export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
       <div className="space-y-3">
         <LogoMark size="sm" />
         <div>
-          <p className="whitespace-nowrap text-sm uppercase tracking-[0.18em] text-slate-500">SFXC Activity Request</p>
+          <p className="whitespace-nowrap text-sm uppercase tracking-[0.18em] text-sfxc-green">SFXC Activity Request</p>
         </div>
       </div>
 
       {user ? (
         <>
           <nav className="flex flex-col gap-2">
-            {menuItems.map((item) => (
+            {menuItems.map((item) => {
+              const itemPath = item.href.split('?')[0];
+              const active = itemPath === '/' ? pathname === '/' || pathname === '/dashboard' : pathname.startsWith(itemPath);
+              return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={onNavigate}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-sfxc-green"
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-sfxc-green transition ${
+                  active ? 'bg-emerald-100 text-emerald-900' : 'hover:bg-emerald-50 hover:text-emerald-800'
+                }`}
               >
                 <MenuIcon href={item.href} />
                 <span>{item.label}</span>
               </Link>
-            ))}
+              );
+            })}
           </nav>
         </>
       ) : (
