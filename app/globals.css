@@ -71,10 +71,22 @@ button, input, textarea, select {
 }
 
 @media print {
+  body:has(.voucher-sheet) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.voucher-sheet) .voucher-sheet,
+  body:has(.voucher-sheet) .voucher-sheet * {
+    visibility: visible !important;
+  }
+
   .voucher-sheet {
     page: voucher;
+    position: absolute;
+    inset: 0 auto auto 0;
     width: 8.1in;
     height: 5.1in;
+    margin: 0;
     overflow: hidden;
     font-size: 9px;
   }
