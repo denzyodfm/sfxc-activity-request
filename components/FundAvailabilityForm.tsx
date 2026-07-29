@@ -12,16 +12,18 @@ interface FundAvailabilityFormProps {
   fundSourceId: string | null;
   fundSources: { id: string; name: string; parentId: string | null; balance: number }[];
   showRequestDetails?: boolean;
+  selectedMain: string;
+  selectedSub: string;
+  onSelectedMainChange: (id: string) => void;
+  onSelectedSubChange: (id: string) => void;
 }
 
-export default function FundAvailabilityForm({ requestId, request, fundSourceId, fundSources, showRequestDetails = true }: FundAvailabilityFormProps) {
+export default function FundAvailabilityForm({
+  requestId, request, fundSources, showRequestDetails = true,
+  selectedMain, selectedSub, onSelectedMainChange, onSelectedSubChange
+}: FundAvailabilityFormProps) {
   const router = useRouter();
   const mainAccounts = fundSources.filter((source) => !source.parentId);
-  const existingSource = fundSources.find((source) => source.id === fundSourceId);
-  const initialMainId = existingSource?.parentId ?? existingSource?.id ?? mainAccounts[0]?.id ?? '';
-  const initialSubId = existingSource?.parentId ? existingSource.id : '';
-  const [selectedMain, setSelectedMain] = useState(initialMainId);
-  const [selectedSub, setSelectedSub] = useState(initialSubId);
   const [available, setAvailable] = useState<'true' | 'false'>('true');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -30,7 +32,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
   const resultRef = useRef<HTMLDivElement>(null);
   const canUpdate = request.status === 'FOR_FUND_AVAILABILITY';
   const subAccounts = fundSources.filter((source) => source.parentId === selectedMain);
-  const selectedSource = selectedSub || selectedMain;
+  const selectedSource = selectedSub;
 
   useEffect(() => {
     if (status === 'success' || status === 'error') {
@@ -99,8 +101,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
             value={selectedMain}
             onChange={(event) => {
               const mainId = event.target.value;
-              setSelectedMain(mainId);
-              setSelectedSub(fundSources.find((source) => source.parentId === mainId)?.id ?? '');
+              onSelectedMainChange(mainId);
             }}
             disabled={!canUpdate}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
@@ -115,7 +116,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
           Sub-Account
           <select
             value={selectedSub}
-            onChange={(event) => setSelectedSub(event.target.value)}
+            onChange={(event) => onSelectedSubChange(event.target.value)}
             disabled={!canUpdate || subAccounts.length === 0}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green disabled:opacity-60"
           >
@@ -166,7 +167,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
             </p>
           ) : null}
         </div>
-        <button type="submit" disabled={!canUpdate || status === 'saving' || status === 'success'} className="sfxc-button">
+        <button type="submit" disabled={!canUpdate || !selectedSub || status === 'saving' || status === 'success'} className="sfxc-button">
           {status === 'saving' ? 'Updating...' : 'Update Availability'}
         </button>
       </div>

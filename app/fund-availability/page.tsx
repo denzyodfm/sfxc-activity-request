@@ -1,9 +1,8 @@
 import prisma from '@/lib/prisma';
-import FundAvailabilityForm from '@/components/FundAvailabilityForm';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import VoucherPrint from '@/components/VoucherPrint';
+import FundAvailabilityVoucherReview from '@/components/FundAvailabilityVoucherReview';
 
 export default async function FundAvailabilityPage() {
   const session = await getSession();
@@ -75,18 +74,11 @@ export default async function FundAvailabilityPage() {
 
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Review Funds">
-                <div className="space-y-6">
-                  <VoucherPrint
+                <FundAvailabilityVoucherReview
                     request={request}
+                    requestDetails={requestDetails}
                     signatories={signatories}
                     roleNames={{ jca: jca?.name, jmapc: jmapc?.name }}
-                    canEdit
-                  />
-                  <FundAvailabilityForm
-                    requestId={request.id}
-                    request={requestDetails}
-                    fundSourceId={request.fundSourceId}
-                    showRequestDetails={false}
                     fundSources={fundSources.map((source) => ({
                       id: source.id,
                       name: source.name,
@@ -94,7 +86,6 @@ export default async function FundAvailabilityPage() {
                       balance: Number(source.ledgerEntries[0]?.balanceAfter ?? 0)
                     }))}
                   />
-                </div>
               </RequestQueueItem>
             );
           })

@@ -23,13 +23,32 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const voucherAddress = body.voucherAddress?.toString().trim();
   const voucherNumber = body.voucherNumber?.toString().trim();
   const voucherParticulars = body.voucherParticulars?.toString().trim();
+  const fundSourceId = body.fundSourceId?.toString().trim() || null;
   if (!voucherPayTo || !voucherAddress || !voucherNumber || !voucherParticulars) {
     return NextResponse.json({ error: 'Pay to, address, voucher number, and particulars are required.' }, { status: 422 });
+  }
+  if (existing.status === 'FOR_FUND_AVAILABILITY') {
+    if (!fundSourceId) {
+      return NextResponse.json({ error: 'Please select a voucher sub-account.' }, { status: 422 });
+    }
+    const fundSource = await prisma.fundSource.findUnique({
+      where: { id: fundSourceId },
+      select: { parentId: true }
+    });
+    if (!fundSource?.parentId) {
+      return NextResponse.json({ error: 'The voucher account must be a sub-account.' }, { status: 422 });
+    }
   }
 
   const updated = await prisma.activityRequest.update({
     where: { id: existing.id },
-    data: { voucherPayTo, voucherAddress, voucherNumber, voucherParticulars }
+    data: {
+      voucherPayTo,
+      voucherAddress,
+      voucherNumber,
+      voucherParticulars,
+      ...(existing.status === 'FOR_FUND_AVAILABILITY' ? { fundSourceId } : {})
+    }
   });
   await recordActivity({
     userId: session.id,

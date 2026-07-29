@@ -23,6 +23,11 @@ interface VoucherPrintProps {
   signatories: Signatory[];
   roleNames: { jca?: string; jmapc?: string };
   canEdit?: boolean;
+  fundAccountOptions?: { id: string; name: string; mainAccountName: string }[];
+  selectedFundSourceId?: string;
+  onFundSourceChange?: (id: string) => void;
+  selectedAccountName?: string;
+  selectedFundName?: string;
 }
 
 function wordsBelowThousand(value: number) {
@@ -77,7 +82,10 @@ function Signature({ label, name, title }: { label: string; name?: string | null
   );
 }
 
-export default function VoucherPrint({ request, signatories, roleNames, canEdit = false }: VoucherPrintProps) {
+export default function VoucherPrint({
+  request, signatories, roleNames, canEdit = false, fundAccountOptions,
+  selectedFundSourceId, onFundSourceChange, selectedAccountName, selectedFundName
+}: VoucherPrintProps) {
   const [payTo, setPayTo] = useState(request.voucherPayTo ?? request.requestedBy.name);
   const [address, setAddress] = useState(request.voucherAddress ?? request.department.name);
   const [voucherNumber, setVoucherNumber] = useState(request.voucherNumber ?? request.controlNumber);
@@ -95,8 +103,8 @@ export default function VoucherPrint({ request, signatories, roleNames, canEdit 
   const president = setting('PRESIDENT');
   const amount = Number(request.amount);
   const payee = payTo;
-  const accountName = request.fundSource?.parent?.name ?? request.fundSource?.name ?? 'UNASSIGNED FUND';
-  const fundName = request.fundSource?.parent ? request.fundSource.name : request.fundSource?.name ?? 'UNASSIGNED';
+  const accountName = selectedAccountName ?? request.fundSource?.parent?.name ?? request.fundSource?.name ?? 'UNASSIGNED FUND';
+  const fundName = selectedFundName ?? (request.fundSource?.parent ? request.fundSource.name : request.fundSource?.name ?? 'UNASSIGNED');
   const downloadExcel = () => {
     const rows: Array<[string, string | number]> = [
       ['DISBURSEMENT VOUCHER', ''],
@@ -151,7 +159,13 @@ export default function VoucherPrint({ request, signatories, roleNames, canEdit 
     const response = await fetch(`/api/vouchers/${request.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ voucherPayTo: payTo, voucherAddress: address, voucherNumber, voucherParticulars })
+      body: JSON.stringify({
+        voucherPayTo: payTo,
+        voucherAddress: address,
+        voucherNumber,
+        voucherParticulars,
+        fundSourceId: selectedFundSourceId
+      })
     });
     const data = await response.json();
     setSaveStatus(response.ok ? 'success' : 'error');
@@ -217,7 +231,21 @@ export default function VoucherPrint({ request, signatories, roleNames, canEdit 
           <div className="border-x border-b border-black">
             <p className="border-b border-black py-1 text-center font-bold">Accounts (For Accounting Use only)</p>
             <div className="grid min-h-[78px] grid-cols-[1fr_140px]">
-              <p className="p-2 font-bold uppercase">{accountName}</p>
+              <div className="p-2 font-bold uppercase">
+                {fundAccountOptions && onFundSourceChange ? (
+                  <select
+                    required
+                    value={selectedFundSourceId ?? ''}
+                    onChange={(event) => onFundSourceChange(event.target.value)}
+                    className="w-full border border-slate-300 bg-white px-2 py-1 font-bold uppercase print:appearance-none print:border-0"
+                  >
+                    <option value="">Select sub-account</option>
+                    {fundAccountOptions.map((account) => (
+                      <option key={account.id} value={account.id}>{account.name}</option>
+                    ))}
+                  </select>
+                ) : fundName}
+              </div>
               <div className="border-l border-black p-2 text-right font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
             </div>
             <div className="grid grid-cols-[1fr_140px] border-t border-black">
@@ -233,7 +261,7 @@ export default function VoucherPrint({ request, signatories, roleNames, canEdit 
 
         <div className="grid grid-cols-[230px_1fr] border-x border-b border-black">
           <div className="border-r border-black p-2">
-            <p>Fund Type: <strong className="float-right">TRUST FUND</strong></p>
+            <p>Fund Type: <strong className="float-right uppercase">{accountName}</strong></p>
             <p className="mt-2">Fund Name: <strong className="float-right uppercase">{fundName}</strong></p>
             <p className="mt-2">Date Requested: <strong className="float-right">{new Date(request.date).toLocaleDateString()}</strong></p>
           </div>
