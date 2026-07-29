@@ -13,6 +13,11 @@ async function main() {
     targetNames.has(normalize(account.name)) ||
     normalize(account.description ?? '') === 'for crim act'
   );
+  console.log('Accounts:', accounts.map((account) => ({
+    name: account.name,
+    description: account.description,
+    parentId: account.parentId
+  })));
   await prisma.$transaction(
     targets.map((account) =>
       prisma.fundSource.update({
