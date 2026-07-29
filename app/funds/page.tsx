@@ -46,6 +46,7 @@ export default async function FundsPage() {
         id: source.id,
         name: source.name,
         description: source.description,
+        parentId: source.parentId,
         balance: Number(latestEntry?.balanceAfter ?? 0),
         totalDebit: Number(totals._sum.debit ?? 0),
         totalCredit: Number(totals._sum.credit ?? 0),

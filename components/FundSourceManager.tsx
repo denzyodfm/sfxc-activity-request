@@ -22,6 +22,7 @@ export interface FundSourceSummary {
   id: string;
   name: string;
   description?: string | null;
+  parentId?: string | null;
   balance: number;
   totalDebit: number;
   totalCredit: number;
@@ -38,6 +39,8 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
   const [sourceName, setSourceName] = useState('');
   const [sourceDescription, setSourceDescription] = useState('');
+  const [accountType, setAccountType] = useState<'main' | 'sub'>('main');
+  const [parentId, setParentId] = useState('');
   const [depositAmounts, setDepositAmounts] = useState<Record<string, string>>({});
   const [depositDates, setDepositDates] = useState<Record<string, string>>({});
   const [depositReferences, setDepositReferences] = useState<Record<string, string>>({});
@@ -66,7 +69,11 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
     const response = await fetch('/api/fund-sources', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: sourceName, description: sourceDescription })
+      body: JSON.stringify({
+        name: sourceName,
+        description: sourceDescription,
+        parentId: accountType === 'sub' ? parentId : null
+      })
     });
     const data = await response.json();
 
@@ -78,6 +85,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
 
     setSourceName('');
     setSourceDescription('');
+    setParentId('');
     setStatus('success');
     setMessage(data.message || 'Source of fund created.');
     router.refresh();
@@ -133,9 +141,35 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
         </div>
       </div>
 
-      <form className="sfxc-card grid gap-4 p-6 md:grid-cols-[1fr_1fr_auto]" onSubmit={createSource}>
+      <form className="sfxc-card grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-[180px_1fr_1fr_1fr_auto]" onSubmit={createSource}>
         <label className="space-y-2 text-sm text-slate-700">
-          Source of Fund Name
+          Account Type
+          <select
+            value={accountType}
+            onChange={(event) => setAccountType(event.target.value as 'main' | 'sub')}
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
+          >
+            <option value="main">Main Account</option>
+            <option value="sub">Sub-Account</option>
+          </select>
+        </label>
+        <label className="space-y-2 text-sm text-slate-700">
+          Main Account
+          <select
+            value={parentId}
+            onChange={(event) => setParentId(event.target.value)}
+            disabled={accountType === 'main'}
+            required={accountType === 'sub'}
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green disabled:opacity-50"
+          >
+            <option value="">Select main account</option>
+            {fundSources.filter((source) => !source.parentId).map((source) => (
+              <option key={source.id} value={source.id}>{source.name}</option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm text-slate-700">
+          Account Name
           <input
             value={sourceName}
             onChange={(event) => setSourceName(event.target.value)}
@@ -168,7 +202,9 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
           <article key={source.id} className="sfxc-card p-5">
             <div className="grid gap-4 lg:grid-cols-[1fr_160px_160px_160px_auto] lg:items-center">
               <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Source of Fund</p>
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  {source.parentId ? `Sub-Account of ${fundSources.find((item) => item.id === source.parentId)?.name ?? 'Main Account'}` : 'Main Account'}
+                </p>
                 <h2 className="mt-2 text-xl font-semibold text-slate-900">{source.name}</h2>
                 {source.description ? <p className="mt-2 text-sm text-slate-600">{source.description}</p> : null}
               </div>

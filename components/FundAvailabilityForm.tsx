@@ -10,12 +10,17 @@ interface FundAvailabilityFormProps {
   requestId: string;
   request: RequestDetailsData;
   fundSourceId: string | null;
-  fundSources: { id: string; name: string; balance: number }[];
+  fundSources: { id: string; name: string; parentId: string | null; balance: number }[];
 }
 
 export default function FundAvailabilityForm({ requestId, request, fundSourceId, fundSources }: FundAvailabilityFormProps) {
   const router = useRouter();
-  const [selectedSource, setSelectedSource] = useState(fundSourceId ?? fundSources[0]?.id ?? '');
+  const mainAccounts = fundSources.filter((source) => !source.parentId);
+  const existingSource = fundSources.find((source) => source.id === fundSourceId);
+  const initialMainId = existingSource?.parentId ?? existingSource?.id ?? mainAccounts[0]?.id ?? '';
+  const initialSubId = existingSource?.parentId ? existingSource.id : '';
+  const [selectedMain, setSelectedMain] = useState(initialMainId);
+  const [selectedSub, setSelectedSub] = useState(initialSubId);
   const [available, setAvailable] = useState<'true' | 'false'>('true');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -23,6 +28,8 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
   const [receipt, setReceipt] = useState<{ approvalCode: string; approvedAt: string } | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const canUpdate = request.status === 'FOR_FUND_AVAILABILITY';
+  const subAccounts = fundSources.filter((source) => source.parentId === selectedMain);
+  const selectedSource = selectedSub || selectedMain;
 
   useEffect(() => {
     if (status === 'success' || status === 'error') {
@@ -84,18 +91,43 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
         <label className="space-y-2 text-sm text-slate-700">
-          Source of Fund
+          Main Account
           <select
-            value={selectedSource}
-            onChange={(event) => setSelectedSource(event.target.value)}
+            value={selectedMain}
+            onChange={(event) => {
+              const mainId = event.target.value;
+              setSelectedMain(mainId);
+              setSelectedSub(fundSources.find((source) => source.parentId === mainId)?.id ?? '');
+            }}
             disabled={!canUpdate}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
           >
-            {fundSources.map((source) => (
+            {mainAccounts.map((source) => (
               <option key={source.id} value={source.id}>{source.name} - {formatMoney(source.balance)}</option>
             ))}
+          </select>
+        </label>
+
+        <label className="space-y-2 text-sm text-slate-700">
+          Sub-Account
+          <select
+            value={selectedSub}
+            onChange={(event) => setSelectedSub(event.target.value)}
+            disabled={!canUpdate || subAccounts.length === 0}
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green disabled:opacity-60"
+          >
+            {subAccounts.length === 0 ? (
+              <option value="">No sub-accounts — use main account</option>
+            ) : (
+              <>
+                <option value="">Use main account</option>
+                {subAccounts.map((source) => (
+                  <option key={source.id} value={source.id}>{source.name} - {formatMoney(source.balance)}</option>
+                ))}
+              </>
+            )}
           </select>
         </label>
 

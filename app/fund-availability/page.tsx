@@ -21,6 +21,7 @@ export default async function FundAvailabilityPage() {
       select: {
         id: true,
         name: true,
+        parentId: true,
         ledgerEntries: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -68,6 +69,7 @@ export default async function FundAvailabilityPage() {
                   fundSources={fundSources.map((source) => ({
                     id: source.id,
                     name: source.name,
+                    parentId: source.parentId,
                     balance: Number(source.ledgerEntries[0]?.balanceAfter ?? 0)
                   }))}
                 />

@@ -44,8 +44,13 @@ model FundSource {
   id            String            @id @default(cuid())
   name          String            @unique
   description   String?
+  parent        FundSource?       @relation("FundSubAccounts", fields: [parentId], references: [id])
+  parentId      String?
+  subAccounts   FundSource[]      @relation("FundSubAccounts")
   requests      ActivityRequest[]
   ledgerEntries FundLedgerEntry[]
+
+  @@index([parentId])
 }
 
 model ActivityRequest {
