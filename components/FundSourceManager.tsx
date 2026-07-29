@@ -112,6 +112,32 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
     setParentId('');
   };
 
+  const deleteSource = async (source: FundSourceSummary) => {
+    const confirmation = window.prompt(`Delete "${source.name}"?\n\nType DELETE exactly to confirm.`);
+    if (confirmation === null) return;
+    if (confirmation !== 'DELETE') {
+      setStatus('error');
+      setMessage('Account was not deleted. Type DELETE exactly to confirm.');
+      return;
+    }
+
+    setStatus('saving');
+    setMessage('');
+    const response = await fetch('/api/fund-sources', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: source.id, confirmation })
+    });
+    const data = await response.json();
+    setStatus(response.ok ? 'success' : 'error');
+    setMessage(response.ok ? data.message : data.error || 'Unable to delete source of fund.');
+    if (response.ok) {
+      if (selectedSourceId === source.id) setSelectedSourceId(null);
+      if (editingId === source.id) cancelEdit();
+      router.refresh();
+    }
+  };
+
   const postDeposit = async (event: React.FormEvent<HTMLFormElement>, fundSourceId: string) => {
     event.preventDefault();
     setStatus('saving');
@@ -248,6 +274,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => editSource(source)} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green">Edit</button>
+                <button type="button" onClick={() => deleteSource(source)} className="rounded-2xl border border-rose-300 px-4 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50">Delete</button>
                 <button type="button" onClick={() => setSelectedSourceId(source.id)} className="sfxc-button">View</button>
               </div>
             </div>

@@ -92,3 +92,45 @@ export async function PATCH(request: NextRequest) {
   });
   return NextResponse.json({ fundSource, message: 'Source of fund updated.' });
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = await getSession();
+  if (!session || !canManageFunds(session.role)) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const id = body.id?.toString().trim();
+  const confirmation = body.confirmation?.toString();
+  if (!id || confirmation !== 'DELETE') {
+    return NextResponse.json({ error: 'Type DELETE exactly to confirm account deletion.' }, { status: 422 });
+  }
+
+  const source = await prisma.fundSource.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      _count: { select: { subAccounts: true, requests: true, ledgerEntries: true } }
+    }
+  });
+  if (!source) return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
+
+  if (source._count.subAccounts > 0) {
+    return NextResponse.json({ error: 'This main account still has sub-accounts. Delete or reassign them first.' }, { status: 409 });
+  }
+  if (source._count.requests > 0) {
+    return NextResponse.json({ error: 'This account is assigned to existing requests and cannot be deleted.' }, { status: 409 });
+  }
+  if (source._count.ledgerEntries > 0) {
+    return NextResponse.json({ error: 'This account has ledger history and cannot be deleted.' }, { status: 409 });
+  }
+
+  await prisma.fundSource.delete({ where: { id: source.id } });
+  await recordActivity({
+    userId: session.id,
+    action: 'FUND_SOURCE_DELETED',
+    details: `Deleted source of fund: ${source.name}.`
+  });
+  return NextResponse.json({ message: `${source.name} was deleted.` });
+}
