@@ -70,9 +70,9 @@ function escapeXml(value: string) {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function Signature({ label, name, title }: { label: string; name?: string | null; title?: string | null }) {
+function Signature({ label, name, title, className = '' }: { label: string; name?: string | null; title?: string | null; className?: string }) {
   return (
-    <div className="min-h-[105px] border border-black p-2 text-center">
+    <div className={`min-h-[105px] border border-black p-2 text-center ${className}`}>
       <p className="text-left text-[10px] italic">{label}</p>
       <div className="mt-8">
         <p className="font-bold uppercase underline">{name || '____________________________'}</p>
@@ -274,8 +274,8 @@ export default function VoucherPrint({
         </div>
         <div className="grid grid-cols-3">
           <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} />
-          <Signature label="APPROVED:" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} />
-          <Signature label="APPROVED:" name={president?.name} title={president?.title ?? 'President'} />
+          <Signature label="APPROVED:" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} className="border-r-0" />
+          <Signature label="APPROVED:" name={president?.name} title={president?.title ?? 'President'} className="border-l-0" />
         </div>
       </div>
 
