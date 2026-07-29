@@ -59,6 +59,10 @@ function amountInWords(amount: number) {
   return `${parts.join(' ').toUpperCase()} PESOS ONLY`;
 }
 
+function escapeXml(value: string) {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function Signature({ label, name, title }: { label: string; name?: string | null; title?: string | null }) {
   return (
     <div className="min-h-[105px] border border-black p-2 text-center">
@@ -85,6 +89,53 @@ export default function VoucherPrint({ request, signatories, roleNames }: Vouche
   const payee = request.requestedBy.name;
   const accountName = request.fundSource?.parent?.name ?? request.fundSource?.name ?? 'UNASSIGNED FUND';
   const fundName = request.fundSource?.parent ? request.fundSource.name : request.fundSource?.name ?? 'UNASSIGNED';
+  const downloadExcel = () => {
+    const rows: Array<[string, string | number]> = [
+      ['DISBURSEMENT VOUCHER', ''],
+      ['Pay To', payee],
+      ['Address', request.department.name],
+      ['Voucher / Control No.', request.controlNumber],
+      ['Date', new Date(request.date).toISOString()],
+      ['Particulars', request.particulars],
+      ['Amount in Words', amountInWords(amount)],
+      ['Main Account', accountName],
+      ['Fund / Sub-Account', fundName],
+      ['Amount', amount],
+      ['Payee', payee],
+      ['Prepared By', fundOfficer ?? ''],
+      ['Checked By', reviewer ?? ''],
+      ['Verified By', endorser ?? ''],
+      ['Recommending Approval', recommending ?? ''],
+      ['Approved By - JMAPC', approved ?? ''],
+      ['Approved By - President', president?.name ?? '']
+    ];
+    const xmlRows = rows.map((row, index) =>
+      `<Row>${row.map((cell, column) => {
+        const isAmount = index === 9 && column === 1;
+        const isDate = index === 4 && column === 1;
+        return `<Cell ss:StyleID="${index === 0 ? 'Title' : column === 0 ? 'Label' : isAmount ? 'Amount' : isDate ? 'Date' : 'Body'}"><Data ss:Type="${isAmount ? 'Number' : isDate ? 'DateTime' : 'String'}">${escapeXml(String(cell))}</Data></Cell>`;
+      }).join('')}</Row>`
+    ).join('');
+    const workbook = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Title"><Font ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/><Interior ss:Color="#065F46" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="Label"><Font ss:Bold="1"/><Interior ss:Color="#E2E8F0" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="Body"><Alignment ss:Vertical="Top" ss:WrapText="1"/></Style>
+  <Style ss:ID="Amount"><NumberFormat ss:Format="&quot;PHP&quot; #,##0.00"/></Style>
+  <Style ss:ID="Date"><NumberFormat ss:Format="mmmm d, yyyy"/></Style>
+ </Styles>
+ <Worksheet ss:Name="Voucher"><Table><Column ss:Width="175"/><Column ss:Width="420"/>${xmlRows}</Table></Worksheet>
+</Workbook>`;
+    const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `voucher-${request.controlNumber}.xls`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="mx-auto max-w-[900px] text-[12px] text-black">
@@ -160,8 +211,11 @@ export default function VoucherPrint({ request, signatories, roleNames }: Vouche
         </div>
       </div>
 
-      <div className="mt-4 print:hidden">
+      <div className="mt-4 flex flex-wrap gap-3 print:hidden">
         <button type="button" onClick={() => window.print()} className="sfxc-button">Print Voucher</button>
+        <button type="button" onClick={downloadExcel} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green hover:bg-emerald-50">
+          Download Excel
+        </button>
       </div>
     </div>
   );

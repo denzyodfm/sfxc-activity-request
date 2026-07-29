@@ -49,7 +49,7 @@ export default async function DonePage() {
                   <h2 className="mt-1 text-lg font-semibold text-slate-900">{request.particulars}</h2>
                 </div>
                 <Link href={`/voucher/${request.id}`} className="sfxc-button">
-                  Print Again
+                  View
                 </Link>
               </div>
               <RequestDetails
