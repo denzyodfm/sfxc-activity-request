@@ -133,3 +133,11 @@ model AuditLog {
   details   String?
   createdAt DateTime         @default(now())
 }
+
+model VoucherSignatory {
+  id        String   @id @default(cuid())
+  slot      String   @unique
+  name      String
+  title     String?
+  updatedAt DateTime @updatedAt
+}

@@ -1,179 +1,167 @@
 'use client';
 
 import { ActivityRequest } from '@prisma/client';
-import LogoMark from './LogoMark';
+
+interface Signatory {
+  slot: string;
+  name: string;
+  title: string | null;
+}
 
 interface VoucherPrintProps {
   request: ActivityRequest & {
     department: { name: string };
     requestedBy: { name: string };
-    approvedBy?: { name: string } | null;
-    fundSource?: { name: string } | null;
-    attachments: { id: string; fileName: string; fileUrl: string }[];
+    fundSource?: { name: string; parent?: { name: string } | null } | null;
     approvals: {
       role: string;
       action: string;
-      approvalCode: string | null;
-      createdAt: Date;
       actor: { name: string; role: string };
     }[];
   };
-  fallbackReviewerName?: string;
-  fallbackEndorserName?: string;
+  signatories: Signatory[];
+  roleNames: { jca?: string; jmapc?: string };
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function wordsBelowThousand(value: number) {
+  const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  const parts: string[] = [];
+  if (value >= 100) {
+    parts.push(`${ones[Math.floor(value / 100)]} hundred`);
+    value %= 100;
+  }
+  if (value >= 20) {
+    parts.push(tens[Math.floor(value / 10)]);
+    value %= 10;
+  }
+  if (value > 0) parts.push(ones[value]);
+  return parts.join(' ');
+}
+
+function amountInWords(amount: number) {
+  const whole = Math.floor(amount);
+  if (whole === 0) return 'ZERO PESOS ONLY';
+  const groups = [
+    { value: 1_000_000_000, label: 'billion' },
+    { value: 1_000_000, label: 'million' },
+    { value: 1_000, label: 'thousand' }
+  ];
+  let remainder = whole;
+  const parts: string[] = [];
+  groups.forEach((group) => {
+    if (remainder >= group.value) {
+      parts.push(`${wordsBelowThousand(Math.floor(remainder / group.value))} ${group.label}`);
+      remainder %= group.value;
+    }
+  });
+  if (remainder) parts.push(wordsBelowThousand(remainder));
+  return `${parts.join(' ').toUpperCase()} PESOS ONLY`;
+}
+
+function Signature({ label, name, title }: { label: string; name?: string | null; title?: string | null }) {
   return (
-    <div className="rounded-2xl border border-slate-200 p-3 print:rounded-md print:p-2">
-      <p className="text-xs uppercase tracking-[0.16em] text-slate-500 print:text-[9px]">{label}</p>
-      <div className="mt-1 text-sm font-medium text-slate-900 print:text-[11px]">{children}</div>
+    <div className="min-h-[105px] border border-black p-2 text-center">
+      <p className="text-left text-[10px] italic">{label}</p>
+      <div className="mt-8">
+        <p className="font-bold uppercase underline">{name || '____________________________'}</p>
+        <p className="mt-1 text-[10px] italic">{title || ''}</p>
+      </div>
     </div>
   );
 }
 
-function ApproverField({
-  label,
-  name,
-  record
-}: {
-  label: string;
-  name: string | null | undefined;
-  record?: { approvalCode: string | null; createdAt: Date };
-}) {
-  return (
-    <Field label={label}>
-      <p>{name ?? 'Pending'}</p>
-      {record?.approvalCode ? (
-        <div className="mt-2 border-t border-slate-100 pt-2">
-          <p className="font-mono text-xs font-bold tracking-[0.14em] text-slate-700 print:text-[9px]">
-            {record.approvalCode}
-          </p>
-          <p className="mt-1 text-xs font-normal text-slate-500 print:text-[8px]">
-            {new Date(record.createdAt).toLocaleString()}
-          </p>
-        </div>
-      ) : null}
-    </Field>
-  );
-}
-
-export default function VoucherPrint({ request, fallbackReviewerName, fallbackEndorserName }: VoucherPrintProps) {
-  const approverLabels: Record<string, string> = {
-    APPROVER_JMAPC: 'JMAPC Approver',
-    APPROVER_JCA: 'JCA Approver'
-  };
-  const fundRecord = request.approvals.find(
-    (approval) => approval.role === 'FUND_OFFICER' && approval.action === 'FUND_AVAILABLE'
-  );
-  const reviewRecord = request.approvals.find((approval) => approval.role === 'REVIEWER' && approval.action === 'REVIEW_APPROVED');
-  const endorsementRecord = request.approvals.find((approval) => approval.role === 'ENDORSER' && approval.action === 'ENDORSED');
-  const finalApprovalRecord = request.approvals.find(
-    (approval) => ['APPROVER_JMAPC', 'APPROVER_JCA', 'ADMIN'].includes(approval.role) && approval.action === 'APPROVED'
-  );
-  const fundOfficerName = fundRecord?.actor.name;
-  const reviewedByName = reviewRecord?.actor.name ?? (request.reviewRemarks ? fallbackReviewerName : null);
-  const endorsedByName = endorsementRecord?.actor.name ?? (request.endorsementRemarks ? fallbackEndorserName : null);
-  const approvedByName =
-    finalApprovalRecord?.actor.name ??
-    request.approvedBy?.name ??
-    (request.finalApprover ? approverLabels[request.finalApprover] : null);
-  const handlePrintAttachment = (fileUrl: string) => {
-    const printWindow = window.open(fileUrl, '_blank', 'noopener,noreferrer');
-
-    if (printWindow) {
-      printWindow.addEventListener('load', () => {
-        printWindow.focus();
-        printWindow.print();
-      });
-    }
-  };
+export default function VoucherPrint({ request, signatories, roleNames }: VoucherPrintProps) {
+  const setting = (slot: string) => signatories.find((item) => item.slot === slot);
+  const approval = (role: string, action: string) =>
+    request.approvals.find((item) => item.role === role && item.action === action);
+  const fundOfficer = approval('FUND_OFFICER', 'FUND_AVAILABLE')?.actor.name ?? setting('PREPARED_BY')?.name;
+  const reviewer = approval('REVIEWER', 'REVIEW_APPROVED')?.actor.name ?? setting('CHECKED_BY')?.name;
+  const endorser = approval('ENDORSER', 'ENDORSED')?.actor.name ?? setting('VERIFIED_BY')?.name;
+  const recommending = setting('RECOMMENDING_APPROVAL')?.name ?? roleNames.jca;
+  const approved = setting('APPROVED_BY')?.name ?? roleNames.jmapc;
+  const president = setting('PRESIDENT');
+  const amount = Number(request.amount);
+  const payee = request.requestedBy.name;
+  const accountName = request.fundSource?.parent?.name ?? request.fundSource?.name ?? 'UNASSIGNED FUND';
+  const fundName = request.fundSource?.parent ? request.fundSource.name : request.fundSource?.name ?? 'UNASSIGNED';
 
   return (
-    <div className="space-y-4 print:space-y-0">
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none">
-        <div className="mb-4 text-center print:mb-2">
-          <div className="mx-auto inline-block">
-            <LogoMark size="sm" />
+    <div className="mx-auto max-w-[900px] text-[12px] text-black">
+      <div className="bg-white p-4 print:p-0">
+        <div className="grid grid-cols-[90px_1fr_90px] items-center border border-black p-2 text-center">
+          <img src="/sfxc_icon.png" alt="SFXC logo" className="mx-auto h-16 w-16 object-contain" />
+          <div>
+            <p className="text-base font-bold">ST. FRANCIS XAVIER COLLEGE</p>
+            <p>San Francisco, Agusan del Sur</p>
+            <p className="mt-2 text-sm font-bold">DISBURSEMENT VOUCHER</p>
           </div>
-          <p className="mt-1 text-xs uppercase tracking-[0.28em] text-slate-500 print:text-[9px]">Activity Request Voucher</p>
+          <div />
         </div>
 
-        <div className="grid gap-3 md:grid-cols-4 print:grid-cols-4 print:gap-2">
-          <Field label="Control No.">{request.controlNumber}</Field>
-          <Field label="Date">{new Date(request.date).toLocaleDateString()}</Field>
-          <Field label="Status">{request.status.replace(/_/g, ' ')}</Field>
-          <Field label="Amount">PHP {Number(request.amount).toLocaleString()}</Field>
+        <div className="grid grid-cols-[1fr_225px] border-x border-black">
+          <div className="border-r border-black p-2">
+            <p>Pay to: <span className="ml-2 font-bold uppercase underline">{payee}</span></p>
+            <p className="mt-1">Address: <span className="ml-2 font-bold uppercase underline">{request.department.name}</span></p>
+          </div>
+          <div className="p-2">
+            <p>Voucher No.: <span className="float-right font-bold">{request.controlNumber}</span></p>
+            <p className="mt-1">Date: <span className="float-right font-bold">{new Date(request.date).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</span></p>
+          </div>
         </div>
 
-        <div className="mt-3 grid gap-3 md:grid-cols-3 print:mt-2 print:grid-cols-3 print:gap-2">
-          <Field label="Department">{request.department.name}</Field>
-          <Field label="Prepared By">{request.requestedBy.name}</Field>
-          <Field label="Source of Fund">{request.fundSource?.name ?? 'TBD'}</Field>
+        <div className="border border-black p-3 text-center">
+          <p className="font-bold">PARTICULARS</p>
+          <p className="mt-5">To release an amount of <strong>{amountInWords(amount)},</strong></p>
+          <p className="mx-auto mt-2 max-w-3xl whitespace-pre-wrap">{request.particulars},</p>
+          <p>as per attached approved request.</p>
         </div>
 
-        <div className="mt-3 print:mt-2">
-          <Field label="Particulars">
-            <p className="line-clamp-4 whitespace-pre-wrap print:line-clamp-none">{request.particulars}</p>
-          </Field>
+        <div className="grid grid-cols-[1fr_220px]">
+          <div className="border-x border-b border-black">
+            <p className="border-b border-black py-1 text-center font-bold">Accounts (For Accounting Use only)</p>
+            <div className="grid min-h-[78px] grid-cols-[1fr_140px]">
+              <p className="p-2 font-bold uppercase">{accountName}</p>
+              <div className="border-l border-black p-2 text-right font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div className="grid grid-cols-[1fr_140px] border-t border-black">
+              <p className="p-2 text-center font-bold">VOUCHER PAYABLE</p>
+              <p className="border-l border-black p-2 text-right font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+            </div>
+          </div>
+          <div className="border-r border-b border-black">
+            <p className="border-b border-black py-1 text-center font-bold">Amount</p>
+            <p className="mt-12 px-3 text-right text-sm font-bold">PHP {amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+          </div>
         </div>
 
-        <div className="mt-3 grid gap-3 md:grid-cols-4 print:mt-2 print:grid-cols-4 print:gap-2">
-          <ApproverField label="Fund Availability By" name={fundOfficerName} record={fundRecord} />
-          <ApproverField label="Reviewed By" name={reviewedByName} record={reviewRecord} />
-          <ApproverField label="Endorsed By" name={endorsedByName} record={endorsementRecord} />
-          <ApproverField label="Approved By" name={approvedByName} record={finalApprovalRecord} />
+        <div className="grid grid-cols-[230px_1fr] border-x border-b border-black">
+          <div className="border-r border-black p-2">
+            <p>Fund Type: <strong className="float-right">TRUST FUND</strong></p>
+            <p className="mt-2">Fund Name: <strong className="float-right uppercase">{fundName}</strong></p>
+            <p className="mt-2">Date Requested: <strong className="float-right">{new Date(request.date).toLocaleDateString()}</strong></p>
+          </div>
+          <div className="p-2 text-center">
+            <p className="text-left italic">Received the amount in payment of the above stated particulars:</p>
+            <p className="mt-5 font-bold uppercase underline">{payee}</p>
+            <p className="mt-1">Payee</p>
+          </div>
         </div>
 
-        <div className="mt-3 print:mt-2">
-          <Field label="Uploaded Files">
-            {request.attachments.length === 0 ? (
-              <span>None</span>
-            ) : (
-              <div className="grid gap-2 md:grid-cols-2 print:grid-cols-2 print:gap-1">
-                {request.attachments.slice(0, 8).map((attachment) => (
-                  <div key={attachment.id} className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2 print:block print:border-0 print:p-0">
-                    <a
-                      href={`/api/attachments/${attachment.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="truncate text-sfxc-green hover:underline print:text-[10px]"
-                    >
-                      {attachment.fileName}
-                    </a>
-                    <div className="flex shrink-0 items-center gap-2 print:hidden">
-                      <a
-                        href={`/api/attachments/${attachment.id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:border-sfxc-green hover:text-sfxc-green"
-                      >
-                        View
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => handlePrintAttachment(`/api/attachments/${attachment.id}`)}
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-sfxc-green hover:border-sfxc-green"
-                      >
-                        Print
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {request.attachments.length > 8 ? (
-                  <span className="text-xs text-slate-500 print:text-[10px]">
-                    +{request.attachments.length - 8} more file(s)
-                  </span>
-                ) : null}
-              </div>
-            )}
-          </Field>
+        <div className="grid grid-cols-3">
+          <Signature label="PREPARED:" name={fundOfficer} title={setting('PREPARED_BY')?.title ?? 'Fund Officer'} />
+          <Signature label="CHECKED:" name={reviewer} title={setting('CHECKED_BY')?.title ?? 'Reviewer'} />
+          <Signature label="VERIFIED:" name={endorser} title={setting('VERIFIED_BY')?.title ?? 'Endorser'} />
+        </div>
+        <div className="grid grid-cols-3">
+          <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} />
+          <Signature label="APPROVED:" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} />
+          <Signature label="APPROVED:" name={president?.name} title={president?.title ?? 'President'} />
         </div>
       </div>
 
-      <div className="print:hidden">
-        <button type="button" onClick={() => window.print()} className="sfxc-button">
-          Print Voucher
-        </button>
+      <div className="mt-4 print:hidden">
+        <button type="button" onClick={() => window.print()} className="sfxc-button">Print Voucher</button>
       </div>
     </div>
   );

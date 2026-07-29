@@ -10,7 +10,7 @@ export default async function AdminPage() {
     redirect('/login');
   }
 
-  const [users, departments, fundSources] = await Promise.all([
+  const [users, departments, fundSources, voucherSignatories] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -35,7 +35,8 @@ export default async function AdminPage() {
           }
         }
       }
-    })
+    }),
+    prisma.voucherSignatory.findMany({ orderBy: { slot: 'asc' } })
   ]);
 
   const fundSummaries = await Promise.all(
@@ -83,7 +84,16 @@ export default async function AdminPage() {
         <h1 className="mt-2 text-3xl font-semibold text-slate-900">Manage Users, Departments, and Funds</h1>
         <p className="mt-3 max-w-2xl text-slate-600">Create users, assign roles, manage departments, and maintain source of fund accounts.</p>
       </div>
-      <AdminFormClient users={users} departments={departments} fundSources={fundSummaries} />
+      <AdminFormClient
+        users={users}
+        departments={departments}
+        fundSources={fundSummaries}
+        voucherSignatories={voucherSignatories.map((item) => ({
+          slot: item.slot,
+          name: item.name,
+          title: item.title ?? ''
+        }))}
+      />
     </section>
   );
 }

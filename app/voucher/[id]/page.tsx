@@ -12,7 +12,7 @@ export default async function VoucherPage({ params }: VoucherPageProps) {
       department: true,
       requestedBy: true,
       approvedBy: true,
-      fundSource: true,
+      fundSource: { include: { parent: true } },
       attachments: true,
       approvals: {
         include: { actor: true },
@@ -21,9 +21,10 @@ export default async function VoucherPage({ params }: VoucherPageProps) {
     }
   });
 
-  const [fallbackReviewer, fallbackEndorser] = await Promise.all([
-    prisma.user.findFirst({ where: { role: 'REVIEWER' }, select: { name: true } }),
-    prisma.user.findFirst({ where: { role: 'ENDORSER' }, select: { name: true } })
+  const [signatories, jca, jmapc] = await Promise.all([
+    prisma.voucherSignatory.findMany(),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JCA' }, select: { name: true } }),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JMAPC' }, select: { name: true } })
   ]);
 
   if (!request) {
@@ -38,8 +39,8 @@ export default async function VoucherPage({ params }: VoucherPageProps) {
     <section className="space-y-8 print:space-y-0">
       <VoucherPrint
         request={request}
-        fallbackReviewerName={fallbackReviewer?.name}
-        fallbackEndorserName={fallbackEndorser?.name}
+        signatories={signatories}
+        roleNames={{ jca: jca?.name, jmapc: jmapc?.name }}
       />
     </section>
   );

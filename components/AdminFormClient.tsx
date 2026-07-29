@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import FundSourceManager, { FundSourceSummary } from './FundSourceManager';
+import VoucherSignatoryManager, { VoucherSignatoryData } from './VoucherSignatoryManager';
 
 interface User {
   id: string;
@@ -23,10 +24,35 @@ interface AdminFormProps {
   users: User[];
   departments: Department[];
   fundSources: FundSourceSummary[];
+  voucherSignatories: VoucherSignatoryData[];
 }
 
-export default function AdminFormClient({ users, departments, fundSources }: AdminFormProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds'>('users');
+const voucherSlots = [
+  'PREPARED_BY',
+  'CHECKED_BY',
+  'VERIFIED_BY',
+  'RECOMMENDING_APPROVAL',
+  'APPROVED_BY',
+  'PRESIDENT'
+];
+const voucherRoleDefaults: Record<string, string> = {
+  PREPARED_BY: 'FUND_OFFICER',
+  CHECKED_BY: 'REVIEWER',
+  VERIFIED_BY: 'ENDORSER',
+  RECOMMENDING_APPROVAL: 'APPROVER_JCA',
+  APPROVED_BY: 'APPROVER_JMAPC'
+};
+const voucherTitleDefaults: Record<string, string> = {
+  PREPARED_BY: 'Fund Officer',
+  CHECKED_BY: 'Reviewer',
+  VERIFIED_BY: 'Endorser',
+  RECOMMENDING_APPROVAL: 'JCA',
+  APPROVED_BY: 'JMAPC',
+  PRESIDENT: 'President'
+};
+
+export default function AdminFormClient({ users, departments, fundSources, voucherSignatories }: AdminFormProps) {
+  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds' | 'voucher'>('users');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
@@ -272,6 +298,12 @@ export default function AdminFormClient({ users, departments, fundSources }: Adm
           className={`px-4 py-2 text-sm font-semibold ${activeTab === 'funds' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
         >
           Source of Fund
+        </button>
+        <button
+          onClick={() => setActiveTab('voucher')}
+          className={`px-4 py-2 text-sm font-semibold ${activeTab === 'voucher' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
+        >
+          Voucher Approvers
         </button>
       </div>
 
@@ -573,6 +605,19 @@ export default function AdminFormClient({ users, departments, fundSources }: Adm
       )}
 
       {activeTab === 'funds' && <FundSourceManager fundSources={fundSources} />}
+      {activeTab === 'voucher' && (
+        <VoucherSignatoryManager
+          initialSignatories={voucherSlots.map((slot) => {
+            const existing = voucherSignatories.find((item) => item.slot === slot);
+            const defaultUser = users.find((user) => user.role === voucherRoleDefaults[slot]);
+            return existing ?? {
+              slot,
+              name: slot === 'PRESIDENT' ? 'President' : defaultUser?.name ?? slot.replace(/_/g, ' '),
+              title: voucherTitleDefaults[slot]
+            };
+          })}
+        />
+      )}
     </div>
   );
 }
