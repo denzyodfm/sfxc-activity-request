@@ -9,7 +9,10 @@ async function main() {
   if (!trustFund) throw new Error('Trust Fund main account was not found.');
 
   const targetNames = new Set(['test', 'ccje', 'ccje department fee']);
-  const targets = accounts.filter((account) => targetNames.has(normalize(account.name)));
+  const targets = accounts.filter((account) =>
+    targetNames.has(normalize(account.name)) ||
+    normalize(account.description ?? '') === 'for crim act'
+  );
   await prisma.$transaction(
     targets.map((account) =>
       prisma.fundSource.update({
