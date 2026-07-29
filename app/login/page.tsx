@@ -35,7 +35,13 @@ export default function LoginPage() {
       setStatus('success');
       setMessage('Login successful. Redirecting...');
       setUser(data.user);
-      router.push('/');
+      const destination =
+        data.user.role === 'APPROVER_JMAPC'
+          ? '/approval?approver=APPROVER_JMAPC'
+          : data.user.role === 'APPROVER_JCA'
+            ? '/approval?approver=APPROVER_JCA'
+            : '/';
+      router.replace(destination);
     } catch (error) {
       setStatus('error');
       setMessage('Authentication service unavailable.');
