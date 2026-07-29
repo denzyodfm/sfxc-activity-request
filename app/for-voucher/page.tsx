@@ -70,7 +70,7 @@ export default async function ForVoucherPage() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Link href={`/voucher/${request.id}`} className="sfxc-button">
-                    Print Voucher
+                    Prepare Voucher
                   </Link>
                   <MarkVoucherDoneButton requestId={request.id} />
                 </div>

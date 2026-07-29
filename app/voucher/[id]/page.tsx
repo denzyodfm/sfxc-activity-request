@@ -1,11 +1,16 @@
 import prisma from '@/lib/prisma';
 import VoucherPrint from '@/components/VoucherPrint';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 interface VoucherPageProps {
   params: { id: string };
 }
 
 export default async function VoucherPage({ params }: VoucherPageProps) {
+  const session = await getSession();
+  if (!session) redirect('/login');
+
   const request = await prisma.activityRequest.findUnique({
     where: { id: params.id },
     include: {
@@ -41,6 +46,7 @@ export default async function VoucherPage({ params }: VoucherPageProps) {
         request={request}
         signatories={signatories}
         roleNames={{ jca: jca?.name, jmapc: jmapc?.name }}
+        canEdit={['ADMIN', 'FUND_OFFICER'].includes(session.role) && request.status === 'APPROVED'}
       />
     </section>
   );

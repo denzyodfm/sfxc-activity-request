@@ -77,6 +77,10 @@ model ActivityRequest {
   endorsementRemarks      String?
   approvalRemarks         String?
   finalApprover           String?
+  voucherPayTo            String?
+  voucherAddress          String?
+  voucherNumber           String?
+  voucherParticulars      String?
   approvedBy              User?               @relation("ApprovedBy", fields: [approvedById], references: [id])
   approvedById            String?
   createdAt               DateTime            @default(now())

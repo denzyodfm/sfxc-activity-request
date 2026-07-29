@@ -41,6 +41,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
   const [sourceDescription, setSourceDescription] = useState('');
   const [accountType, setAccountType] = useState<'main' | 'sub'>('main');
   const [parentId, setParentId] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [depositAmounts, setDepositAmounts] = useState<Record<string, string>>({});
   const [depositDates, setDepositDates] = useState<Record<string, string>>({});
   const [depositReferences, setDepositReferences] = useState<Record<string, string>>({});
@@ -67,9 +68,10 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
     setMessage('');
 
     const response = await fetch('/api/fund-sources', {
-      method: 'POST',
+      method: editingId ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        id: editingId,
         name: sourceName,
         description: sourceDescription,
         parentId: accountType === 'sub' ? parentId : null
@@ -86,9 +88,28 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
     setSourceName('');
     setSourceDescription('');
     setParentId('');
+    setEditingId(null);
+    setAccountType('main');
     setStatus('success');
     setMessage(data.message || 'Source of fund created.');
     router.refresh();
+  };
+
+  const editSource = (source: FundSourceSummary) => {
+    setEditingId(source.id);
+    setSourceName(source.name);
+    setSourceDescription(source.description ?? '');
+    setAccountType(source.parentId ? 'sub' : 'main');
+    setParentId(source.parentId ?? '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setSourceName('');
+    setSourceDescription('');
+    setAccountType('main');
+    setParentId('');
   };
 
   const postDeposit = async (event: React.FormEvent<HTMLFormElement>, fundSourceId: string) => {
@@ -186,9 +207,14 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
             placeholder="Optional notes"
           />
         </label>
-        <button type="submit" disabled={status === 'saving'} className="sfxc-button self-end">
-          Add Source
-        </button>
+        <div className="flex gap-2 self-end">
+          <button type="submit" disabled={status === 'saving'} className="sfxc-button">
+            {editingId ? 'Save Account' : 'Add Source'}
+          </button>
+          {editingId ? (
+            <button type="button" onClick={cancelEdit} className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700">Cancel</button>
+          ) : null}
+        </div>
       </form>
 
       {status !== 'idle' ? (
@@ -220,9 +246,10 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                 <p className="text-xs uppercase tracking-[0.18em] text-emerald-700">Balance</p>
                 <p className="mt-2 font-semibold text-emerald-900">{formatMoney(source.balance)}</p>
               </div>
-              <button type="button" onClick={() => setSelectedSourceId(source.id)} className="sfxc-button">
-                View
-              </button>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => editSource(source)} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green">Edit</button>
+                <button type="button" onClick={() => setSelectedSourceId(source.id)} className="sfxc-button">View</button>
+              </div>
             </div>
           </article>
         ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import { ActivityRequest } from '@prisma/client';
+import { useState } from 'react';
 
 interface Signatory {
   slot: string;
@@ -21,6 +22,7 @@ interface VoucherPrintProps {
   };
   signatories: Signatory[];
   roleNames: { jca?: string; jmapc?: string };
+  canEdit?: boolean;
 }
 
 function wordsBelowThousand(value: number) {
@@ -75,7 +77,13 @@ function Signature({ label, name, title }: { label: string; name?: string | null
   );
 }
 
-export default function VoucherPrint({ request, signatories, roleNames }: VoucherPrintProps) {
+export default function VoucherPrint({ request, signatories, roleNames, canEdit = false }: VoucherPrintProps) {
+  const [payTo, setPayTo] = useState(request.voucherPayTo ?? request.requestedBy.name);
+  const [address, setAddress] = useState(request.voucherAddress ?? request.department.name);
+  const [voucherNumber, setVoucherNumber] = useState(request.voucherNumber ?? request.controlNumber);
+  const [voucherParticulars, setVoucherParticulars] = useState(request.voucherParticulars ?? request.particulars);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [saveMessage, setSaveMessage] = useState('');
   const setting = (slot: string) => signatories.find((item) => item.slot === slot);
   const approval = (role: string, action: string) =>
     request.approvals.find((item) => item.role === role && item.action === action);
@@ -86,17 +94,17 @@ export default function VoucherPrint({ request, signatories, roleNames }: Vouche
   const approved = setting('APPROVED_BY')?.name ?? roleNames.jmapc;
   const president = setting('PRESIDENT');
   const amount = Number(request.amount);
-  const payee = request.requestedBy.name;
+  const payee = payTo;
   const accountName = request.fundSource?.parent?.name ?? request.fundSource?.name ?? 'UNASSIGNED FUND';
   const fundName = request.fundSource?.parent ? request.fundSource.name : request.fundSource?.name ?? 'UNASSIGNED';
   const downloadExcel = () => {
     const rows: Array<[string, string | number]> = [
       ['DISBURSEMENT VOUCHER', ''],
       ['Pay To', payee],
-      ['Address', request.department.name],
-      ['Voucher / Control No.', request.controlNumber],
+      ['Address', address],
+      ['Voucher / Control No.', voucherNumber],
       ['Date', new Date(request.date).toISOString()],
-      ['Particulars', request.particulars],
+      ['Particulars', voucherParticulars],
       ['Amount in Words', amountInWords(amount)],
       ['Main Account', accountName],
       ['Fund / Sub-Account', fundName],
@@ -132,13 +140,50 @@ export default function VoucherPrint({ request, signatories, roleNames }: Vouche
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `voucher-${request.controlNumber}.xls`;
+    link.download = `voucher-${voucherNumber}.xls`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+  const saveVoucher = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaveStatus('saving');
+    setSaveMessage('');
+    const response = await fetch(`/api/vouchers/${request.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voucherPayTo: payTo, voucherAddress: address, voucherNumber, voucherParticulars })
+    });
+    const data = await response.json();
+    setSaveStatus(response.ok ? 'success' : 'error');
+    setSaveMessage(response.ok ? data.message : data.error || 'Unable to save voucher details.');
   };
 
   return (
     <div className="mx-auto max-w-[900px] text-[12px] text-black">
+      {canEdit ? (
+        <form onSubmit={saveVoucher} className="mb-6 grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 text-sm print:hidden md:grid-cols-2">
+          <div className="md:col-span-2">
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Voucher Preparation</p>
+            <h1 className="mt-2 text-xl font-semibold text-slate-900">Enter voucher details</h1>
+          </div>
+          <label className="space-y-2 text-slate-700">Pay To / Payee
+            <input required value={payTo} onChange={(event) => setPayTo(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
+          </label>
+          <label className="space-y-2 text-slate-700">Address
+            <input required value={address} onChange={(event) => setAddress(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
+          </label>
+          <label className="space-y-2 text-slate-700">Voucher No. / Control No.
+            <input required value={voucherNumber} onChange={(event) => setVoucherNumber(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
+          </label>
+          <label className="space-y-2 text-slate-700 md:col-span-2">Particulars
+            <textarea required rows={4} value={voucherParticulars} onChange={(event) => setVoucherParticulars(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
+          </label>
+          <div className="flex items-center gap-3 md:col-span-2">
+            <button disabled={saveStatus === 'saving'} className="sfxc-button">{saveStatus === 'saving' ? 'Saving...' : 'Save Voucher Details'}</button>
+            {saveMessage ? <p className={saveStatus === 'error' ? 'text-rose-700' : 'text-emerald-700'}>{saveMessage}</p> : null}
+          </div>
+        </form>
+      ) : null}
       <div className="bg-white p-4 print:p-0">
         <div className="grid grid-cols-[90px_1fr_90px] items-center border border-black p-2 text-center">
           <img src="/sfxc_icon.png" alt="SFXC logo" className="mx-auto h-16 w-16 object-contain" />
@@ -153,10 +198,10 @@ export default function VoucherPrint({ request, signatories, roleNames }: Vouche
         <div className="grid grid-cols-[1fr_225px] border-x border-black">
           <div className="border-r border-black p-2">
             <p>Pay to: <span className="ml-2 font-bold uppercase underline">{payee}</span></p>
-            <p className="mt-1">Address: <span className="ml-2 font-bold uppercase underline">{request.department.name}</span></p>
+            <p className="mt-1">Address: <span className="ml-2 font-bold uppercase underline">{address}</span></p>
           </div>
           <div className="p-2">
-            <p>Voucher No.: <span className="float-right font-bold">{request.controlNumber}</span></p>
+            <p>Voucher No.: <span className="float-right font-bold">{voucherNumber}</span></p>
             <p className="mt-1">Date: <span className="float-right font-bold">{new Date(request.date).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</span></p>
           </div>
         </div>
@@ -164,7 +209,7 @@ export default function VoucherPrint({ request, signatories, roleNames }: Vouche
         <div className="border border-black p-3 text-center">
           <p className="font-bold">PARTICULARS</p>
           <p className="mt-5">To release an amount of <strong>{amountInWords(amount)},</strong></p>
-          <p className="mx-auto mt-2 max-w-3xl whitespace-pre-wrap">{request.particulars},</p>
+          <p className="mx-auto mt-2 max-w-3xl whitespace-pre-wrap">{voucherParticulars},</p>
           <p>as per attached approved request.</p>
         </div>
 
