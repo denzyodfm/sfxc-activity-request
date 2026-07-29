@@ -225,7 +225,12 @@ export default function VoucherPrint({
         <div className="grid grid-cols-[1fr_220px]">
           <div className="border-x border-b border-black">
             <p className="border-b border-black py-1 text-center font-bold">Accounts (For Accounting Use only)</p>
-            <div className="grid min-h-[78px] grid-cols-[1fr_140px]">
+            <div className="grid grid-cols-[1fr_110px_110px] text-[10px] font-semibold uppercase">
+              <span />
+              <span className="border-l border-black px-2 py-1 text-center">Debit</span>
+              <span className="border-l border-black px-2 py-1 text-center">Credit</span>
+            </div>
+            <div className="grid min-h-[58px] grid-cols-[1fr_110px_110px]">
               <div className="p-2 font-bold uppercase">
                 {fundAccountOptions && onFundSourceChange ? (
                   <select
@@ -241,10 +246,12 @@ export default function VoucherPrint({
                   </select>
                 ) : fundName}
               </div>
-              <div className="border-l border-black p-2 text-right font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+              <div className="border-l border-black p-2 text-left font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+              <div className="border-l border-black" />
             </div>
-            <div className="grid grid-cols-[1fr_140px] border-t border-black">
+            <div className="grid grid-cols-[1fr_110px_110px]">
               <p className="p-2 text-center font-bold">VOUCHER PAYABLE</p>
+              <p className="border-l border-black" />
               <p className="border-l border-black p-2 text-right font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
             </div>
           </div>
