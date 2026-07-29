@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export interface ActivityLogRow {
   id: string;
@@ -25,6 +25,9 @@ function escapeXml(value: string) {
 export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] }) {
   const [query, setQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [printAll, setPrintAll] = useState(false);
   const normalizedQuery = query.trim().toLowerCase();
 
   const filteredLogs = useMemo(() => {
@@ -66,6 +69,23 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
       .filter((value) => value.toLowerCase().includes(normalizedQuery))
       .slice(0, 20);
   }, [logs, normalizedQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pageStart = (safeCurrentPage - 1) * pageSize;
+  const visibleLogs = printAll ? filteredLogs : filteredLogs.slice(pageStart, pageStart + pageSize);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [normalizedQuery, selectedDate, pageSize]);
+
+  const printResults = () => {
+    setPrintAll(true);
+    window.setTimeout(() => {
+      window.print();
+      setPrintAll(false);
+    }, 100);
+  };
 
   const downloadExcel = () => {
     const headers = ['Timestamp', 'User', 'Email', 'Role', 'Process', 'Request', 'Details'];
@@ -162,7 +182,7 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
               Clear Filters
             </button>
           ) : null}
-          <button type="button" onClick={() => window.print()} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green hover:bg-emerald-50">
+          <button type="button" onClick={printResults} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green hover:bg-emerald-50">
             Print Results
           </button>
           <button type="button" onClick={downloadExcel} className="sfxc-button">
@@ -171,16 +191,32 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
         </div>
       </div>
 
-      <p className="text-sm text-slate-500 print:text-slate-700">
-        Showing {filteredLogs.length} of {logs.length} activities
-        {selectedDate ? ` on ${new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-PH')}` : ''}
-        {query ? ` for “${query}”` : ''}.
-      </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between print:block">
+        <p className="text-sm text-slate-500 print:text-slate-700">
+          {filteredLogs.length > 0
+            ? `Showing ${pageStart + 1}–${Math.min(pageStart + pageSize, filteredLogs.length)} of ${filteredLogs.length} matching activities`
+            : 'Showing 0 matching activities'}
+          {selectedDate ? ` on ${new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-PH')}` : ''}
+          {query ? ` for “${query}”` : ''}.
+        </p>
+        <label className="flex items-center gap-2 text-sm text-slate-600 print:hidden">
+          Rows per page
+          <select
+            value={pageSize}
+            onChange={(event) => setPageSize(Number(event.target.value))}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-sfxc-green"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+        </label>
+      </div>
 
       <div className="sfxc-card overflow-hidden print:border-0 print:shadow-none">
-        <div className="overflow-x-auto">
+        <div className="max-h-[65vh] overflow-auto print:max-h-none print:overflow-visible">
           <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-[0.14em] text-slate-500">
+            <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-[0.14em] text-slate-500 print:static">
               <tr>
                 <th className="px-5 py-4 font-semibold">Timestamp</th>
                 <th className="px-5 py-4 font-semibold">User</th>
@@ -190,7 +226,7 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredLogs.map((log) => (
+              {visibleLogs.map((log) => (
                 <tr key={log.id} className="align-top hover:bg-slate-50">
                   <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                     {new Date(log.timestamp).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}
@@ -212,6 +248,18 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
           </table>
         </div>
       </div>
+
+      {filteredLogs.length > 0 ? (
+        <nav className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden" aria-label="Activity log pagination">
+          <p className="text-sm text-slate-500">Page {safeCurrentPage} of {totalPages}</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setCurrentPage(1)} disabled={safeCurrentPage === 1} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">First</button>
+            <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={safeCurrentPage === 1} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+            <button type="button" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={safeCurrentPage === totalPages} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+            <button type="button" onClick={() => setCurrentPage(totalPages)} disabled={safeCurrentPage === totalPages} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Last</button>
+          </div>
+        </nav>
+      ) : null}
     </div>
   );
 }
