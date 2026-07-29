@@ -21,6 +21,7 @@ export default function EndorsementForm({ requestId, request }: EndorsementFormP
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (decision === 'return' && !window.confirm('Send this request back to the Reviewer?')) return;
     setStatus('saving');
     setMessage('');
 
@@ -40,7 +41,13 @@ export default function EndorsementForm({ requestId, request }: EndorsementFormP
 
       setStatus('success');
       setMessage(data.message || 'Request endorsed successfully.');
-      setReceipt({ approvalCode: data.approvalCode, approvedAt: data.approvedAt });
+      if (data.approvalCode) {
+        setReceipt({ approvalCode: data.approvalCode, approvedAt: data.approvedAt });
+      } else {
+        setReceipt(null);
+        window.alert(data.message || 'Request sent back.');
+        router.refresh();
+      }
     } catch (error) {
       setStatus('error');
       setMessage('Endorsement service unavailable.');

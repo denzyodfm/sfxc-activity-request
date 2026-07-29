@@ -41,12 +41,8 @@ export async function POST(request: NextRequest) {
   const returned = decision === 'return';
   const action = returned ? 'ENDORSEMENT_RETURNED' : 'ENDORSED';
   const approvedAt = new Date();
-  const approvalCode = generateApprovalCode({
-    requestId,
-    actorId: session.id,
-    role: 'ENDORSER',
-    action,
-    approvedAt
+  const approvalCode = returned ? null : generateApprovalCode({
+    requestId, actorId: session.id, role: 'ENDORSER', action, approvedAt
   });
 
   await prisma.activityRequest.update({
@@ -85,7 +81,7 @@ export async function POST(request: NextRequest) {
     message: returned
       ? 'Request sent back to the reviewer.'
       : 'Request endorsed and sent to final approval.',
-    approvalCode,
+    approvalCode: approvalCode ?? undefined,
     approvedAt: approvedAt.toISOString()
   });
 }

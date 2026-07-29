@@ -20,6 +20,7 @@ export default function ReviewForm({ requestId, request }: ReviewFormProps) {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (decision === 'return' && !window.confirm('Send this request back to Fund Availability?')) return;
     setStatus('saving');
     setMessage('');
 
@@ -39,7 +40,13 @@ export default function ReviewForm({ requestId, request }: ReviewFormProps) {
 
       setStatus('success');
       setMessage(data.message || 'Review updated.');
-      setReceipt({ approvalCode: data.approvalCode, approvedAt: data.approvedAt });
+      if (data.approvalCode) {
+        setReceipt({ approvalCode: data.approvalCode, approvedAt: data.approvedAt });
+      } else {
+        setReceipt(null);
+        window.alert(data.message || 'Request sent back.');
+        router.refresh();
+      }
     } catch (error) {
       setStatus('error');
       setMessage('Review service unavailable.');

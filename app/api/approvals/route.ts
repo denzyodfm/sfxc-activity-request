@@ -47,12 +47,8 @@ export async function POST(request: NextRequest) {
   const actorId = approver?.id ?? existing.requestedById;
   const role = session.role === 'ADMIN' ? existing.finalApprover ?? 'ADMIN' : session.role;
   const approvedAt = new Date();
-  const approvalCode = generateApprovalCode({
-    requestId,
-    actorId,
-    role,
-    action,
-    approvedAt
+  const approvalCode = returned ? null : generateApprovalCode({
+    requestId, actorId, role, action, approvedAt
   });
 
   await prisma.activityRequest.update({
@@ -90,7 +86,7 @@ export async function POST(request: NextRequest) {
     message: returned
       ? 'Request sent back to the endorser.'
       : `Request has been ${approved ? 'approved' : 'denied'}.`,
-    approvalCode,
+    approvalCode: approvalCode ?? undefined,
     approvedAt: approvedAt.toISOString()
   });
 }
