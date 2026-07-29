@@ -6,7 +6,7 @@ async function main() {
   const trustFund = await prisma.fundSource.findUnique({ where: { name: 'Trust Fund' } });
   if (!trustFund) throw new Error('Trust Fund main account was not found.');
 
-  const names = ['Test', 'CCJE Department Fee'];
+  const names = ['Test', 'CCJE', 'CCJE Department Fee'];
   const result = await prisma.fundSource.updateMany({
     where: { name: { in: names } },
     data: { parentId: trustFund.id }

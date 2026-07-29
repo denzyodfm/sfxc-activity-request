@@ -74,6 +74,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
         id: editingId,
         name: sourceName,
         description: sourceDescription,
+        accountType,
         parentId: accountType === 'sub' ? parentId : null
       })
     });
@@ -193,7 +194,11 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
           Account Type
           <select
             value={accountType}
-            onChange={(event) => setAccountType(event.target.value as 'main' | 'sub')}
+            onChange={(event) => {
+              const nextType = event.target.value as 'main' | 'sub';
+              setAccountType(nextType);
+              setParentId(nextType === 'sub' ? parentId || fundSources.find((source) => !source.parentId && source.id !== editingId)?.id || '' : '');
+            }}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
           >
             <option value="main">Main Account</option>

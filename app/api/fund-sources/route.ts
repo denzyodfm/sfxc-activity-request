@@ -17,10 +17,20 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const name = body.name?.toString().trim();
   const description = body.description?.toString().trim() || null;
+  const accountType = body.accountType?.toString();
   const parentId = body.parentId?.toString().trim() || null;
 
   if (!name) {
     return NextResponse.json({ error: 'Source of fund name is required.' }, { status: 422 });
+  }
+  if (!['main', 'sub'].includes(accountType)) {
+    return NextResponse.json({ error: 'Please select a valid account type.' }, { status: 422 });
+  }
+  if (accountType === 'sub' && !parentId) {
+    return NextResponse.json({ error: 'A main account is required for a sub-account.' }, { status: 422 });
+  }
+  if (accountType === 'main' && parentId) {
+    return NextResponse.json({ error: 'A main account cannot have a parent account.' }, { status: 422 });
   }
 
   if (parentId) {
@@ -59,9 +69,19 @@ export async function PATCH(request: NextRequest) {
   const id = body.id?.toString().trim();
   const name = body.name?.toString().trim();
   const description = body.description?.toString().trim() || null;
+  const accountType = body.accountType?.toString();
   const parentId = body.parentId?.toString().trim() || null;
   if (!id || !name) {
     return NextResponse.json({ error: 'Account and account name are required.' }, { status: 422 });
+  }
+  if (!['main', 'sub'].includes(accountType)) {
+    return NextResponse.json({ error: 'Please select a valid account type.' }, { status: 422 });
+  }
+  if (accountType === 'sub' && !parentId) {
+    return NextResponse.json({ error: 'A main account is required for a sub-account.' }, { status: 422 });
+  }
+  if (accountType === 'main' && parentId) {
+    return NextResponse.json({ error: 'A main account cannot have a parent account.' }, { status: 422 });
   }
   if (parentId === id) {
     return NextResponse.json({ error: 'An account cannot be its own main account.' }, { status: 422 });
