@@ -255,8 +255,9 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
       ) : null}
 
       <div className="grid gap-4">
-        {fundSources.map((source) => (
-          <article key={source.id} className="sfxc-card p-5">
+        {fundSources.filter((source) => !source.parentId).map((source) => (
+          <article key={source.id} className="sfxc-card overflow-hidden">
+            <div className="p-5">
             <div className="grid gap-4 lg:grid-cols-[1fr_160px_160px_160px_auto] lg:items-center">
               <div>
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
@@ -283,6 +284,38 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                 <button type="button" onClick={() => setSelectedSourceId(source.id)} className="sfxc-button">View</button>
               </div>
             </div>
+            </div>
+            {fundSources.some((subAccount) => subAccount.parentId === source.id) ? (
+              <div className="space-y-3 border-t border-slate-200 bg-slate-50/70 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Sub-Accounts</p>
+                {fundSources.filter((subAccount) => subAccount.parentId === source.id).map((subAccount) => (
+                  <div key={subAccount.id} className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 lg:grid-cols-[1fr_140px_140px_140px_auto] lg:items-center">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.2em] text-sfxc-green">Sub-Account</p>
+                      <h3 className="mt-1 text-lg font-semibold text-slate-900">{subAccount.name}</h3>
+                      {subAccount.description ? <p className="mt-1 text-sm text-slate-600">{subAccount.description}</p> : null}
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-3 text-sm">
+                      <p className="text-xs uppercase text-slate-500">Funds</p>
+                      <p className="mt-1 font-semibold">{formatMoney(subAccount.totalDebit)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-3 text-sm">
+                      <p className="text-xs uppercase text-slate-500">Deductions</p>
+                      <p className="mt-1 font-semibold">{formatMoney(subAccount.totalCredit)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-emerald-50 p-3 text-sm">
+                      <p className="text-xs uppercase text-emerald-700">Balance</p>
+                      <p className="mt-1 font-semibold text-emerald-900">{formatMoney(subAccount.balance)}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => editSource(subAccount)} className="rounded-2xl border border-sfxc-green px-3 py-2 text-sm font-semibold text-sfxc-green">Edit</button>
+                      <button type="button" onClick={() => deleteSource(subAccount)} className="rounded-2xl border border-rose-300 px-3 py-2 text-sm font-semibold text-rose-700">Delete</button>
+                      <button type="button" onClick={() => setSelectedSourceId(subAccount.id)} className="sfxc-button">View</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </article>
         ))}
       </div>
