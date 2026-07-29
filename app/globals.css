@@ -59,3 +59,27 @@ button, input, textarea, select {
     print-color-adjust: exact;
   }
 }
+
+@page voucher {
+  size: 8.5in 5.5in;
+  margin: 0.2in;
+}
+
+.voucher-sheet {
+  width: min(100%, 8.5in);
+  margin-inline: auto;
+}
+
+@media print {
+  .voucher-sheet {
+    page: voucher;
+    width: 8.1in;
+    height: 5.1in;
+    overflow: hidden;
+    font-size: 9px;
+  }
+
+  .voucher-sheet .voucher-signature {
+    min-height: 72px;
+  }
+}

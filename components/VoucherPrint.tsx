@@ -72,7 +72,7 @@ function escapeXml(value: string) {
 
 function Signature({ label, name, title, className = '' }: { label: string; name?: string | null; title?: string | null; className?: string }) {
   return (
-    <div className={`min-h-[105px] border border-black p-2 text-center ${className}`}>
+    <div className={`voucher-signature min-h-[105px] border border-black p-2 text-center ${className}`}>
       <p className="text-left text-[10px] italic">{label}</p>
       <div className="mt-8">
         <p className="font-bold uppercase underline">{name || '____________________________'}</p>
@@ -173,7 +173,7 @@ export default function VoucherPrint({
 
   return (
     <div className="mx-auto max-w-[900px] text-[12px] text-black">
-      <div className="bg-white p-4 print:p-0">
+      <div className="voucher-sheet bg-white p-4 print:p-0">
         <div className="grid grid-cols-[90px_1fr_90px] items-center border border-black p-2 text-center">
           <img src="/sfxc_icon.png" alt="SFXC logo" className="mx-auto h-16 w-16 object-contain" />
           <div>
