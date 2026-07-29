@@ -48,6 +48,9 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
   const [depositDescriptions, setDepositDescriptions] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
   const [message, setMessage] = useState('');
+  const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
+  const [subAccountNames, setSubAccountNames] = useState<Record<string, string>>({});
+  const [subAccountDescriptions, setSubAccountDescriptions] = useState<Record<string, string>>({});
 
   const report = useMemo(() => {
     return fundSources.reduce(
@@ -111,6 +114,32 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
     setSourceDescription('');
     setAccountType('main');
     setParentId('');
+  };
+
+  const createSubAccount = async (event: React.FormEvent<HTMLFormElement>, mainAccountId: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setStatus('saving');
+    setMessage('');
+    const response = await fetch('/api/fund-sources', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: subAccountNames[mainAccountId],
+        description: subAccountDescriptions[mainAccountId],
+        accountType: 'sub',
+        parentId: mainAccountId
+      })
+    });
+    const data = await response.json();
+    setStatus(response.ok ? 'success' : 'error');
+    setMessage(response.ok ? data.message : data.error || 'Unable to create sub-account.');
+    if (response.ok) {
+      setSubAccountNames((current) => ({ ...current, [mainAccountId]: '' }));
+      setSubAccountDescriptions((current) => ({ ...current, [mainAccountId]: '' }));
+      setExpandedMainId(mainAccountId);
+      router.refresh();
+    }
   };
 
   const deleteSource = async (source: FundSourceSummary) => {
@@ -189,37 +218,12 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
         </div>
       </div>
 
-      <form className="sfxc-card grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-[180px_1fr_1fr_1fr_auto]" onSubmit={createSource}>
-        <label className="space-y-2 text-sm text-slate-700">
-          Account Type
-          <select
-            value={accountType}
-            onChange={(event) => {
-              const nextType = event.target.value as 'main' | 'sub';
-              setAccountType(nextType);
-              setParentId(nextType === 'sub' ? parentId || fundSources.find((source) => !source.parentId && source.id !== editingId)?.id || '' : '');
-            }}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
-          >
-            <option value="main">Main Account</option>
-            <option value="sub">Sub-Account</option>
-          </select>
-        </label>
-        <label className="space-y-2 text-sm text-slate-700">
-          Main Account
-          <select
-            value={parentId}
-            onChange={(event) => setParentId(event.target.value)}
-            disabled={accountType === 'main'}
-            required={accountType === 'sub'}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green disabled:opacity-50"
-          >
-            <option value="">Select main account</option>
-            {fundSources.filter((source) => !source.parentId).map((source) => (
-              <option key={source.id} value={source.id}>{source.name}</option>
-            ))}
-          </select>
-        </label>
+      <form className="sfxc-card grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]" onSubmit={createSource}>
+        <div className="md:col-span-2 xl:col-span-3">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            {editingId ? `Edit ${accountType === 'sub' ? 'Sub-Account' : 'Main Account'}` : 'Add Main Account'}
+          </p>
+        </div>
         <label className="space-y-2 text-sm text-slate-700">
           Account Name
           <input
@@ -257,7 +261,10 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
       <div className="grid gap-4">
         {fundSources.filter((source) => !source.parentId).map((source) => (
           <article key={source.id} className="sfxc-card overflow-hidden">
-            <div className="p-5">
+            <div
+              className="cursor-pointer p-5 transition hover:bg-slate-50/60"
+              onClick={() => setExpandedMainId((current) => current === source.id ? null : source.id)}
+            >
             <div className="grid gap-4 lg:grid-cols-[1fr_160px_160px_160px_auto] lg:items-center">
               <div>
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
@@ -265,6 +272,9 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                 </p>
                 <h2 className="mt-2 text-xl font-semibold text-slate-900">{source.name}</h2>
                 {source.description ? <p className="mt-2 text-sm text-slate-600">{source.description}</p> : null}
+                <p className="mt-2 text-xs font-semibold text-sfxc-green">
+                  {expandedMainId === source.id ? 'Hide sub-accounts' : 'Show sub-accounts'}
+                </p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4 text-sm">
                 <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Funds</p>
@@ -279,15 +289,41 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                 <p className="mt-2 font-semibold text-emerald-900">{formatMoney(source.balance)}</p>
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => editSource(source)} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green">Edit</button>
-                <button type="button" onClick={() => deleteSource(source)} className="rounded-2xl border border-rose-300 px-4 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50">Delete</button>
-                <button type="button" onClick={() => setSelectedSourceId(source.id)} className="sfxc-button">View</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); editSource(source); }} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green">Edit</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); deleteSource(source); }} className="rounded-2xl border border-rose-300 px-4 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50">Delete</button>
+                <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedSourceId(source.id); }} className="sfxc-button">View</button>
               </div>
             </div>
             </div>
-            {fundSources.some((subAccount) => subAccount.parentId === source.id) ? (
+            {expandedMainId === source.id ? (
               <div className="space-y-3 border-t border-slate-200 bg-slate-50/70 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Sub-Accounts</p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Sub-Accounts</p>
+                  <span className="text-xs text-slate-500">New sub-accounts will belong to {source.name}</span>
+                </div>
+                <form className="grid gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 md:grid-cols-[1fr_1fr_auto]" onSubmit={(event) => createSubAccount(event, source.id)}>
+                  <label className="text-sm text-slate-700">Sub-Account Name
+                    <input
+                      required
+                      value={subAccountNames[source.id] ?? ''}
+                      onChange={(event) => setSubAccountNames((current) => ({ ...current, [source.id]: event.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2"
+                      placeholder="Enter sub-account name"
+                    />
+                  </label>
+                  <label className="text-sm text-slate-700">Description
+                    <input
+                      value={subAccountDescriptions[source.id] ?? ''}
+                      onChange={(event) => setSubAccountDescriptions((current) => ({ ...current, [source.id]: event.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2"
+                      placeholder="Optional notes"
+                    />
+                  </label>
+                  <button type="submit" disabled={status === 'saving'} className="sfxc-button self-end">Add Sub-Account</button>
+                </form>
+                {fundSources.filter((subAccount) => subAccount.parentId === source.id).length === 0 ? (
+                  <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">No sub-accounts yet.</p>
+                ) : null}
                 {fundSources.filter((subAccount) => subAccount.parentId === source.id).map((subAccount) => (
                   <div key={subAccount.id} className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 lg:grid-cols-[1fr_140px_140px_140px_auto] lg:items-center">
                     <div>
