@@ -65,13 +65,7 @@ export default function FundAvailabilityVoucherReview({
         fundSourceId={request.fundSourceId}
         showRequestDetails={false}
         fundSources={fundSources}
-        selectedMain={selectedMain}
         selectedSub={selectedSub}
-        onSelectedMainChange={(id) => {
-          setSelectedMain(id);
-          setSelectedSub(fundSources.find((source) => source.parentId === id)?.id ?? '');
-        }}
-        onSelectedSubChange={selectSubAccount}
       />
     </div>
   );

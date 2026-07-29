@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
-import { formatMoney } from '@/lib/money';
 import ApprovalCodeReceipt from './ApprovalCodeReceipt';
 
 interface FundAvailabilityFormProps {
@@ -12,18 +11,16 @@ interface FundAvailabilityFormProps {
   fundSourceId: string | null;
   fundSources: { id: string; name: string; parentId: string | null; balance: number }[];
   showRequestDetails?: boolean;
-  selectedMain: string;
   selectedSub: string;
-  onSelectedMainChange: (id: string) => void;
-  onSelectedSubChange: (id: string) => void;
 }
 
 export default function FundAvailabilityForm({
-  requestId, request, fundSources, showRequestDetails = true,
-  selectedMain, selectedSub, onSelectedMainChange, onSelectedSubChange
+  requestId,
+  request,
+  showRequestDetails = true,
+  selectedSub
 }: FundAvailabilityFormProps) {
   const router = useRouter();
-  const mainAccounts = fundSources.filter((source) => !source.parentId);
   const [available, setAvailable] = useState<'true' | 'false'>('true');
   const [remarks, setRemarks] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -31,8 +28,6 @@ export default function FundAvailabilityForm({
   const [receipt, setReceipt] = useState<{ approvalCode: string; approvedAt: string } | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const canUpdate = request.status === 'FOR_FUND_AVAILABILITY';
-  const subAccounts = fundSources.filter((source) => source.parentId === selectedMain);
-  const selectedSource = selectedSub;
 
   useEffect(() => {
     if (status === 'success' || status === 'error') {
@@ -42,9 +37,7 @@ export default function FundAvailabilityForm({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canUpdate) {
-      return;
-    }
+    if (!canUpdate) return;
     setStatus('saving');
     setMessage('');
 
@@ -54,23 +47,21 @@ export default function FundAvailabilityForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           requestId,
-          fundSourceId: selectedSource,
+          fundSourceId: selectedSub,
           fundAvailable: available === 'true',
           remarks
         })
       });
       const data = await response.json();
-
       if (!response.ok) {
         setStatus('error');
         setMessage(data.error || 'Unable to update availability.');
         return;
       }
-
       setStatus('success');
       setMessage(data.message || 'Fund availability updated.');
       setReceipt({ approvalCode: data.approvalCode, approvedAt: data.approvedAt });
-    } catch (error) {
+    } catch {
       setStatus('error');
       setMessage('Fund service unavailable.');
     }
@@ -78,74 +69,24 @@ export default function FundAvailabilityForm({
 
   return (
     <form className="sfxc-card p-6" onSubmit={handleSubmit}>
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-500">Request</p>
-          <h2 className="mt-1 text-lg font-semibold text-slate-900">{request.particulars}</h2>
-        </div>
+      <div className="flex justify-end">
         <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Fund Availability</span>
       </div>
 
       {showRequestDetails ? <RequestDetails request={request} /> : null}
 
-      {!canUpdate ? (
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-          This request is already past fund availability review.
-        </div>
-      ) : null}
-
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
-        <label className="space-y-2 text-sm text-slate-700">
-          Main Account
-          <select
-            value={selectedMain}
-            onChange={(event) => {
-              const mainId = event.target.value;
-              onSelectedMainChange(mainId);
-            }}
-            disabled={!canUpdate}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
-          >
-            {mainAccounts.map((source) => (
-              <option key={source.id} value={source.id}>{source.name} - {formatMoney(source.balance)}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="space-y-2 text-sm text-slate-700">
-          Sub-Account
-          <select
-            value={selectedSub}
-            onChange={(event) => onSelectedSubChange(event.target.value)}
-            disabled={!canUpdate || subAccounts.length === 0}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green disabled:opacity-60"
-          >
-            {subAccounts.length === 0 ? (
-              <option value="">No sub-accounts — use main account</option>
-            ) : (
-              <>
-                <option value="">Use main account</option>
-                {subAccounts.map((source) => (
-                  <option key={source.id} value={source.id}>{source.name} - {formatMoney(source.balance)}</option>
-                ))}
-              </>
-            )}
-          </select>
-        </label>
-
-        <label className="space-y-2 text-sm text-slate-700">
-          Availability
-          <select
-            value={available}
-            onChange={(event) => setAvailable(event.target.value as 'true' | 'false')}
-            disabled={!canUpdate}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
-          >
-            <option value="true">Available</option>
-            <option value="false">Not Available</option>
-          </select>
-        </label>
-      </div>
+      <label className="mt-5 block space-y-2 text-sm text-slate-700">
+        Availability
+        <select
+          value={available}
+          onChange={(event) => setAvailable(event.target.value as 'true' | 'false')}
+          disabled={!canUpdate}
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green md:max-w-sm"
+        >
+          <option value="true">Available</option>
+          <option value="false">Not Available</option>
+        </select>
+      </label>
 
       <label className="mt-4 block text-sm text-slate-700">
         Remarks
@@ -161,11 +102,7 @@ export default function FundAvailabilityForm({
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="text-sm text-slate-500">Completing this step moves the request to review or denies it.</div>
-          {status === 'saving' ? (
-            <p className="mt-1 text-sm font-semibold text-sfxc-green" role="status">
-              Assigning source of fund…
-            </p>
-          ) : null}
+          {status === 'saving' ? <p className="mt-1 text-sm font-semibold text-sfxc-green">Assigning source of fund...</p> : null}
         </div>
         <button type="submit" disabled={!canUpdate || !selectedSub || status === 'saving' || status === 'success'} className="sfxc-button">
           {status === 'saving' ? 'Updating...' : 'Update Availability'}
@@ -181,9 +118,7 @@ export default function FundAvailabilityForm({
             onContinue={() => router.refresh()}
           />
         ) : status === 'error' ? (
-          <div className="mt-4 rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
-            {message}
-          </div>
+          <div className="mt-4 rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{message}</div>
         ) : null}
       </div>
     </form>
