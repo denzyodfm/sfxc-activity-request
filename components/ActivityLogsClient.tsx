@@ -24,13 +24,21 @@ function escapeXml(value: string) {
 
 export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] }) {
   const [query, setQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
   const normalizedQuery = query.trim().toLowerCase();
 
   const filteredLogs = useMemo(() => {
-    if (!normalizedQuery) return logs;
-
-    return logs.filter((log) =>
-      [
+    return logs.filter((log) => {
+      const logDate = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(new Date(log.timestamp));
+      const matchesDate = !selectedDate || logDate === selectedDate;
+      const matchesQuery =
+        !normalizedQuery ||
+        [
         new Date(log.timestamp).toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
         log.userName,
         log.email,
@@ -38,9 +46,11 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
         log.process,
         log.requestNumber,
         log.details
-      ].some((value) => value.toLowerCase().includes(normalizedQuery))
-    );
-  }, [logs, normalizedQuery]);
+        ].some((value) => value.toLowerCase().includes(normalizedQuery));
+
+      return matchesDate && matchesQuery;
+    });
+  }, [logs, normalizedQuery, selectedDate]);
 
   const suggestions = useMemo(() => {
     const values = new Set<string>();
@@ -113,22 +123,45 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between print:hidden">
-        <label className="w-full max-w-2xl text-sm font-medium text-slate-700">
-          Search all fields
-          <input
-            type="search"
-            list="activity-log-suggestions"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Type a user, role, process, request number, detail, or timestamp…"
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sfxc-green focus:ring-2 focus:ring-emerald-100"
-          />
-          <datalist id="activity-log-suggestions">
-            {suggestions.map((suggestion) => <option key={suggestion} value={suggestion} />)}
-          </datalist>
-        </label>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between print:hidden">
+        <div className="grid w-full max-w-4xl gap-3 sm:grid-cols-[minmax(0,1fr)_210px]">
+          <label className="text-sm font-medium text-slate-700">
+            Search all fields
+            <input
+              type="search"
+              list="activity-log-suggestions"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Type a user, role, process, request number, detail, or timestamp…"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sfxc-green focus:ring-2 focus:ring-emerald-100"
+            />
+            <datalist id="activity-log-suggestions">
+              {suggestions.map((suggestion) => <option key={suggestion} value={suggestion} />)}
+            </datalist>
+          </label>
+          <label className="text-sm font-medium text-slate-700">
+            Filter by date
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sfxc-green focus:ring-2 focus:ring-emerald-100"
+            />
+          </label>
+        </div>
         <div className="flex flex-wrap gap-2">
+          {query || selectedDate ? (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery('');
+                setSelectedDate('');
+              }}
+              className="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Clear Filters
+            </button>
+          ) : null}
           <button type="button" onClick={() => window.print()} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green hover:bg-emerald-50">
             Print Results
           </button>
@@ -139,7 +172,9 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
       </div>
 
       <p className="text-sm text-slate-500 print:text-slate-700">
-        Showing {filteredLogs.length} of {logs.length} activities{query ? ` for “${query}”` : ''}.
+        Showing {filteredLogs.length} of {logs.length} activities
+        {selectedDate ? ` on ${new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-PH')}` : ''}
+        {query ? ` for “${query}”` : ''}.
       </p>
 
       <div className="sfxc-card overflow-hidden print:border-0 print:shadow-none">
