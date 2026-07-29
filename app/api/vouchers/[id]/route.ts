@@ -14,8 +14,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     select: { id: true, status: true, controlNumber: true }
   });
   if (!existing) return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
-  if (existing.status !== 'APPROVED') {
-    return NextResponse.json({ error: 'Only requests awaiting voucher preparation can be edited.' }, { status: 422 });
+  if (!['FOR_FUND_AVAILABILITY', 'APPROVED'].includes(existing.status)) {
+    return NextResponse.json({ error: 'Voucher details can only be edited during fund availability or voucher preparation.' }, { status: 422 });
   }
 
   const body = await request.json();

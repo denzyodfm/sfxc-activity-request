@@ -11,9 +11,10 @@ interface FundAvailabilityFormProps {
   request: RequestDetailsData;
   fundSourceId: string | null;
   fundSources: { id: string; name: string; parentId: string | null; balance: number }[];
+  showRequestDetails?: boolean;
 }
 
-export default function FundAvailabilityForm({ requestId, request, fundSourceId, fundSources }: FundAvailabilityFormProps) {
+export default function FundAvailabilityForm({ requestId, request, fundSourceId, fundSources, showRequestDetails = true }: FundAvailabilityFormProps) {
   const router = useRouter();
   const mainAccounts = fundSources.filter((source) => !source.parentId);
   const existingSource = fundSources.find((source) => source.id === fundSourceId);
@@ -83,7 +84,7 @@ export default function FundAvailabilityForm({ requestId, request, fundSourceId,
         <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Fund Availability</span>
       </div>
 
-      <RequestDetails request={request} />
+      {showRequestDetails ? <RequestDetails request={request} /> : null}
 
       {!canUpdate ? (
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">

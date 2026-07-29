@@ -3,6 +3,7 @@ import FundAvailabilityForm from '@/components/FundAvailabilityForm';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import VoucherPrint from '@/components/VoucherPrint';
 
 export default async function FundAvailabilityPage() {
   const session = await getSession();
@@ -11,11 +12,20 @@ export default async function FundAvailabilityPage() {
     redirect('/login');
   }
 
-  const [requests, fundSources] = await Promise.all([
+  const [requests, fundSources, signatories, jca, jmapc] = await Promise.all([
     prisma.activityRequest.findMany({
       where: { status: 'FOR_FUND_AVAILABILITY' },
       orderBy: { date: 'desc' },
-      include: { department: true, requestedBy: true, fundSource: true, attachments: true }
+      include: {
+        department: true,
+        requestedBy: true,
+        fundSource: { include: { parent: true } },
+        attachments: true,
+        approvals: {
+          include: { actor: true },
+          orderBy: { createdAt: 'desc' }
+        }
+      }
     }),
     prisma.fundSource.findMany({
       select: {
@@ -28,7 +38,10 @@ export default async function FundAvailabilityPage() {
           select: { balanceAfter: true }
         }
       }
-    })
+    }),
+    prisma.voucherSignatory.findMany(),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JCA' }, select: { name: true } }),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JMAPC' }, select: { name: true } })
   ]);
 
   return (
@@ -62,17 +75,26 @@ export default async function FundAvailabilityPage() {
 
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Review Funds">
-                <FundAvailabilityForm
-                  requestId={request.id}
-                  request={requestDetails}
-                  fundSourceId={request.fundSourceId}
-                  fundSources={fundSources.map((source) => ({
-                    id: source.id,
-                    name: source.name,
-                    parentId: source.parentId,
-                    balance: Number(source.ledgerEntries[0]?.balanceAfter ?? 0)
-                  }))}
-                />
+                <div className="space-y-6">
+                  <VoucherPrint
+                    request={request}
+                    signatories={signatories}
+                    roleNames={{ jca: jca?.name, jmapc: jmapc?.name }}
+                    canEdit
+                  />
+                  <FundAvailabilityForm
+                    requestId={request.id}
+                    request={requestDetails}
+                    fundSourceId={request.fundSourceId}
+                    showRequestDetails={false}
+                    fundSources={fundSources.map((source) => ({
+                      id: source.id,
+                      name: source.name,
+                      parentId: source.parentId,
+                      balance: Number(source.ledgerEntries[0]?.balanceAfter ?? 0)
+                    }))}
+                  />
+                </div>
               </RequestQueueItem>
             );
           })
