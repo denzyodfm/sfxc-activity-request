@@ -67,8 +67,8 @@ button, input, textarea, select {
 
 @media print {
   @page {
-    size: A4;
-    margin: 10mm;
+    size: 8.5in 5.5in;
+    margin: 0.2in;
   }
 
   html,
@@ -80,11 +80,6 @@ button, input, textarea, select {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-}
-
-@page voucher {
-  size: 8.5in 5.5in;
-  margin: 0.2in;
 }
 
 .voucher-sheet {
@@ -109,14 +104,15 @@ button, input, textarea, select {
   }
 
   .voucher-sheet {
-    page: voucher;
     position: absolute;
     inset: 0 auto auto 0;
-    width: 8.1in;
-    height: 5.1in;
+    width: 138.8889%;
+    height: auto;
     margin: 0;
-    overflow: hidden;
+    overflow: visible;
     font-size: 9px;
+    transform: scale(0.72);
+    transform-origin: top left;
   }
 
   .voucher-sheet .voucher-signature {
