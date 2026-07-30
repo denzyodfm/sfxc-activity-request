@@ -3,6 +3,7 @@ import ApprovalForm from '@/components/ApprovalForm';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import VoucherPrint from '@/components/VoucherPrint';
 
 interface ApprovalPageProps {
   searchParams: { approver?: string };
@@ -27,14 +28,23 @@ export default async function ApprovalPage({ searchParams }: ApprovalPageProps) 
 
   const filterByApprover = session.role === 'APPROVER_JMAPC' ? 'APPROVER_JMAPC' : session.role === 'APPROVER_JCA' ? 'APPROVER_JCA' : searchParams.approver;
 
-  const requests = await prisma.activityRequest.findMany({
-    where: {
-      status: 'FOR_APPROVAL',
-      ...(filterByApprover ? { finalApprover: filterByApprover } : {})
-    },
-    orderBy: { date: 'desc' },
-    include: { department: true, requestedBy: true, fundSource: true, attachments: true }
-  });
+  const [requests, signatories, jca, jmapc] = await Promise.all([
+    prisma.activityRequest.findMany({
+      where: {
+        status: 'FOR_APPROVAL',
+        ...(filterByApprover ? { finalApprover: filterByApprover } : {})
+      },
+      orderBy: { date: 'desc' },
+      include: {
+        department: true, requestedBy: true, attachments: true,
+        fundSource: { include: { parent: true } },
+        approvals: { include: { actor: true }, orderBy: { createdAt: 'desc' } }
+      }
+    }),
+    prisma.voucherSignatory.findMany(),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JCA' }, select: { name: true } }),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JMAPC' }, select: { name: true } })
+  ]);
 
   const approverLabels: Record<string, string> = {
     APPROVER_JMAPC: 'JMAPC',
@@ -72,11 +82,14 @@ export default async function ApprovalPage({ searchParams }: ApprovalPageProps) 
 
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Approve">
-                <ApprovalForm
-                  requestId={request.id}
-                  request={requestDetails}
-                  finalApproverLabel={approverLabels[request.finalApprover ?? 'APPROVER_JMAPC'] ?? 'TBD'}
-                />
+                <div className="space-y-2">
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <ApprovalForm
+                    requestId={request.id}
+                    request={requestDetails}
+                    finalApproverLabel={approverLabels[request.finalApprover ?? 'APPROVER_JMAPC'] ?? 'TBD'}
+                  />
+                </div>
               </RequestQueueItem>
             );
           })

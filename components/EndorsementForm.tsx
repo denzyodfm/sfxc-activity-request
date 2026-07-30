@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import RequestDetails, { RequestDetailsData } from './RequestDetails';
+import { RequestDetailsData } from './RequestDetails';
 import ApprovalCodeReceipt from './ApprovalCodeReceipt';
+import WorkflowAttachments from './WorkflowAttachments';
 
 interface EndorsementFormProps {
   requestId: string;
@@ -55,7 +56,7 @@ export default function EndorsementForm({ requestId, request }: EndorsementFormP
   };
 
   return (
-    <form className="sfxc-card p-6" onSubmit={handleSubmit}>
+    <form className="sfxc-card p-4 sm:p-5" onSubmit={handleSubmit}>
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm text-slate-500">Endorse Request</p>
@@ -64,9 +65,8 @@ export default function EndorsementForm({ requestId, request }: EndorsementFormP
         <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-800">Endorser</span>
       </div>
 
-      <RequestDetails request={request} />
-
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <WorkflowAttachments attachments={request.attachments} />
         <label className="space-y-2 text-sm text-slate-700">
           Decision
           <select

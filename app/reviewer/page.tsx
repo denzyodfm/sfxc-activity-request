@@ -3,6 +3,7 @@ import ReviewForm from '@/components/ReviewForm';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import VoucherPrint from '@/components/VoucherPrint';
 
 export default async function ReviewerPage() {
   const session = await getSession();
@@ -11,11 +12,20 @@ export default async function ReviewerPage() {
     redirect('/login');
   }
 
-  const requests = await prisma.activityRequest.findMany({
-    where: { status: 'FOR_REVIEW' },
-    orderBy: { date: 'desc' },
-    include: { department: true, requestedBy: true, fundSource: true, attachments: true }
-  });
+  const [requests, signatories, jca, jmapc] = await Promise.all([
+    prisma.activityRequest.findMany({
+      where: { status: 'FOR_REVIEW' },
+      orderBy: { date: 'desc' },
+      include: {
+        department: true, requestedBy: true, attachments: true,
+        fundSource: { include: { parent: true } },
+        approvals: { include: { actor: true }, orderBy: { createdAt: 'desc' } }
+      }
+    }),
+    prisma.voucherSignatory.findMany(),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JCA' }, select: { name: true } }),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JMAPC' }, select: { name: true } })
+  ]);
 
   return (
     <section className="space-y-8">
@@ -48,7 +58,10 @@ export default async function ReviewerPage() {
 
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Review">
-                <ReviewForm requestId={request.id} request={requestDetails} />
+                <div className="space-y-2">
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <ReviewForm requestId={request.id} request={requestDetails} />
+                </div>
               </RequestQueueItem>
             );
           })
