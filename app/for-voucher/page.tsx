@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import RequestDetails from '@/components/RequestDetails';
 import MarkVoucherDoneButton from '@/components/MarkVoucherDoneButton';
 import RequestQueueItem from '@/components/RequestQueueItem';
+import VoucherPrint from '@/components/VoucherPrint';
+import WorkflowAttachments from '@/components/WorkflowAttachments';
 
 export default async function ForVoucherPage() {
   const session = await getSession();
@@ -25,11 +25,20 @@ export default async function ForVoucherPage() {
 
   let whereClause: any = { status: 'APPROVED' };
 
-  const requests = await prisma.activityRequest.findMany({
-    where: whereClause,
-    orderBy: { date: 'desc' },
-    include: { department: true, requestedBy: true, fundSource: true, attachments: true }
-  });
+  const [requests, signatories, jca, jmapc] = await Promise.all([
+    prisma.activityRequest.findMany({
+      where: whereClause,
+      orderBy: { date: 'desc' },
+      include: {
+        department: true, requestedBy: true, attachments: true,
+        fundSource: { include: { parent: true } },
+        approvals: { include: { actor: true }, orderBy: { createdAt: 'desc' } }
+      }
+    }),
+    prisma.voucherSignatory.findMany(),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JCA' }, select: { name: true } }),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JMAPC' }, select: { name: true } })
+  ]);
 
   return (
     <section className="space-y-8">
@@ -62,24 +71,13 @@ export default async function ForVoucherPage() {
 
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Open Voucher">
-                <article className="sfxc-card p-6">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Ready for Voucher</p>
-                  <h2 className="mt-1 text-lg font-semibold text-slate-900">{request.particulars}</h2>
+                <div className="space-y-2">
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <div className="sfxc-card flex flex-col gap-4 p-4 sm:flex-row sm:items-end sm:justify-between">
+                    <WorkflowAttachments attachments={requestDetails.attachments} />
+                    <MarkVoucherDoneButton requestId={request.id} />
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  <Link href={`/voucher/${request.id}`} className="sfxc-button">
-                    Prepare Voucher
-                  </Link>
-                  <MarkVoucherDoneButton requestId={request.id} />
-                </div>
-              </div>
-
-              <RequestDetails
-                request={requestDetails}
-              />
-                </article>
               </RequestQueueItem>
             );
           })

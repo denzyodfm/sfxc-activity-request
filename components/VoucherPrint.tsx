@@ -17,6 +17,8 @@ interface VoucherPrintProps {
     approvals: {
       role: string;
       action: string;
+      approvalCode: string | null;
+      createdAt: Date;
       actor: { name: string; role: string };
     }[];
   };
@@ -70,13 +72,24 @@ function escapeXml(value: string) {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function Signature({ label, name, title, className = '' }: { label: string; name?: string | null; title?: string | null; className?: string }) {
+function Signature({
+  label, name, title, approvalCode, approvedAt, className = ''
+}: {
+  label: string;
+  name?: string | null;
+  title?: string | null;
+  approvalCode?: string | null;
+  approvedAt?: Date | string | null;
+  className?: string;
+}) {
   return (
     <div className={`voucher-signature min-h-[105px] border border-black p-2 text-center ${className}`}>
       <p className="text-left text-[10px] italic">{label}</p>
       <div className="mt-8">
         <p className="font-bold uppercase underline">{name || '____________________________'}</p>
         <p className="mt-1 text-[10px] italic">{title || ''}</p>
+        {approvalCode ? <p className="mt-1 font-mono text-[8px] font-semibold">Code: {approvalCode}</p> : null}
+        {approvedAt ? <p className="text-[8px]">Approved: {new Date(approvedAt).toLocaleString()}</p> : null}
       </div>
     </div>
   );
@@ -98,6 +111,11 @@ export default function VoucherPrint({
   const fundOfficer = approval('FUND_OFFICER', 'FUND_AVAILABLE')?.actor.name ?? setting('PREPARED_BY')?.name;
   const reviewer = approval('REVIEWER', 'REVIEW_APPROVED')?.actor.name ?? setting('CHECKED_BY')?.name;
   const endorser = approval('ENDORSER', 'ENDORSED')?.actor.name ?? setting('VERIFIED_BY')?.name;
+  const fundOfficerApproval = approval('FUND_OFFICER', 'FUND_AVAILABLE');
+  const reviewerApproval = approval('REVIEWER', 'REVIEW_APPROVED');
+  const endorserApproval = approval('ENDORSER', 'ENDORSED');
+  const jcaApproval = approval('APPROVER_JCA', 'APPROVED');
+  const jmapcApproval = approval('APPROVER_JMAPC', 'APPROVED');
   const recommending = setting('RECOMMENDING_APPROVAL')?.name ?? roleNames.jca;
   const approved = setting('APPROVED_BY')?.name ?? roleNames.jmapc;
   const president = setting('PRESIDENT');
@@ -275,13 +293,13 @@ export default function VoucherPrint({
         </div>
 
         <div className="grid grid-cols-3">
-          <Signature label="PREPARED:" name={fundOfficer} title={setting('PREPARED_BY')?.title ?? 'Fund Officer'} />
-          <Signature label="CHECKED:" name={reviewer} title={setting('CHECKED_BY')?.title ?? 'Reviewer'} />
-          <Signature label="VERIFIED:" name={endorser} title={setting('VERIFIED_BY')?.title ?? 'Endorser'} />
+          <Signature label="PREPARED:" name={fundOfficer} title={setting('PREPARED_BY')?.title ?? 'Fund Officer'} approvalCode={fundOfficerApproval?.approvalCode} approvedAt={fundOfficerApproval?.createdAt} />
+          <Signature label="CHECKED:" name={reviewer} title={setting('CHECKED_BY')?.title ?? 'Reviewer'} approvalCode={reviewerApproval?.approvalCode} approvedAt={reviewerApproval?.createdAt} />
+          <Signature label="VERIFIED:" name={endorser} title={setting('VERIFIED_BY')?.title ?? 'Endorser'} approvalCode={endorserApproval?.approvalCode} approvedAt={endorserApproval?.createdAt} />
         </div>
         <div className="grid grid-cols-3">
-          <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} />
-          <Signature label="APPROVED:" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} className="border-r-0" />
+          <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} approvalCode={jcaApproval?.approvalCode} approvedAt={jcaApproval?.createdAt} />
+          <Signature label="APPROVED:" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} approvalCode={jmapcApproval?.approvalCode} approvedAt={jmapcApproval?.createdAt} className="border-r-0" />
           <Signature label="APPROVED:" name={president?.name} title={president?.title ?? 'President'} className="border-l-0" />
         </div>
       </div>
@@ -292,7 +310,7 @@ export default function VoucherPrint({
             {saveStatus === 'saving' ? 'Saving...' : 'Save Voucher'}
           </button>
         ) : null}
-        <button type="button" onClick={() => window.print()} className="sfxc-button">Print Voucher</button>
+        <button type="button" onClick={() => window.print()} className="sfxc-button">Print</button>
         <button type="button" onClick={downloadExcel} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green hover:bg-emerald-50">
           Download Excel
         </button>

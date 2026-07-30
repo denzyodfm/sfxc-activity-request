@@ -1,8 +1,9 @@
-import Link from 'next/link';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import RequestDetails from '@/components/RequestDetails';
+import RequestQueueItem from '@/components/RequestQueueItem';
+import VoucherPrint from '@/components/VoucherPrint';
+import WorkflowAttachments from '@/components/WorkflowAttachments';
 
 export default async function DonePage() {
   const session = await getSession();
@@ -19,11 +20,20 @@ export default async function DonePage() {
       : { ...whereClause, requestedById: session.id };
   }
 
-  const requests = await prisma.activityRequest.findMany({
-    where: whereClause,
-    orderBy: { updatedAt: 'desc' },
-    include: { department: true, requestedBy: true, fundSource: true, attachments: true }
-  });
+  const [requests, signatories, jca, jmapc] = await Promise.all([
+    prisma.activityRequest.findMany({
+      where: whereClause,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        department: true, requestedBy: true, attachments: true,
+        fundSource: { include: { parent: true } },
+        approvals: { include: { actor: true }, orderBy: { createdAt: 'desc' } }
+      }
+    }),
+    prisma.voucherSignatory.findMany(),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JCA' }, select: { name: true } }),
+    prisma.user.findFirst({ where: { role: 'APPROVER_JMAPC' }, select: { name: true } })
+  ]);
 
   return (
     <section className="space-y-8">
@@ -41,19 +51,8 @@ export default async function DonePage() {
         {requests.length === 0 ? (
           <div className="sfxc-card p-8 text-slate-600">No completed requests yet.</div>
         ) : (
-          requests.map((request) => (
-            <article key={request.id} className="sfxc-card p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Completed Request</p>
-                  <h2 className="mt-1 text-lg font-semibold text-slate-900">{request.particulars}</h2>
-                </div>
-                <Link href={`/voucher/${request.id}`} className="sfxc-button">
-                  View
-                </Link>
-              </div>
-              <RequestDetails
-                request={{
+          requests.map((request) => {
+            const requestDetails = {
                   controlNumber: request.controlNumber,
                   date: request.date.toISOString(),
                   departmentName: request.department.name,
@@ -67,10 +66,18 @@ export default async function DonePage() {
                     fileName: attachment.fileName,
                     fileUrl: attachment.fileUrl
                   }))
-                }}
-              />
-            </article>
-          ))
+                };
+            return (
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="View">
+                <div className="space-y-2">
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <div className="sfxc-card p-4">
+                    <WorkflowAttachments attachments={requestDetails.attachments} />
+                  </div>
+                </div>
+              </RequestQueueItem>
+            );
+          })
         )}
       </div>
     </section>

@@ -44,7 +44,7 @@ export default function MarkVoucherDoneButton({ requestId }: { requestId: string
         disabled={status === 'saving'}
         className="sfxc-button-secondary"
       >
-        {status === 'saving' ? 'Completing...' : 'Complete Voucher'}
+        {status === 'saving' ? 'Completing...' : 'Complete/Close Voucher'}
       </button>
       {status === 'error' ? <p className="text-sm text-rose-600">{message}</p> : null}
     </div>
