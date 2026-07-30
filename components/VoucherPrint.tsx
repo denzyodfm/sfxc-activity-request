@@ -73,7 +73,7 @@ function escapeXml(value: string) {
 }
 
 function Signature({
-  label, name, title, approvalCode, approvedAt, className = ''
+  label, name, title, approvalCode, approvedAt, className = '', lowerName = false
 }: {
   label: string;
   name?: string | null;
@@ -81,15 +81,20 @@ function Signature({
   approvalCode?: string | null;
   approvedAt?: Date | string | null;
   className?: string;
+  lowerName?: boolean;
 }) {
   return (
-    <div className={`voucher-signature min-h-[105px] border border-black p-2 text-center ${className}`}>
-      <p className="text-left text-[10px] italic">{label}</p>
-      <div className="mt-8">
+    <div className={`voucher-signature min-h-[118px] border border-black p-2 text-center ${className}`}>
+      {label ? <p className="text-left text-[10px] italic">{label}</p> : null}
+      {approvalCode ? (
+        <div className="mt-1 text-center leading-tight">
+          <p className="font-mono text-[8px] font-semibold">Approval Code: {approvalCode}</p>
+          <p className="text-[8px]">Approved: {approvedAt ? new Date(approvedAt).toLocaleString() : ''}</p>
+        </div>
+      ) : null}
+      <div className={lowerName ? (approvalCode ? 'mt-6' : 'mt-12') : (approvalCode ? 'mt-4' : 'mt-8')}>
         <p className="font-bold uppercase underline">{name || '____________________________'}</p>
         <p className="mt-1 text-[10px] italic">{title || ''}</p>
-        {approvalCode ? <p className="mt-1 font-mono text-[8px] font-semibold">Code: {approvalCode}</p> : null}
-        {approvedAt ? <p className="text-[8px]">Approved: {new Date(approvedAt).toLocaleString()}</p> : null}
       </div>
     </div>
   );
@@ -299,8 +304,13 @@ export default function VoucherPrint({
         </div>
         <div className="grid grid-cols-3">
           <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} approvalCode={jcaApproval?.approvalCode} approvedAt={jcaApproval?.createdAt} />
-          <Signature label="APPROVED:" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} approvalCode={jmapcApproval?.approvalCode} approvedAt={jmapcApproval?.createdAt} className="border-r-0" />
-          <Signature label="APPROVED:" name={president?.name} title={president?.title ?? 'President'} className="border-l-0" />
+          <div className="col-span-2 border-y border-r border-black">
+            <p className="py-2 text-center text-[10px] italic">APPROVED:</p>
+            <div className="grid grid-cols-2">
+              <Signature label="" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} approvalCode={jmapcApproval?.approvalCode} approvedAt={jmapcApproval?.createdAt} lowerName className="border-0" />
+              <Signature label="" name={president?.name} title={president?.title ?? 'President'} lowerName className="border-0" />
+            </div>
+          </div>
         </div>
       </div>
 

@@ -120,6 +120,7 @@ button, input, textarea, select {
   }
 
   .voucher-sheet .voucher-signature {
-    min-height: 72px;
+    min-height: 82px;
+    padding: 3px;
   }
 }
