@@ -8,7 +8,7 @@ async function main() {
   const trustFund = accounts.find((account) => normalize(account.name) === 'trust fund');
   if (!trustFund) throw new Error('Trust Fund main account was not found.');
 
-  const targetNames = new Set(['test', 'cc', 'ccje', 'ccje department fee']);
+  const targetNames = new Set(['test', 'cc', 'ccje', 'ccje dept funds', 'ccje department fund', 'ccje department fee']);
   const targets = accounts.filter((account) =>
     targetNames.has(normalize(account.name)) ||
     normalize(account.description ?? '') === 'for crim act'

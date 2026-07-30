@@ -69,46 +69,25 @@ export async function PATCH(request: NextRequest) {
   const id = body.id?.toString().trim();
   const name = body.name?.toString().trim();
   const description = body.description?.toString().trim() || null;
-  const accountType = body.accountType?.toString();
-  const parentId = body.parentId?.toString().trim() || null;
   if (!id || !name) {
     return NextResponse.json({ error: 'Account and account name are required.' }, { status: 422 });
   }
-  if (!['main', 'sub'].includes(accountType)) {
-    return NextResponse.json({ error: 'Please select a valid account type.' }, { status: 422 });
-  }
-  if (accountType === 'sub' && !parentId) {
-    return NextResponse.json({ error: 'A main account is required for a sub-account.' }, { status: 422 });
-  }
-  if (accountType === 'main' && parentId) {
-    return NextResponse.json({ error: 'A main account cannot have a parent account.' }, { status: 422 });
-  }
-  if (parentId === id) {
-    return NextResponse.json({ error: 'An account cannot be its own main account.' }, { status: 422 });
-  }
 
-  const [source, parent, duplicate] = await Promise.all([
-    prisma.fundSource.findUnique({ where: { id }, include: { subAccounts: { select: { id: true } } } }),
-    parentId ? prisma.fundSource.findUnique({ where: { id: parentId }, select: { id: true, parentId: true } }) : null,
+  const [source, duplicate] = await Promise.all([
+    prisma.fundSource.findUnique({ where: { id }, select: { id: true, parentId: true } }),
     prisma.fundSource.findFirst({ where: { name, NOT: { id } }, select: { id: true } })
   ]);
   if (!source) return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
   if (duplicate) return NextResponse.json({ error: 'An account with this name already exists.' }, { status: 422 });
-  if (parentId && (!parent || parent.parentId)) {
-    return NextResponse.json({ error: 'Please select a valid main account.' }, { status: 422 });
-  }
-  if (parentId && source.subAccounts.length) {
-    return NextResponse.json({ error: 'A main account with sub-accounts cannot itself become a sub-account.' }, { status: 422 });
-  }
 
   const fundSource = await prisma.fundSource.update({
     where: { id },
-    data: { name, description, parentId }
+    data: { name, description }
   });
   await recordActivity({
     userId: session.id,
     action: 'FUND_SOURCE_UPDATED',
-    details: `Updated ${parentId ? 'sub-account' : 'main account'}: ${fundSource.name}.`
+    details: `Updated ${source.parentId ? 'sub-account' : 'main account'}: ${fundSource.name}.`
   });
   return NextResponse.json({ fundSource, message: 'Source of fund updated.' });
 }
