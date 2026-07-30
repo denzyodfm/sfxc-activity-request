@@ -35,12 +35,14 @@ export default function LoginPage() {
       setStatus('success');
       setMessage('Login successful. Redirecting...');
       setUser(data.user);
-      const destination =
-        data.user.role === 'APPROVER_JMAPC'
-          ? '/approval?approver=APPROVER_JMAPC'
-          : data.user.role === 'APPROVER_JCA'
-            ? '/approval?approver=APPROVER_JCA'
-            : '/';
+      const roleDestinations: Record<string, string> = {
+        FUND_OFFICER: '/fund-availability',
+        REVIEWER: '/reviewer',
+        ENDORSER: '/endorsement',
+        APPROVER_JMAPC: '/approval?approver=APPROVER_JMAPC',
+        APPROVER_JCA: '/approval?approver=APPROVER_JCA'
+      };
+      const destination = roleDestinations[data.user.role] ?? '/';
       router.replace(destination);
     } catch (error) {
       setStatus('error');
