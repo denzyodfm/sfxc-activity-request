@@ -291,7 +291,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                 <p className="text-xs uppercase tracking-[0.18em] text-emerald-700">Balance</p>
                 <p className="mt-2 font-semibold text-emerald-900">{formatMoney(source.balance)}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={(event) => { event.stopPropagation(); editSource(source); }} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green">Edit</button>
                 <button type="button" onClick={(event) => { event.stopPropagation(); deleteSource(source); }} className="rounded-2xl border border-rose-300 px-4 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50">Delete</button>
                 <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedSourceId(source.id); }} className="sfxc-button">View</button>
@@ -346,7 +346,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
                       <p className="text-xs uppercase text-emerald-700">Balance</p>
                       <p className="mt-1 font-semibold text-emerald-900">{formatMoney(subAccount.balance)}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button type="button" onClick={() => editSource(subAccount)} className="rounded-2xl border border-sfxc-green px-3 py-2 text-sm font-semibold text-sfxc-green">Edit</button>
                       <button type="button" onClick={() => deleteSource(subAccount)} className="rounded-2xl border border-rose-300 px-3 py-2 text-sm font-semibold text-rose-700">Delete</button>
                       <button type="button" onClick={() => setSelectedSourceId(subAccount.id)} className="sfxc-button">View</button>
@@ -360,7 +360,7 @@ export default function FundSourceManager({ fundSources }: FundSourceManagerProp
       </div>
 
       {selectedSource ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 p-2 backdrop-blur-sm sm:p-4">
           <div className="mt-8 w-full max-w-6xl">
             <div className="mb-3 flex justify-end">
               <button

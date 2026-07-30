@@ -24,7 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[1600px] overflow-hidden">
+    <div className="mx-auto flex min-h-screen max-w-[1600px] overflow-x-hidden">
       <div
         className={`fixed inset-0 z-30 bg-slate-950/40 transition-opacity lg:hidden ${
           isSidebarOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
@@ -39,8 +39,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         <Sidebar onNavigate={() => setIsSidebarOpen(false)} />
       </div>
-      <main className="flex-1 p-6 print:p-0 lg:px-10 lg:py-8">
-        <div className="mb-8 flex items-start justify-between gap-4 print:hidden">
+      <main className="min-w-0 flex-1 px-3 py-4 print:p-0 sm:p-6 lg:px-10 lg:py-8">
+        <div className="mb-6 flex flex-col items-start gap-3 print:hidden sm:mb-8 sm:flex-row sm:justify-between sm:gap-4">
           <button
             type="button"
             onClick={() => setIsSidebarOpen((current) => !current)}

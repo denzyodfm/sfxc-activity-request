@@ -12,6 +12,8 @@ html, body {
   min-height: 100%;
   background: #F5F6F7;
   color: #1F2937;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body {
@@ -20,6 +22,26 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #15803d #e2e8f0;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid #e2e8f0;
+  border-radius: 999px;
+  background: #15803d;
 }
 
 ::selection {
@@ -68,6 +90,12 @@ button, input, textarea, select {
 .voucher-sheet {
   width: min(100%, 8.5in);
   margin-inline: auto;
+}
+
+@media screen and (max-width: 720px) {
+  .voucher-sheet {
+    width: 700px;
+  }
 }
 
 @media print {

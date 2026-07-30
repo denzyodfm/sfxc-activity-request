@@ -44,8 +44,8 @@ export default function RequestQueueItem({ request, actionLabel = 'View Request'
       </article>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 p-4 backdrop-blur-sm">
-          <div className="mt-8 w-full max-w-5xl">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 p-2 backdrop-blur-sm sm:p-4">
+          <div className="mt-14 w-full max-w-5xl sm:mt-8">
             <div className="mb-3 flex justify-end">
               <button
                 type="button"

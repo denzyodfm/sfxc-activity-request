@@ -189,8 +189,8 @@ export default function DashboardRequestBrowser({ requests }: { requests: Dashbo
       </div>
 
       {selectedCategory ? (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/55 p-4 backdrop-blur-sm">
-          <div className="mx-auto mt-6 w-full max-w-6xl rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/55 p-2 backdrop-blur-sm sm:p-4">
+          <div className="mx-auto mt-3 w-full max-w-6xl rounded-3xl bg-white p-4 shadow-2xl sm:mt-6 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm uppercase tracking-[0.24em] text-sfxc-green">Request List</p>

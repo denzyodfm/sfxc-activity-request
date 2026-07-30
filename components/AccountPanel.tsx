@@ -24,9 +24,9 @@ export default function AccountPanel() {
     <div className="ml-auto flex w-full max-w-4xl flex-wrap items-center justify-end gap-3 rounded-3xl bg-white px-4 py-3 text-sm text-slate-700 shadow-sm ring-1 ring-slate-200">
       <span className="text-xs text-slate-500">Logged in as:</span>
       <span className="font-semibold text-slate-900">{user.name}</span>
-      <span className="text-xs text-slate-600">{user.email}</span>
+      <span className="hidden text-xs text-slate-600 sm:inline">{user.email}</span>
       {user.departmentName ? (
-        <span className="text-xs text-slate-600">
+        <span className="hidden text-xs text-slate-600 md:inline">
           Department: <span className="font-semibold text-slate-900">{user.departmentName}</span>
         </span>
       ) : null}

@@ -172,7 +172,7 @@ export default function VoucherPrint({
   };
 
   return (
-    <div className="mx-auto max-w-[900px] text-[12px] text-black">
+    <div className="mx-auto max-w-[900px] overflow-x-auto text-[12px] text-black">
       <div className="voucher-sheet bg-white p-4 print:p-0">
         <div className="grid grid-cols-[90px_1fr_90px] items-center border border-black p-2 text-center">
           <img src="/sfxc_icon.png" alt="SFXC logo" className="mx-auto h-16 w-16 object-contain" />
@@ -286,7 +286,7 @@ export default function VoucherPrint({
         </div>
       </div>
 
-      <div className="fixed right-24 top-4 z-[60] flex flex-wrap gap-2 print:hidden">
+      <div className="fixed left-2 right-20 top-2 z-[60] flex flex-wrap justify-end gap-1 sm:left-auto sm:right-24 sm:top-4 sm:gap-2 print:hidden">
         {canEdit ? (
           <button type="button" onClick={saveVoucher} disabled={saveStatus === 'saving'} className="sfxc-button">
             {saveStatus === 'saving' ? 'Saving...' : 'Save Voucher'}
