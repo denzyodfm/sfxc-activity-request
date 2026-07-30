@@ -73,13 +73,14 @@ function escapeXml(value: string) {
 }
 
 function Signature({
-  label, name, title, approvalCode, approvedAt, className = '', lowerName = false
+  label, name, title, approvalCode, approvedAt, evidenceLabel = 'Approved', className = '', lowerName = false
 }: {
   label: string;
   name?: string | null;
   title?: string | null;
   approvalCode?: string | null;
   approvedAt?: Date | string | null;
+  evidenceLabel?: string;
   className?: string;
   lowerName?: boolean;
 }) {
@@ -89,7 +90,7 @@ function Signature({
       {approvalCode ? (
         <div className="mt-1 text-center leading-tight">
           <p className="font-mono text-[8px] font-semibold">Approval Code: {approvalCode}</p>
-          <p className="text-[8px]">Approved: {approvedAt ? new Date(approvedAt).toLocaleString() : ''}</p>
+          <p className="text-[8px]">{evidenceLabel}: {approvedAt ? new Date(approvedAt).toLocaleString() : ''}</p>
         </div>
       ) : null}
       <div className={lowerName ? (approvalCode ? 'mt-6' : 'mt-12') : (approvalCode ? 'mt-4' : 'mt-8')}>
@@ -298,12 +299,12 @@ export default function VoucherPrint({
         </div>
 
         <div className="grid grid-cols-3">
-          <Signature label="PREPARED:" name={fundOfficer} title={setting('PREPARED_BY')?.title ?? 'Fund Officer'} approvalCode={fundOfficerApproval?.approvalCode} approvedAt={fundOfficerApproval?.createdAt} />
-          <Signature label="CHECKED:" name={reviewer} title={setting('CHECKED_BY')?.title ?? 'Reviewer'} approvalCode={reviewerApproval?.approvalCode} approvedAt={reviewerApproval?.createdAt} />
-          <Signature label="VERIFIED:" name={endorser} title={setting('VERIFIED_BY')?.title ?? 'Endorser'} approvalCode={endorserApproval?.approvalCode} approvedAt={endorserApproval?.createdAt} />
+          <Signature label="PREPARED:" name={fundOfficer} title={setting('PREPARED_BY')?.title ?? 'Fund Officer'} approvalCode={fundOfficerApproval?.approvalCode} approvedAt={fundOfficerApproval?.createdAt} evidenceLabel="Prepared" />
+          <Signature label="CHECKED:" name={reviewer} title={setting('CHECKED_BY')?.title ?? 'Reviewer'} approvalCode={reviewerApproval?.approvalCode} approvedAt={reviewerApproval?.createdAt} evidenceLabel="Checked" />
+          <Signature label="VERIFIED:" name={endorser} title={setting('VERIFIED_BY')?.title ?? 'Endorser'} approvalCode={endorserApproval?.approvalCode} approvedAt={endorserApproval?.createdAt} evidenceLabel="Verified" />
         </div>
         <div className="grid grid-cols-3">
-          <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} approvalCode={jcaApproval?.approvalCode} approvedAt={jcaApproval?.createdAt} />
+          <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} approvalCode={jcaApproval?.approvalCode} approvedAt={jcaApproval?.createdAt} evidenceLabel="Recommended" />
           <div className="col-span-2 border-y border-r border-black">
             <p className="py-2 text-center text-[10px] italic">APPROVED:</p>
             <div className="grid grid-cols-2">
