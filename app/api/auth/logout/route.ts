@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import { SESSION_COOKIE_NAME } from '@/lib/session-cookie';
 import { recordActivity } from '@/lib/activity-log';
 
 export async function POST() {
@@ -13,6 +14,6 @@ export async function POST() {
   }
 
   const response = NextResponse.json({ message: 'Logged out.' });
-  response.cookies.delete('session');
+  response.cookies.delete(SESSION_COOKIE_NAME);
   return response;
 }

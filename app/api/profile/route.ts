@@ -2,8 +2,9 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession, UserSession } from '@/lib/auth';
-import { getSessionCookieOptions } from '@/lib/session-cookie';
+import { getSession } from '@/lib/auth';
+import { SESSION_COOKIE_NAME, getSessionCookieOptions } from '@/lib/session-cookie';
+import { createSessionToken } from '@/lib/session-token';
 import { hashPassword, verifyPassword } from '@/lib/password';
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '@/lib/upload-limits';
 import { recordActivity } from '@/lib/activity-log';
@@ -91,23 +92,30 @@ export async function PUT(request: NextRequest) {
     }
   });
 
-  const nextSession: UserSession = {
-    id: updatedUser.id,
-    name: updatedUser.name,
-    email: updatedUser.email,
-    role: updatedUser.role,
-    departmentId: session.departmentId,
-    departmentName: session.departmentName
-  };
-
   await recordActivity({
     userId: session.id,
     action: 'PROFILE_UPDATED',
     details: newPassword ? 'Updated profile information and password.' : 'Updated profile information.'
   });
 
-  const response = NextResponse.json({ user: updatedUser, message: 'Profile updated.' });
-  response.cookies.set('session', JSON.stringify(nextSession), getSessionCookieOptions());
+  const response = NextResponse.json({
+    user: {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      firstName: updatedUser.firstName,
+      middleName: updatedUser.middleName,
+      lastName: updatedUser.lastName,
+      birthdate: updatedUser.birthdate,
+      position: updatedUser.position,
+      profilePictureUrl: updatedUser.profilePictureUrl
+    },
+    message: 'Profile updated.'
+  });
+
+  // Issue a fresh token so that a password change rotates the session.
+  response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(session.id), getSessionCookieOptions());
 
   return response;
 }

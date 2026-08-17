@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loginUser } from '@/lib/auth';
-import { getSessionCookieOptions } from '@/lib/session-cookie';
+import { SESSION_COOKIE_NAME, getSessionCookieOptions } from '@/lib/session-cookie';
 import { recordActivity } from '@/lib/activity-log';
 
 export async function POST(request: NextRequest) {
@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
 
   const result = await loginUser(email, password);
   
-  if (!result.success) {
-    return NextResponse.json({ error: result.error }, { status: 401 });
+  if (!result.success || !result.token) {
+    return NextResponse.json({ error: result.error ?? 'Invalid email or password.' }, { status: 401 });
   }
 
   await recordActivity({
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   });
 
   const response = NextResponse.json({ user: result.user });
-  response.cookies.set('session', JSON.stringify(result.user), getSessionCookieOptions());
+  response.cookies.set(SESSION_COOKIE_NAME, result.token, getSessionCookieOptions());
 
   return response;
 }
