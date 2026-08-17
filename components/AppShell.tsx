@@ -66,7 +66,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="min-h-[calc(100vh-10rem)]">{children}</div>
         <footer className="mt-10 border-t border-slate-200/70 pt-6 text-center text-xs text-slate-500 print:hidden">
-          &copy; {currentYear} St. Francis Xavier College. All rights reserved.
+          <p>&copy; {currentYear} St. Francis Xavier College. All rights reserved.</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+            <span className="inline-flex items-center rounded-full border border-white bg-[#1c3f94] px-3 py-1 text-[11px] font-bold italic leading-none text-white shadow-sm ring-1 ring-[#1c3f94]/40">
+              Powered by
+            </span>
+            <span className="inline-flex items-baseline gap-1.5 text-[#c00000]">
+              <span className="font-serif text-2xl font-bold leading-none">V</span>
+              <span className="font-serif text-[11px] font-bold uppercase tracking-[0.08em]">
+                Valdemeir Resources, Inc
+              </span>
+            </span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+              IT Team &ndash; Kamaru
+            </span>
+          </div>
         </footer>
       </main>
     </div>
