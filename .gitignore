@@ -9,3 +9,4 @@ dev.db
 *.log
 *.tsbuildinfo
 .DS_Store
+backups
