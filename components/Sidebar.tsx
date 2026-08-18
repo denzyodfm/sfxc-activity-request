@@ -77,6 +77,15 @@ function MenuIcon({ href }: { href: string }) {
     );
   }
 
+  if (href.startsWith('/reports')) {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 15v-3m5 3V8m5 7v-5" />
+      </svg>
+    );
+  }
+
   if (href.startsWith('/attachments')) {
     return (
       <svg {...common}>
@@ -126,7 +135,8 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/profile', label: 'Profile' },
     { href: '/requests/new', label: 'Make Request' },
     { href: '/attachments', label: 'Attachments' },
-    { href: '/done', label: 'Completed' }
+    { href: '/done', label: 'Completed' },
+    { href: '/reports', label: 'Reports' }
   ],
   FUND_OFFICER: [
     { href: '/', label: 'Dashboard' },
@@ -134,32 +144,37 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/fund-availability', label: 'Fund Availability' },
     { href: '/funds', label: 'Source of Fund' },
     { href: '/for-voucher', label: 'For Voucher' },
-    { href: '/done', label: 'Completed' }
+    { href: '/done', label: 'Completed' },
+    { href: '/reports', label: 'Reports' }
   ],
   REVIEWER: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/reviewer', label: 'Reviewer' },
     { href: '/for-voucher', label: 'For Voucher' },
-    { href: '/done', label: 'Completed' }
+    { href: '/done', label: 'Completed' },
+    { href: '/reports', label: 'Reports' }
   ],
   ENDORSER: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/endorsement', label: 'Endorsed By' },
-    { href: '/done', label: 'Completed' }
+    { href: '/done', label: 'Completed' },
+    { href: '/reports', label: 'Reports' }
   ],
   APPROVER_JMAPC: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/approval?approver=APPROVER_JMAPC', label: 'Final Approval' },
-    { href: '/done', label: 'Completed' }
+    { href: '/done', label: 'Completed' },
+    { href: '/reports', label: 'Reports' }
   ],
   APPROVER_JCA: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/approval?approver=APPROVER_JCA', label: 'Final Approval' },
-    { href: '/done', label: 'Completed' }
+    { href: '/done', label: 'Completed' },
+    { href: '/reports', label: 'Reports' }
   ],
   ADMIN: [
     { href: '/', label: 'Dashboard' },
@@ -172,6 +187,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/attachments', label: 'Attachments' },
     { href: '/for-voucher', label: 'For Voucher' },
     { href: '/done', label: 'Completed' },
+    { href: '/reports', label: 'Reports' },
     { href: '/activity-logs', label: 'Activity Logs' },
     { href: '/admin', label: 'Admin Settings' }
   ]

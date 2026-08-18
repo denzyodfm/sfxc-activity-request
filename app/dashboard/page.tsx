@@ -5,6 +5,12 @@ import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
+/**
+ * How many requests the browsable list holds. The status tiles stay accurate
+ * beyond this because they are counted in the database, not from this array.
+ */
+const DASHBOARD_PAGE_SIZE = 200;
+
 export default async function DashboardPage() {
   const session = await getSession();
   
@@ -23,11 +29,31 @@ export default async function DashboardPage() {
     }
   }
 
-  const requests = await prisma.activityRequest.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: { department: true, requestedBy: true, fundSource: true, attachments: true },
-    where: whereClause
-  });
+  // The tiles need a count per status across everything the user may see, but
+  // the list itself only ever renders a page of rows. Counting with groupBy
+  // keeps the tiles exact without loading the whole table — this query used to
+  // pull every request with four relations joined on every dashboard view.
+  const [statusGroups, requests] = await Promise.all([
+    prisma.activityRequest.groupBy({
+      by: ['status'],
+      where: whereClause,
+      _count: { _all: true }
+    }),
+    prisma.activityRequest.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { department: true, requestedBy: true, fundSource: true, attachments: true },
+      where: whereClause,
+      take: DASHBOARD_PAGE_SIZE
+    })
+  ]);
+
+  const statusCounts: Record<string, number> = {};
+  let totalRequests = 0;
+
+  for (const group of statusGroups) {
+    statusCounts[group.status] = group._count._all;
+    totalRequests += group._count._all;
+  }
 
   const dashboardRequests = requests.map((request) => ({
     id: request.id,
@@ -63,7 +89,11 @@ export default async function DashboardPage() {
         ) : null}
       </div>
 
-      <DashboardRequestBrowser requests={dashboardRequests} />
+      <DashboardRequestBrowser
+        requests={dashboardRequests}
+        statusCounts={statusCounts}
+        totalRequests={totalRequests}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
         <div className="sfxc-card p-6">

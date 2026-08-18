@@ -136,7 +136,20 @@ function CategoryIcon({ icon }: { icon: string }) {
   );
 }
 
-export default function DashboardRequestBrowser({ requests }: { requests: DashboardRequestData[] }) {
+interface DashboardRequestBrowserProps {
+  /** The most recent page of requests, newest first. */
+  requests: DashboardRequestData[];
+  /** Exact count per status across every request the user may see. */
+  statusCounts: Record<string, number>;
+  /** Exact total across every request the user may see. */
+  totalRequests: number;
+}
+
+export default function DashboardRequestBrowser({
+  requests,
+  statusCounts,
+  totalRequests
+}: DashboardRequestBrowserProps) {
   const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number] | null>(null);
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
 
@@ -147,6 +160,13 @@ export default function DashboardRequestBrowser({ requests }: { requests: Dashbo
 
     return requests.filter((request) => selectedCategory.statuses.includes(request.status));
   }, [requests, selectedCategory]);
+
+  // How many rows of this category exist in total, versus how many were sent.
+  const selectedTotal = !selectedCategory || selectedCategory.statuses.length === 0
+    ? totalRequests
+    : selectedCategory.statuses.reduce((total, status) => total + (statusCounts[status] ?? 0), 0);
+
+  const isTruncated = selectedTotal > selectedRequests.length;
 
   const openCategory = (category: (typeof categories)[number]) => {
     setSelectedCategory(category);
@@ -162,10 +182,12 @@ export default function DashboardRequestBrowser({ requests }: { requests: Dashbo
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
         {categories.map((category) => {
+          // Counted in the database, so a tile stays correct even when the
+          // list below holds only the most recent page.
           const count =
             category.statuses.length === 0
-              ? requests.length
-              : requests.filter((request) => category.statuses.includes(request.status)).length;
+              ? totalRequests
+              : category.statuses.reduce((total, status) => total + (statusCounts[status] ?? 0), 0);
 
           return (
             <button
@@ -196,7 +218,9 @@ export default function DashboardRequestBrowser({ requests }: { requests: Dashbo
                 <p className="text-sm uppercase tracking-[0.24em] text-sfxc-green">Request List</p>
                 <h2 className="mt-2 text-2xl font-semibold text-slate-900">{selectedCategory.title}</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  {selectedRequests.length} request{selectedRequests.length === 1 ? '' : 's'}
+                  {isTruncated
+                    ? `Showing the ${selectedRequests.length} most recent of ${selectedTotal} requests`
+                    : `${selectedRequests.length} request${selectedRequests.length === 1 ? '' : 's'}`}
                 </p>
               </div>
               <button
