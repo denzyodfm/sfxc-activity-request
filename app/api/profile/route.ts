@@ -1,11 +1,11 @@
-import { promises as fs } from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { SESSION_COOKIE_NAME, getSessionCookieOptions } from '@/lib/session-cookie';
 import { createSessionToken } from '@/lib/session-token';
-import { hashPassword, verifyPassword } from '@/lib/password';
+import { hashPassword, verifyPassword, validatePassword } from '@/lib/password';
+import { saveUpload, validateUpload, PROFILE_SUBDIR } from '@/lib/uploads';
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '@/lib/upload-limits';
 import { recordActivity } from '@/lib/activity-log';
 
@@ -47,8 +47,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'New password and confirmation do not match.' }, { status: 422 });
     }
 
-    if (newPassword.length < 6) {
-      return NextResponse.json({ error: 'New password must be at least 6 characters.' }, { status: 422 });
+    const policyError = validatePassword(newPassword);
+    if (policyError) {
+      return NextResponse.json({ error: policyError }, { status: 422 });
     }
 
     if (!verifyPassword(currentPassword, existingUser.passwordHash)) {
@@ -60,22 +61,23 @@ export async function PUT(request: NextRequest) {
 
   let nextProfilePictureUrl = existingUser.profilePictureUrl;
   if (profilePicture && profilePicture.name) {
-    if (!profilePicture.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'Profile picture must be an image file.' }, { status: 422 });
-    }
-
     if (profilePicture.size > MAX_UPLOAD_SIZE_BYTES) {
       return NextResponse.json({ error: `Profile picture must not exceed ${MAX_UPLOAD_SIZE_LABEL}.` }, { status: 422 });
     }
 
-    const safeName = path.basename(profilePicture.name.replace(/[^a-zA-Z0-9._-]/g, '_'));
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'profiles');
-    await fs.mkdir(uploadDir, { recursive: true });
-    const fileName = `${session.id}-${Date.now()}-${safeName}`;
-    const targetPath = path.join(uploadDir, fileName);
-    const fileData = await profilePicture.arrayBuffer();
-    await fs.writeFile(targetPath, new Uint8Array(fileData));
-    nextProfilePictureUrl = `/uploads/profiles/${fileName}`;
+    const bytes = new Uint8Array(await profilePicture.arrayBuffer());
+    const extension = path.extname(profilePicture.name).toLowerCase();
+    const uploadError = validateUpload(extension, profilePicture.type, bytes, { imagesOnly: true });
+
+    if (uploadError) {
+      return NextResponse.json({ error: `Profile picture: ${uploadError}` }, { status: 422 });
+    }
+
+    const saved = await saveUpload(bytes, profilePicture.name, {
+      subdir: PROFILE_SUBDIR,
+      prefix: session.id
+    });
+    nextProfilePictureUrl = saved.storageKey;
   }
 
   const updatedUser = await prisma.user.update({
@@ -114,8 +116,13 @@ export async function PUT(request: NextRequest) {
     message: 'Profile updated.'
   });
 
-  // Issue a fresh token so that a password change rotates the session.
-  response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(session.id), getSessionCookieOptions());
+  // Issue a fresh token so that a password change rotates the session. The
+  // token must carry the current tokenVersion or getSession() will reject it.
+  response.cookies.set(
+    SESSION_COOKIE_NAME,
+    createSessionToken(session.id, updatedUser.tokenVersion),
+    getSessionCookieOptions()
+  );
 
   return response;
 }

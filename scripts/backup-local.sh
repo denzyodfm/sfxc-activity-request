@@ -47,8 +47,13 @@ if [ -f prisma/dev.db ]; then
   cp prisma/dev.db "$DEST/database/dev.db"
 fi
 
-if [ -d public/uploads ]; then
+# Uploads live in private/uploads (outside the web root). The public/uploads
+# branch is kept for archives taken before that move.
+if [ -d private/uploads ]; then
   echo "==> Archiving uploads..."
+  tar -czf "$DEST/uploads.tar.gz" -C private uploads
+elif [ -d public/uploads ]; then
+  echo "==> Archiving uploads (legacy public location)..."
   tar -czf "$DEST/uploads.tar.gz" -C public uploads
 fi
 

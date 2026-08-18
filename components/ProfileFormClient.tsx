@@ -74,7 +74,13 @@ export default function ProfileFormClient({ user }: ProfileFormClientProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="h-24 w-24 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
           {user.profilePictureUrl ? (
-            <img src={user.profilePictureUrl} alt="Profile" className="h-full w-full object-cover" />
+            // Profile pictures are private; they are served through a route that
+            // checks the session. The stored path is only a cache-busting key.
+            <img
+              src={`/api/profile/picture?v=${encodeURIComponent(user.profilePictureUrl)}`}
+              alt="Profile"
+              className="h-full w-full object-cover"
+            />
           ) : null}
         </div>
         <label className="block text-sm text-slate-700">

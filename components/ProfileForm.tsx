@@ -75,7 +75,11 @@ export default function ProfileForm({ user }: ProfileFormProps) {
         <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50">
           {user.profilePictureUrl || profilePicture ? (
             <img
-              src={profilePicture ? URL.createObjectURL(profilePicture) : user.profilePictureUrl ?? ''}
+              src={
+                profilePicture
+                  ? URL.createObjectURL(profilePicture)
+                  : `/api/profile/picture?v=${encodeURIComponent(user.profilePictureUrl ?? '')}`
+              }
               alt="Profile"
               className="h-full w-full object-cover"
             />
