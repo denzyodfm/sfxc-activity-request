@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import FooterBranding from '@/components/FooterBranding';
 import AccountPanel from '@/components/AccountPanel';
 import { useSession } from '@/lib/session-context';
+import { Branding } from '@/lib/branding';
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children, branding }: { children: React.ReactNode; branding: Branding }) {
   const { user } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const currentYear = new Date().getFullYear();
@@ -39,7 +41,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         <Sidebar onNavigate={() => setIsSidebarOpen(false)} />
       </div>
-      <main className="min-w-0 flex-1 px-3 py-4 print:p-0 sm:p-6 lg:px-10 lg:py-8">
+      <main className="flex min-h-screen min-w-0 flex-1 flex-col px-3 py-4 print:min-h-0 print:p-0 sm:p-6 lg:px-10 lg:py-8">
         <div className="mb-6 flex flex-col items-start gap-3 print:hidden sm:mb-8 sm:flex-row sm:justify-between sm:gap-4">
           <button
             type="button"
@@ -64,22 +66,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
           <AccountPanel />
         </div>
-        <div className="min-h-[calc(100vh-10rem)]">{children}</div>
+        <div className="flex-1">{children}</div>
         <footer className="mt-10 border-t border-slate-200/70 pt-6 text-center text-xs text-slate-500 print:hidden">
           <p>&copy; {currentYear} St. Francis Xavier College. All rights reserved.</p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-            <span className="inline-flex items-center rounded-full border border-white bg-[#1c3f94] px-3 py-1 text-[11px] font-bold italic leading-none text-white shadow-sm ring-1 ring-[#1c3f94]/40">
-              Powered by
-            </span>
-            <span className="inline-flex items-baseline gap-1.5 text-[#c00000]">
-              <span className="font-serif text-2xl font-bold leading-none">V</span>
-              <span className="font-serif text-[11px] font-bold uppercase tracking-[0.08em]">
-                Valdemeir Resources, Inc
-              </span>
-            </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
-              IT Team &ndash; Kamaru
-            </span>
+          <div className="mt-4">
+            <FooterBranding branding={branding} />
           </div>
         </footer>
       </main>

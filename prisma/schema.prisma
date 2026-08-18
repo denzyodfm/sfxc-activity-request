@@ -146,3 +146,12 @@ model VoucherSignatory {
   title     String?
   updatedAt DateTime @updatedAt
 }
+
+/// Editable site-wide settings, keyed by a dotted name (see lib/branding.ts).
+/// Values fall back to code defaults when a row is absent, so a fresh database
+/// needs no seeding.
+model AppSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}

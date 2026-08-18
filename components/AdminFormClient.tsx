@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import FundSourceManager, { FundSourceSummary } from './FundSourceManager';
 import VoucherSignatoryManager, { VoucherSignatoryData } from './VoucherSignatoryManager';
+import BrandingManager from './BrandingManager';
+import { Branding } from '@/lib/branding';
 
 interface User {
   id: string;
@@ -25,6 +27,7 @@ interface AdminFormProps {
   departments: Department[];
   fundSources: FundSourceSummary[];
   voucherSignatories: VoucherSignatoryData[];
+  branding: Branding;
 }
 
 const voucherSlots = [
@@ -51,8 +54,8 @@ const voucherTitleDefaults: Record<string, string> = {
   PRESIDENT: 'President'
 };
 
-export default function AdminFormClient({ users, departments, fundSources, voucherSignatories }: AdminFormProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds' | 'voucher'>('users');
+export default function AdminFormClient({ users, departments, fundSources, voucherSignatories, branding }: AdminFormProps) {
+  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds' | 'voucher' | 'branding'>('users');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
@@ -304,6 +307,12 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
           className={`px-4 py-2 text-sm font-semibold ${activeTab === 'voucher' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
         >
           Voucher Approvers
+        </button>
+        <button
+          onClick={() => setActiveTab('branding')}
+          className={`px-4 py-2 text-sm font-semibold ${activeTab === 'branding' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
+        >
+          Branding
         </button>
       </div>
 
@@ -618,6 +627,7 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
           })}
         />
       )}
+      {activeTab === 'branding' && <BrandingManager initialBranding={branding} />}
     </div>
   );
 }

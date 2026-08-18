@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import AdminFormClient from '@/components/AdminFormClient';
 import { getSession } from '@/lib/auth';
+import { getBranding } from '@/lib/branding';
 import { redirect } from 'next/navigation';
 
 export default async function AdminPage() {
@@ -10,7 +11,7 @@ export default async function AdminPage() {
     redirect('/login');
   }
 
-  const [users, departments, fundSources, voucherSignatories] = await Promise.all([
+  const [users, departments, fundSources, voucherSignatories, branding] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -36,7 +37,8 @@ export default async function AdminPage() {
         }
       }
     }),
-    prisma.voucherSignatory.findMany({ orderBy: { slot: 'asc' } })
+    prisma.voucherSignatory.findMany({ orderBy: { slot: 'asc' } }),
+    getBranding()
   ]);
 
   const fundSummaries = await Promise.all(
@@ -93,6 +95,7 @@ export default async function AdminPage() {
           name: item.name,
           title: item.title ?? ''
         }))}
+        branding={branding}
       />
     </section>
   );
