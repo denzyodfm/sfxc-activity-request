@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { hashPassword } from '@/lib/password';
+import { hashPassword, validatePassword } from '@/lib/password';
 import { getSession } from '@/lib/auth';
 import { recordActivity } from '@/lib/activity-log';
+import { isValidRole } from '@/lib/roles';
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -11,14 +12,22 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { name, email, role, departmentId, password, isDepartmentHead } = body;
+  const { name, role, departmentId, password, isDepartmentHead } = body;
+  // Stored lower-case so the address is unambiguous, matching how the login
+  // route normalises what the user types.
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
 
   if (!name || !email || !role || !password) {
     return NextResponse.json({ error: 'Name, email, role, and password are required.' }, { status: 422 });
   }
 
-  if (password.length < 6) {
-    return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 422 });
+  if (!isValidRole(role)) {
+    return NextResponse.json({ error: 'That is not a valid role.' }, { status: 422 });
+  }
+
+  const policyError = validatePassword(password);
+  if (policyError) {
+    return NextResponse.json({ error: policyError }, { status: 422 });
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });

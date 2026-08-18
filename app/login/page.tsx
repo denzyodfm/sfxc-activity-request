@@ -94,25 +94,27 @@ export default function LoginPage() {
           )}
         </form>
 
-        <div className="rounded-3xl bg-slate-50 p-4">
-          <p className="text-xs text-slate-600">Demo Accounts:</p>
-          <p className="mt-1 text-xs font-semibold text-slate-700">Password for demo accounts: password</p>
-          <p className="mt-2 text-xs text-slate-700">
-            <strong>Admin:</strong> admin@sfxc.edu
-            <br />
-            <strong>Requestor:</strong> nina.reyes@sfxc.edu
-            <br />
-            <strong>Fund Officer:</strong> marcos.dc@sfxc.edu
-            <br />
-            <strong>Reviewer:</strong> liza.santos@sfxc.edu
-            <br />
-            <strong>Endorser:</strong> rafael.bautista@sfxc.edu
-            <br />
-            <strong>JMAPC:</strong> jmapc@sfxc.edu
-            <br />
-            <strong>JCA:</strong> jca@sfxc.edu
-          </p>
-        </div>
+        {process.env.NODE_ENV === 'development' ? (
+          <div className="rounded-3xl bg-slate-50 p-4">
+            <p className="text-xs text-slate-600">Demo Accounts (development only):</p>
+            <p className="mt-1 text-xs font-semibold text-slate-700">Password for demo accounts: password</p>
+            <p className="mt-2 text-xs text-slate-700">
+              <strong>Admin:</strong> admin@sfxc.edu
+              <br />
+              <strong>Requestor:</strong> nina.reyes@sfxc.edu
+              <br />
+              <strong>Fund Officer:</strong> marcos.dc@sfxc.edu
+              <br />
+              <strong>Reviewer:</strong> liza.santos@sfxc.edu
+              <br />
+              <strong>Endorser:</strong> rafael.bautista@sfxc.edu
+              <br />
+              <strong>JMAPC:</strong> jmapc@sfxc.edu
+              <br />
+              <strong>JCA:</strong> jca@sfxc.edu
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   );

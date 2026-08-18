@@ -12,6 +12,7 @@ interface User {
   email: string;
   role: string;
   isDepartmentHead: boolean;
+  isActive: boolean;
   department?: { id: string; name: string } | null;
   headedDepartment?: { id: string; name: string } | null;
 }
@@ -70,6 +71,8 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
   const [editingUserRole, setEditingUserRole] = useState('REQUESTOR');
   const [editingUserDepartment, setEditingUserDepartment] = useState('');
   const [editingUserIsDepartmentHead, setEditingUserIsDepartmentHead] = useState(false);
+  const [editingUserIsActive, setEditingUserIsActive] = useState(true);
+  const [editingUserNewPassword, setEditingUserNewPassword] = useState('');
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
   const [editingDeptName, setEditingDeptName] = useState('');
   const [editingDeptHead, setEditingDeptHead] = useState('');
@@ -94,6 +97,8 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
     setEditingUserRole(user.role);
     setEditingUserDepartment(user.department?.id ?? user.headedDepartment?.id ?? '');
     setEditingUserIsDepartmentHead(user.isDepartmentHead);
+    setEditingUserIsActive(user.isActive);
+    setEditingUserNewPassword('');
   };
 
   const startEditDepartment = (department: Department) => {
@@ -159,7 +164,9 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
           email: editingUserEmail,
           role: editingUserRole,
           isDepartmentHead: editingUserIsDepartmentHead,
-          departmentId: editingUserDepartment || null
+          departmentId: editingUserDepartment || null,
+          isActive: editingUserIsActive,
+          newPassword: editingUserNewPassword || undefined
         })
       });
       const data = await response.json();
@@ -170,7 +177,49 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
       }
 
       setEditingUserId(null);
+      setEditingUserNewPassword('');
       showStatus('success', 'User updated successfully.');
+      reloadSoon();
+    } catch (error) {
+      showStatus('error', 'User service unavailable.');
+    }
+  };
+
+  const handleToggleActive = async (user: User) => {
+    const deactivating = user.isActive;
+    const confirmed = window.confirm(
+      deactivating
+        ? `Deactivate ${user.name}? They will be signed out immediately and cannot sign in again until reactivated. Their request history is kept.`
+        : `Reactivate ${user.name}? They will be able to sign in again.`
+    );
+    if (!confirmed) return;
+
+    setStatus('saving');
+    setMessage('');
+
+    try {
+      // The update endpoint validates the whole user, so the unchanged fields
+      // are sent back as they are.
+      const response = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isDepartmentHead: user.isDepartmentHead,
+          departmentId: user.department?.id ?? user.headedDepartment?.id ?? null,
+          isActive: !user.isActive
+        })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        showStatus('error', data.error || 'Unable to update the account.');
+        return;
+      }
+
+      showStatus('success', deactivating ? 'Account deactivated.' : 'Account reactivated.');
       reloadSoon();
     } catch (error) {
       showStatus('error', 'User service unavailable.');
@@ -460,6 +509,29 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
                         />
                         Department Head
                       </label>
+                      <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={editingUserIsActive}
+                          onChange={(e) => setEditingUserIsActive(e.target.checked)}
+                          className="h-4 w-4 accent-sfxc-green"
+                        />
+                        Account active
+                      </label>
+                      <label className="block text-sm text-slate-700">
+                        Reset Password
+                        <input
+                          type="password"
+                          value={editingUserNewPassword}
+                          onChange={(e) => setEditingUserNewPassword(e.target.value)}
+                          placeholder="Leave blank to keep current password"
+                          autoComplete="new-password"
+                          className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
+                        />
+                        <span className="mt-1 block text-xs text-slate-500">
+                          Setting a password signs the user out of every device.
+                        </span>
+                      </label>
                       <div className="flex flex-wrap gap-2">
                         <button type="submit" className="sfxc-button">Save</button>
                         <button type="button" onClick={() => setEditingUserId(null)} className="sfxc-button-secondary">
@@ -482,9 +554,25 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
                           Department Head
                         </p>
                       ) : null}
+                      {!user.isActive ? (
+                        <p className="ml-2 mt-1 inline-block rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-800">
+                          Deactivated
+                        </p>
+                      ) : null}
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button type="button" onClick={() => startEditUser(user)} className="sfxc-button-secondary">
                           Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleActive(user)}
+                          className={
+                            user.isActive
+                              ? 'rounded-2xl border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-50'
+                              : 'rounded-2xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50'
+                          }
+                        >
+                          {user.isActive ? 'Deactivate' : 'Reactivate'}
                         </button>
                         <button
                           type="button"
