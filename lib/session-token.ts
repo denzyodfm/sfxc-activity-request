@@ -5,6 +5,13 @@ export const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 export interface SessionTokenPayload {
   /** User id. */
   sub: string;
+  /**
+   * The user's tokenVersion at the time the token was issued. getSession()
+   * rejects the token when it no longer matches the database, which is how a
+   * session is revoked without keeping server-side session state. Tokens issued
+   * before this field existed parse as 0, matching the column default.
+   */
+  ver: number;
   /** Issued at (seconds since epoch). */
   iat: number;
   /** Expires at (seconds since epoch). */
@@ -49,10 +56,11 @@ function safeEquals(a: string, b: string) {
   return timingSafeEqual(new Uint8Array(bufferA), new Uint8Array(bufferB));
 }
 
-export function createSessionToken(userId: string, now = new Date()) {
+export function createSessionToken(userId: string, tokenVersion = 0, now = new Date()) {
   const issuedAt = Math.floor(now.getTime() / 1000);
   const payload: SessionTokenPayload = {
     sub: userId,
+    ver: tokenVersion,
     iat: issuedAt,
     exp: issuedAt + SESSION_TTL_SECONDS
   };
@@ -88,6 +96,10 @@ export function verifySessionToken(token: string | undefined | null): SessionTok
 
   if (typeof payload?.sub !== 'string' || !payload.sub) return null;
   if (typeof payload.exp !== 'number' || typeof payload.iat !== 'number') return null;
+
+  // Tokens predating the version field are treated as version 0 rather than
+  // rejected, so adding this did not sign everyone out.
+  payload.ver = typeof payload.ver === 'number' ? payload.ver : 0;
 
   // The expiry is enforced here, not just by the cookie's maxAge, so that a
   // client holding on to an old cookie cannot extend its own session.

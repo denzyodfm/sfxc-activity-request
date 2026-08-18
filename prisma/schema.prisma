@@ -21,6 +21,15 @@ model User {
   profilePictureUrl String?
   role              String
   isDepartmentHead  Boolean           @default(false)
+  /// Deactivated accounts cannot sign in and their live sessions stop
+  /// resolving. Used instead of deletion, which is blocked once a user has
+  /// request history.
+  isActive          Boolean           @default(true)
+  /// Bumped to invalidate every session token already issued to this user.
+  /// See lib/session-token.ts.
+  tokenVersion      Int               @default(0)
+  failedLoginCount  Int               @default(0)
+  lockedUntil       DateTime?
   department        Department?       @relation("DepartmentEmployees", fields: [departmentId], references: [id])
   departmentId      String?
   headedDepartment  Department?       @relation("DepartmentHead")
@@ -86,6 +95,13 @@ model ActivityRequest {
   approvedById            String?
   createdAt               DateTime            @default(now())
   updatedAt               DateTime            @updatedAt
+
+  // Every workflow queue filters on status and orders by date; the dashboard
+  // and department views order by createdAt. MySQL already indexes the foreign
+  // key columns, so only these are missing.
+  @@index([status, date])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model FundLedgerEntry {
@@ -104,6 +120,10 @@ model FundLedgerEntry {
   credit          Decimal          @default(0)
   balanceAfter    Decimal
   createdAt       DateTime         @default(now())
+
+  // getFundSourceBalance() reads the newest row for one fund on every balance
+  // check and every ledger write.
+  @@index([fundSourceId, createdAt])
 }
 
 model RequestAttachment {
@@ -137,6 +157,8 @@ model AuditLog {
   action    String
   details   String?
   createdAt DateTime         @default(now())
+
+  @@index([createdAt])
 }
 
 model VoucherSignatory {

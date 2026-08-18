@@ -6,7 +6,9 @@ dist
 dev.db
 *.db
 /public/uploads/*
+/private/
 *.log
 *.tsbuildinfo
 .DS_Store
 backups
+initial-passwords.txt
