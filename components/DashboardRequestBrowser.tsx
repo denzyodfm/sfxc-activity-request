@@ -180,7 +180,10 @@ export default function DashboardRequestBrowser({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+      {/* Seven columns left each tile around 165px wide, which is narrower than
+          the word "ENDORSEMENT" renders at any readable size. Four columns give
+          the titles room to wrap between words instead of inside them. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {categories.map((category) => {
           // Counted in the database, so a tile stays correct even when the
           // list below holds only the most recent page.
@@ -194,15 +197,25 @@ export default function DashboardRequestBrowser({
               key={category.key}
               type="button"
               onClick={() => openCategory(category)}
-              className="group relative flex h-full flex-col sfxc-card p-6 text-left transition hover:-translate-y-0.5 hover:border-sfxc-green hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sfxc-green/40"
+              className="group flex h-full flex-col sfxc-card p-6 text-left transition hover:-translate-y-0.5 hover:border-sfxc-green hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sfxc-green/40"
               aria-label={`View ${category.title} requests`}
             >
-              <div className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-sfxc-green transition group-hover:border-sfxc-green group-hover:bg-sfxc-green group-hover:text-white">
-                <CategoryIcon icon={category.icon} />
+              {/* Title and icon share a flex row rather than the icon being
+                  absolutely positioned over the title. Letter-spaced words like
+                  "ENDORSEMENT" do not break, so they used to run straight
+                  underneath the icon whenever the column was narrow. */}
+              <div className="flex min-h-[4.5rem] items-start justify-between gap-2">
+                <p
+                  className={`${
+                    category.key === 'ALL' ? 'normal-case tracking-normal' : 'uppercase tracking-[0.14em]'
+                  } min-w-0 flex-1 break-words text-sm text-slate-500`}
+                >
+                  {category.title}
+                </p>
+                <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-sfxc-green transition group-hover:border-sfxc-green group-hover:bg-sfxc-green group-hover:text-white">
+                  <CategoryIcon icon={category.icon} />
+                </div>
               </div>
-              <p className={`${category.key === 'ALL' ? 'normal-case tracking-normal' : 'uppercase tracking-[0.24em]'} min-h-[4.5rem] pr-11 text-sm text-slate-500`}>
-                {category.title}
-              </p>
               <p className="min-h-[4.5rem] text-sm text-slate-500">{category.description}</p>
               <p className="mt-3 text-3xl font-semibold text-slate-900">{count}</p>
             </button>
