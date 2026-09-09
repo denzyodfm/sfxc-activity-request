@@ -3,10 +3,18 @@
 Restore point captured **2026-08-18** immediately before the security-hardening
 work began.
 
+> **Status: the hardening work has since been merged and pushed.** `main`,
+> `security-hardening`, and `origin/main` all point at the same commit, and the
+> restore point is now reachable only through the `pre-hardening` tag. An earlier
+> version of this file said `main` still pointed at the restore point and that
+> nothing had been pushed; both were true when written and are not true now.
+> Section 1 has been corrected accordingly — the rest of this document still
+> applies as written.
+
 | What | Where |
 | --- | --- |
-| Git restore point | tag `pre-hardening` (commit `eac4649`, branch `main`) |
-| Work branch | `security-hardening` |
+| Git restore point | tag `pre-hardening` (commit `eac4649`) |
+| Hardening work | merged into `main`, pushed to `origin/main` |
 | Full backup | `backups/20260818-135834/` |
 | Database dump | `backups/20260818-135834/database/sfxc_activity_request.sql` |
 | Uploads archive | `backups/20260818-135834/uploads.tar.gz` |
@@ -15,8 +23,7 @@ work began.
 | `.env` copy | `backups/20260818-135834/env/.env` |
 | Generated passwords | `initial-passwords.txt` (created during this work, gitignored) |
 
-Nothing has been pushed to GitHub and nothing has been deployed. The rollback is
-entirely local.
+Nothing has been deployed, so no production system is affected either way.
 
 ---
 
@@ -25,24 +32,36 @@ entirely local.
 Use this when the database is fine and you only want the old code back. This is
 the common case, because every schema change in this work is additive.
 
-```bash
-git checkout main
-```
-
-`main` still points at the restore point, so this alone undoes every code change.
-The `security-hardening` branch keeps the work if you want it back later.
-
 To inspect what changed before deciding:
 
 ```bash
-git diff main security-hardening --stat
+git diff pre-hardening main --stat
 ```
 
-To throw the work away permanently:
+To look at the old code without changing any branch:
 
 ```bash
-git branch -D security-hardening
+git checkout pre-hardening      # detached HEAD; `git checkout main` returns
 ```
+
+To actually undo the work on `main`, revert it as a new commit. This keeps the
+history intact and is safe to push, unlike rewriting a branch that is already on
+GitHub:
+
+```bash
+git revert --no-commit pre-hardening..main
+git commit -m "Revert security-hardening work"
+```
+
+If nobody else has pulled and you would rather erase it outright:
+
+```bash
+git reset --hard pre-hardening
+git push --force-with-lease origin main
+```
+
+Read the **Passwords** section below before doing either — a code-only rollback
+locks several accounts out.
 
 ---
 

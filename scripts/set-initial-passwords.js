@@ -16,46 +16,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
+const { hashPassword, generatePassword } = require('./lib/password');
 
 const dryRun = process.argv.includes('--dry');
 const prisma = new PrismaClient();
-
-// Ambiguous characters (0/O, 1/l/I) are left out so a password read off a
-// printout is typed correctly the first time.
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-
-function generatePassword(length = 14) {
-  const bytes = crypto.randomBytes(length);
-  let password = '';
-
-  for (let index = 0; index < length; index += 1) {
-    password += ALPHABET[bytes[index] % ALPHABET.length];
-  }
-
-  return password;
-}
-
-// Mirrors lib/password.ts. Duplicated because this script runs outside the
-// Next build and cannot import a TypeScript module.
-const SCRYPT_N = 16384;
-const SCRYPT_R = 8;
-const SCRYPT_P = 1;
-
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto
-    .scryptSync(password.normalize('NFKC'), salt, 32, {
-      N: SCRYPT_N,
-      r: SCRYPT_R,
-      p: SCRYPT_P,
-      maxmem: 64 * 1024 * 1024
-    })
-    .toString('hex');
-
-  return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt}$${hash}`;
-}
 
 async function main() {
   const users = await prisma.user.findMany({
