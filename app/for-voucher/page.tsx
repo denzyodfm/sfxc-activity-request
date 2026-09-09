@@ -23,11 +23,9 @@ export default async function ForVoucherPage() {
     );
   }
 
-  let whereClause: any = { status: 'APPROVED' };
-
   const [requests, signatories, jca, jmapc] = await Promise.all([
     prisma.activityRequest.findMany({
-      where: whereClause,
+      where: { status: 'APPROVED' },
       orderBy: { date: 'desc' },
       include: {
         department: true, requestedBy: true, attachments: true,

@@ -31,10 +31,25 @@ export function parseAmount(raw: unknown): { amount: number } | { error: string 
     return { error: `Amount must not exceed ${formatMoney(MAX_REQUEST_AMOUNT)}.` };
   }
 
-  if (Math.round(amount * 100) !== Number((amount * 100).toFixed(0))) {
+  // Reject anything finer than a centavo.
+  //
+  // This used to compare Math.round(amount * 100) with
+  // Number((amount * 100).toFixed(0)). Those two round identically, so the
+  // check could never fail: 10.005 was silently rounded to 10.01, and — worse —
+  // 0.001 passed the "greater than zero" guard above and then normalised to
+  // exactly 0, producing a zero-amount request.
+  //
+  // Comparing against the centavo-rounded value needs a tolerance, because
+  // amount * 100 is not exact in binary floating point: 1234.56 * 100 is
+  // 123456.00000000001. The tolerance is relative so it still holds at
+  // MAX_REQUEST_AMOUNT, where one unit in the last place is already ~2e-6.
+  const centavos = amount * 100;
+  const tolerance = Math.max(1e-6, Math.abs(centavos) * 1e-12);
+
+  if (Math.abs(centavos - Math.round(centavos)) > tolerance) {
     return { error: 'Amount cannot have more than two decimal places.' };
   }
 
   // Normalise to centavos so floating point noise never reaches the database.
-  return { amount: Math.round(amount * 100) / 100 };
+  return { amount: Math.round(centavos) / 100 };
 }
