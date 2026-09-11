@@ -4,13 +4,16 @@ import { useState } from 'react';
 import FundSourceManager, { FundSourceSummary } from './FundSourceManager';
 import VoucherSignatoryManager, { VoucherSignatoryData } from './VoucherSignatoryManager';
 import BrandingManager from './BrandingManager';
+import DemoDataManager from './DemoDataManager';
 import { Branding } from '@/lib/branding';
+import { DemoAccountSettings } from '@/lib/demo-accounts';
 
 interface User {
   id: string;
   name: string;
   email: string;
   role: string;
+  position?: string | null;
   isDepartmentHead: boolean;
   isActive: boolean;
   department?: { id: string; name: string } | null;
@@ -29,6 +32,14 @@ interface AdminFormProps {
   fundSources: FundSourceSummary[];
   voucherSignatories: VoucherSignatoryData[];
   branding: Branding;
+  demoSettings: DemoAccountSettings;
+  sampleDataCounts: {
+    requests: number;
+    attachments: number;
+    approvals: number;
+    ledgerEntries: number;
+    requestAuditLogs: number;
+  };
 }
 
 const voucherSlots = [
@@ -55,8 +66,16 @@ const voucherTitleDefaults: Record<string, string> = {
   PRESIDENT: 'President'
 };
 
-export default function AdminFormClient({ users, departments, fundSources, voucherSignatories, branding }: AdminFormProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds' | 'voucher' | 'branding'>('users');
+export default function AdminFormClient({
+  users,
+  departments,
+  fundSources,
+  voucherSignatories,
+  branding,
+  demoSettings,
+  sampleDataCounts
+}: AdminFormProps) {
+  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds' | 'voucher' | 'branding' | 'demo'>('users');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
@@ -362,6 +381,12 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
           className={`px-4 py-2 text-sm font-semibold ${activeTab === 'branding' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
         >
           Branding
+        </button>
+        <button
+          onClick={() => setActiveTab('demo')}
+          className={`px-4 py-2 text-sm font-semibold ${activeTab === 'demo' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
+        >
+          Demo &amp; Data
         </button>
       </div>
 
@@ -704,6 +729,13 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
       {activeTab === 'funds' && <FundSourceManager fundSources={fundSources} />}
       {activeTab === 'voucher' && (
         <VoucherSignatoryManager
+          candidates={users.map((user) => ({
+            id: user.id,
+            name: user.name,
+            role: user.role,
+            position: user.position,
+            isActive: user.isActive
+          }))}
           initialSignatories={voucherSlots.map((slot) => {
             const existing = voucherSignatories.find((item) => item.slot === slot);
             const defaultUser = users.find((user) => user.role === voucherRoleDefaults[slot]);
@@ -716,6 +748,9 @@ export default function AdminFormClient({ users, departments, fundSources, vouch
         />
       )}
       {activeTab === 'branding' && <BrandingManager initialBranding={branding} />}
+      {activeTab === 'demo' && (
+        <DemoDataManager initialSettings={demoSettings} initialCounts={sampleDataCounts} />
+      )}
     </div>
   );
 }

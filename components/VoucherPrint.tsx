@@ -1,6 +1,5 @@
 'use client';
 
-import { ActivityRequest } from '@prisma/client';
 import { useState } from 'react';
 
 interface Signatory {
@@ -9,22 +8,48 @@ interface Signatory {
   title: string | null;
 }
 
+/**
+ * Exactly the fields the voucher renders, rather than the Prisma row.
+ *
+ * A full ActivityRequest still satisfies this, so the server pages pass their
+ * query results through unchanged. Dates and the Decimal amount are widened to
+ * accept their JSON forms as well, which is what lets the dashboard fetch a
+ * voucher over the API and render it client-side — Decimal and Date do not
+ * survive serialisation.
+ */
+export interface VoucherRequestData {
+  id: string;
+  controlNumber: string;
+  date: Date | string;
+  particulars: string;
+  amount: number | string | { toString(): string };
+  voucherPayTo: string | null;
+  voucherAddress: string | null;
+  voucherNumber: string | null;
+  voucherParticulars: string | null;
+  department: { name: string };
+  requestedBy: { name: string };
+  fundSource?: { name: string; parent?: { name: string } | null } | null;
+  approvals: {
+    role: string;
+    action: string;
+    approvalCode: string | null;
+    createdAt: Date | string;
+    actor: { name: string; role: string };
+  }[];
+}
+
 interface VoucherPrintProps {
-  request: ActivityRequest & {
-    department: { name: string };
-    requestedBy: { name: string };
-    fundSource?: { name: string; parent?: { name: string } | null } | null;
-    approvals: {
-      role: string;
-      action: string;
-      approvalCode: string | null;
-      createdAt: Date;
-      actor: { name: string; role: string };
-    }[];
-  };
+  request: VoucherRequestData;
   signatories: Signatory[];
   roleNames: { jca?: string; jmapc?: string };
   canEdit?: boolean;
+  /**
+   * Renders the Print / Excel toolbar inline instead of pinned to the viewport.
+   * The fixed toolbar sits above everything, which collides with the controls
+   * of any dialog the voucher is shown inside.
+   */
+  embedded?: boolean;
   fundAccountOptions?: { id: string; name: string; mainAccountName: string }[];
   selectedFundSourceId?: string;
   onFundSourceChange?: (id: string) => void;
@@ -87,13 +112,20 @@ function Signature({
   return (
     <div className={`voucher-signature min-h-[118px] border border-black p-2 text-center ${className}`}>
       {label ? <p className="text-left text-[10px] italic">{label}</p> : null}
-      {approvalCode ? (
+      {approvalCode || approvedAt ? (
         <div className="mt-1 text-center leading-tight">
-          <p className="font-mono text-[8px] font-semibold">Approval Code: {approvalCode}</p>
-          <p className="text-[8px]">{evidenceLabel}: {approvedAt ? new Date(approvedAt).toLocaleString() : ''}</p>
+          {/* A row approved before the approvalCode column existed still has a
+              timestamp worth showing; scripts/backfill-approval-codes.js fills
+              in the codes for those. */}
+          {approvalCode ? (
+            <p className="font-mono text-[8px] font-semibold">Approval Code: {approvalCode}</p>
+          ) : null}
+          {approvedAt ? (
+            <p className="text-[8px]">{evidenceLabel}: {new Date(approvedAt).toLocaleString()}</p>
+          ) : null}
         </div>
       ) : null}
-      <div className={lowerName ? (approvalCode ? 'mt-6' : 'mt-12') : (approvalCode ? 'mt-4' : 'mt-8')}>
+      <div className={lowerName ? (approvalCode || approvedAt ? 'mt-6' : 'mt-12') : (approvalCode || approvedAt ? 'mt-4' : 'mt-8')}>
         <p className="font-bold uppercase underline">{name || '____________________________'}</p>
         <p className="mt-1 text-[10px] italic">{title || ''}</p>
       </div>
@@ -102,7 +134,7 @@ function Signature({
 }
 
 export default function VoucherPrint({
-  request, signatories, roleNames, canEdit = false, fundAccountOptions,
+  request, signatories, roleNames, canEdit = false, embedded = false, fundAccountOptions,
   selectedFundSourceId, onFundSourceChange, selectedAccountName, selectedFundName
 }: VoucherPrintProps) {
   const [payTo, setPayTo] = useState(request.voucherPayTo ?? request.requestedBy.name);
@@ -315,7 +347,13 @@ export default function VoucherPrint({
         </div>
       </div>
 
-      <div className="fixed left-2 right-20 top-2 z-[60] flex flex-wrap justify-end gap-1 sm:left-auto sm:right-24 sm:top-4 sm:gap-2 print:hidden">
+      <div
+        className={`flex flex-wrap gap-1 sm:gap-2 print:hidden ${
+          embedded
+            ? 'mt-3 justify-start'
+            : 'fixed left-2 right-20 top-2 z-[60] justify-end sm:left-auto sm:right-24 sm:top-4'
+        }`}
+      >
         {canEdit ? (
           <button type="button" onClick={saveVoucher} disabled={saveStatus === 'saving'} className="sfxc-button">
             {saveStatus === 'saving' ? 'Saving...' : 'Save Voucher'}

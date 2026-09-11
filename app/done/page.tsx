@@ -70,7 +70,7 @@ export default async function DonePage() {
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="View">
                 <div className="space-y-2">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} embedded />
                   <div className="sfxc-card p-4">
                     <WorkflowAttachments attachments={requestDetails.attachments} />
                   </div>

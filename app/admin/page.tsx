@@ -2,7 +2,24 @@ import prisma from '@/lib/prisma';
 import AdminFormClient from '@/components/AdminFormClient';
 import { getSession } from '@/lib/auth';
 import { getBranding } from '@/lib/branding';
+import { getDemoAccountSettings } from '@/lib/demo-accounts';
 import { redirect } from 'next/navigation';
+
+/**
+ * The same tally the Demo & Data panel's delete button reports, read on the
+ * server so the panel opens with real numbers instead of zeroes.
+ */
+async function countSampleData() {
+  const [requests, attachments, approvals, ledgerEntries, requestAuditLogs] = await Promise.all([
+    prisma.activityRequest.count(),
+    prisma.requestAttachment.count(),
+    prisma.requestApproval.count(),
+    prisma.fundLedgerEntry.count(),
+    prisma.auditLog.count({ where: { requestId: { not: null } } })
+  ]);
+
+  return { requests, attachments, approvals, ledgerEntries, requestAuditLogs };
+}
 
 export default async function AdminPage() {
   const session = await getSession();
@@ -11,13 +28,23 @@ export default async function AdminPage() {
     redirect('/login');
   }
 
-  const [users, departments, fundSources, voucherSignatories, branding] = await Promise.all([
+  const [
+    users,
+    departments,
+    fundSources,
+    voucherSignatories,
+    branding,
+    demoSettings,
+    sampleDataCounts
+  ] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        // Printed as the signatory's title when they are picked for a voucher slot.
+        position: true,
         isDepartmentHead: true,
         isActive: true,
         department: { select: { id: true, name: true } },
@@ -39,7 +66,9 @@ export default async function AdminPage() {
       }
     }),
     prisma.voucherSignatory.findMany({ orderBy: { slot: 'asc' } }),
-    getBranding()
+    getBranding(),
+    getDemoAccountSettings(),
+    countSampleData()
   ]);
 
   const fundSummaries = await Promise.all(
@@ -60,6 +89,11 @@ export default async function AdminPage() {
         id: source.id,
         name: source.name,
         description: source.description,
+        // Without this every account arrives with parentId undefined, so the
+        // manager renders sub-accounts as main accounts and a newly created
+        // sub-account appears to vanish. FundSourceSummary.parentId is
+        // optional, which is why omitting it type-checked.
+        parentId: source.parentId,
         balance: Number(latestEntry?.balanceAfter ?? 0),
         totalDebit: Number(totals._sum.debit ?? 0),
         totalCredit: Number(totals._sum.credit ?? 0),
@@ -97,6 +131,8 @@ export default async function AdminPage() {
           title: item.title ?? ''
         }))}
         branding={branding}
+        demoSettings={demoSettings}
+        sampleDataCounts={sampleDataCounts}
       />
     </section>
   );

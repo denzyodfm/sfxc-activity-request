@@ -24,6 +24,15 @@ function MenuIcon({ href }: { href: string }) {
     );
   }
 
+  if (href.startsWith('/manual')) {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.5C10.5 5.2 8.6 4.5 6 4.5H4v13h2c2.6 0 4.5.7 6 2 1.5-1.3 3.4-2 6-2h2v-13h-2c-2.6 0-4.5.7-6 2Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.5v13" />
+      </svg>
+    );
+  }
+
   if (href.startsWith('/profile')) {
     return (
       <svg {...common}>
@@ -136,7 +145,8 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/requests/new', label: 'Make Request' },
     { href: '/attachments', label: 'Attachments' },
     { href: '/done', label: 'Completed' },
-    { href: '/reports', label: 'Reports' }
+    { href: '/reports', label: 'Reports' },
+    { href: '/manual', label: 'User Manual' }
   ],
   FUND_OFFICER: [
     { href: '/', label: 'Dashboard' },
@@ -145,7 +155,8 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/funds', label: 'Source of Fund' },
     { href: '/for-voucher', label: 'For Voucher' },
     { href: '/done', label: 'Completed' },
-    { href: '/reports', label: 'Reports' }
+    { href: '/reports', label: 'Reports' },
+    { href: '/manual', label: 'User Manual' }
   ],
   REVIEWER: [
     { href: '/', label: 'Dashboard' },
@@ -153,28 +164,32 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/reviewer', label: 'Reviewer' },
     { href: '/for-voucher', label: 'For Voucher' },
     { href: '/done', label: 'Completed' },
-    { href: '/reports', label: 'Reports' }
+    { href: '/reports', label: 'Reports' },
+    { href: '/manual', label: 'User Manual' }
   ],
   ENDORSER: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/endorsement', label: 'Endorsed By' },
     { href: '/done', label: 'Completed' },
-    { href: '/reports', label: 'Reports' }
+    { href: '/reports', label: 'Reports' },
+    { href: '/manual', label: 'User Manual' }
   ],
   APPROVER_JMAPC: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/approval?approver=APPROVER_JMAPC', label: 'Final Approval' },
     { href: '/done', label: 'Completed' },
-    { href: '/reports', label: 'Reports' }
+    { href: '/reports', label: 'Reports' },
+    { href: '/manual', label: 'User Manual' }
   ],
   APPROVER_JCA: [
     { href: '/', label: 'Dashboard' },
     { href: '/profile', label: 'Profile' },
     { href: '/approval?approver=APPROVER_JCA', label: 'Final Approval' },
     { href: '/done', label: 'Completed' },
-    { href: '/reports', label: 'Reports' }
+    { href: '/reports', label: 'Reports' },
+    { href: '/manual', label: 'User Manual' }
   ],
   ADMIN: [
     { href: '/', label: 'Dashboard' },
@@ -189,7 +204,8 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/done', label: 'Completed' },
     { href: '/reports', label: 'Reports' },
     { href: '/activity-logs', label: 'Activity Logs' },
-    { href: '/admin', label: 'Admin Settings' }
+    { href: '/admin', label: 'Admin Settings' },
+    { href: '/manual', label: 'User Manual' }
   ]
 };
 

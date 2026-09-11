@@ -70,7 +70,7 @@ export default async function ForVoucherPage() {
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Open Voucher">
                 <div className="space-y-2">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} embedded />
                   <div className="sfxc-card flex flex-col gap-4 p-4 sm:flex-row sm:items-end sm:justify-between">
                     <WorkflowAttachments attachments={requestDetails.attachments} />
                     <MarkVoucherDoneButton requestId={request.id} />

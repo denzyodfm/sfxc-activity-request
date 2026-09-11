@@ -49,6 +49,7 @@ export default function FundAvailabilityVoucherReview({
         signatories={signatories}
         roleNames={roleNames}
         canEdit
+        embedded
         fundAccountOptions={fundSources.filter((source) => source.parentId).map((source) => ({
           id: source.id,
           name: source.name,

@@ -59,7 +59,7 @@ export default async function ReviewerPage() {
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Review">
                 <div className="space-y-2">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} embedded />
                   <ReviewForm requestId={request.id} request={requestDetails} />
                 </div>
               </RequestQueueItem>

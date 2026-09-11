@@ -46,7 +46,11 @@ export default function RequestQueueItem({ request, actionLabel = 'View Request'
       {open ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 p-2 backdrop-blur-sm sm:p-4">
           <div className="mt-14 w-full max-w-5xl sm:mt-8">
-            <div className="mb-3 flex justify-end">
+            {/* Sticky so Close stays reachable down a long voucher. The
+                voucher's own Print / Excel toolbar is rendered inline inside
+                the sheet (its `embedded` prop) rather than pinned to the
+                viewport, where it used to land on top of this button. */}
+            <div className="sticky top-0 z-10 mb-3 flex justify-end">
               <button
                 type="button"
                 onClick={() => setOpen(false)}

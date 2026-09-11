@@ -1,14 +1,27 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 import StatusBadge from './StatusBadge';
+import VoucherPrint, { VoucherRequestData } from './VoucherPrint';
 import { formatMoney } from '@/lib/money';
 
 export interface DashboardRequestData extends RequestDetailsData {
   id: string;
   createdAt: string;
 }
+
+interface VoucherPayload {
+  request: VoucherRequestData;
+  signatories: { slot: string; name: string; title: string | null }[];
+  roleNames: { jca?: string; jmapc?: string };
+}
+
+/**
+ * Statuses that have a voucher worth showing. Before final approval the sheet
+ * would be mostly empty signature boxes, so the summary alone is more useful.
+ */
+const VOUCHER_STATUSES = ['APPROVED', 'COMPLETED', 'DONE'];
 
 const categories = [
   {
@@ -152,6 +165,57 @@ export default function DashboardRequestBrowser({
 }: DashboardRequestBrowserProps) {
   const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number] | null>(null);
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  // Vouchers are fetched per request as rows are expanded, and kept so that
+  // collapsing and reopening the same row does not refetch.
+  const [vouchers, setVouchers] = useState<Record<string, VoucherPayload>>({});
+  const [voucherErrors, setVoucherErrors] = useState<Record<string, string>>({});
+  const [loadingVoucherId, setLoadingVoucherId] = useState<string | null>(null);
+
+  const loadVoucher = useCallback(
+    async (requestId: string) => {
+      setLoadingVoucherId(requestId);
+      setVoucherErrors((current) => {
+        const { [requestId]: _removed, ...rest } = current;
+        return rest;
+      });
+
+      try {
+        const response = await fetch(`/api/requests/${requestId}/voucher`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          setVoucherErrors((current) => ({
+            ...current,
+            [requestId]: data.error || 'Unable to load the voucher.'
+          }));
+          return;
+        }
+
+        setVouchers((current) => ({ ...current, [requestId]: data }));
+      } catch {
+        setVoucherErrors((current) => ({
+          ...current,
+          [requestId]: 'Unable to reach the server. Please try again.'
+        }));
+      } finally {
+        setLoadingVoucherId((current) => (current === requestId ? null : current));
+      }
+    },
+    []
+  );
+
+  // Expanding a row is what triggers the fetch, so the dashboard's own query
+  // stays as light as it is.
+  useEffect(() => {
+    if (!expandedRequestId) return;
+
+    const request = requests.find((item) => item.id === expandedRequestId);
+
+    if (!request || !VOUCHER_STATUSES.includes(request.status)) return;
+    if (vouchers[expandedRequestId] || voucherErrors[expandedRequestId]) return;
+
+    loadVoucher(expandedRequestId);
+  }, [expandedRequestId, requests, vouchers, voucherErrors, loadVoucher]);
 
   const selectedRequests = useMemo(() => {
     if (!selectedCategory || selectedCategory.statuses.length === 0) {
@@ -286,6 +350,42 @@ export default function DashboardRequestBrowser({
                       {expanded ? (
                         <div className="border-t border-slate-200 bg-slate-50 p-4">
                           <RequestDetails request={request} />
+
+                          {VOUCHER_STATUSES.includes(request.status) ? (
+                            <div className="mt-5">
+                              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                                Disbursement Voucher
+                              </p>
+
+                              {voucherErrors[request.id] ? (
+                                <div className="mt-2 flex flex-wrap items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                                  <span>{voucherErrors[request.id]}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => loadVoucher(request.id)}
+                                    className="font-semibold underline hover:text-rose-900"
+                                  >
+                                    Try again
+                                  </button>
+                                </div>
+                              ) : vouchers[request.id] ? (
+                                <div className="mt-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3">
+                                  <VoucherPrint
+                                    request={vouchers[request.id].request}
+                                    signatories={vouchers[request.id].signatories}
+                                    roleNames={vouchers[request.id].roleNames}
+                                    embedded
+                                  />
+                                </div>
+                              ) : (
+                                <p className="mt-2 text-sm text-slate-500">
+                                  {loadingVoucherId === request.id
+                                    ? 'Loading voucher...'
+                                    : 'Preparing voucher...'}
+                                </p>
+                              )}
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                     </article>

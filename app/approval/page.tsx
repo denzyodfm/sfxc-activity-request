@@ -83,7 +83,7 @@ export default async function ApprovalPage({ searchParams }: ApprovalPageProps) 
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Approve">
                 <div className="space-y-2">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} embedded />
                   <ApprovalForm
                     requestId={request.id}
                     request={requestDetails}
