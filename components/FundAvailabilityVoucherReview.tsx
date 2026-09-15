@@ -43,13 +43,12 @@ export default function FundAvailabilityVoucherReview({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <VoucherPrint
         request={request}
         signatories={signatories}
         roleNames={roleNames}
         canEdit
-        embedded
         fundAccountOptions={fundSources.filter((source) => source.parentId).map((source) => ({
           id: source.id,
           name: source.name,

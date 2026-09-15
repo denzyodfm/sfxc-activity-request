@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { RequestDetailsData } from './RequestDetails';
 import ApprovalCodeReceipt from './ApprovalCodeReceipt';
 import WorkflowAttachments from './WorkflowAttachments';
+import { PanelFooter, PanelHeader, RoleBadge, fieldControlClass, fieldLabelClass, panelClass } from './WorkflowPanel';
 
 interface ApprovalFormProps {
   requestId: string;
@@ -56,63 +57,68 @@ export default function ApprovalForm({ requestId, request, finalApproverLabel }:
   };
 
   return (
-    <form className="sfxc-card p-4 sm:p-5" onSubmit={handleSubmit}>
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-500">Final Approval</p>
-          <h2 className="mt-1 text-lg font-semibold text-slate-900">{request.particulars}</h2>
-          <p className="mt-1 text-sm text-slate-500">Assigned to {finalApproverLabel}</p>
-        </div>
-        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Approver</span>
-      </div>
+    <form className={panelClass} onSubmit={handleSubmit}>
+      <PanelHeader
+        eyebrow="Your Decision"
+        title="Final Approval"
+        description={request.particulars}
+        aside={<RoleBadge tone="emerald">Approver</RoleBadge>}
+      />
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="space-y-5 p-5">
         <WorkflowAttachments attachments={request.attachments} />
-        <label className="space-y-2 text-sm text-slate-700">
-          Decision
-          <select
-            value={decision}
-            onChange={(event) => setDecision(event.target.value as 'approve' | 'return' | 'deny')}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
-          >
-            <option value="approve">Approve</option>
-            <option value="return">Send Back to Endorser</option>
-            <option value="deny">Deny</option>
-          </select>
-        </label>
 
-        <label className="space-y-2 text-sm text-slate-700">
-          Approval Remarks
+        <div className="grid gap-5 md:grid-cols-2">
+          <label className={fieldLabelClass}>
+            Decision
+            <select
+              value={decision}
+              onChange={(event) => setDecision(event.target.value as 'approve' | 'return' | 'deny')}
+              className={fieldControlClass}
+            >
+              <option value="approve">Approve</option>
+              <option value="return">Send Back to Endorser</option>
+              <option value="deny">Deny</option>
+            </select>
+          </label>
+
+          <div className={fieldLabelClass}>
+            Assigned Approver
+            <p className={`${fieldControlClass} font-semibold`}>{finalApproverLabel}</p>
+          </div>
+        </div>
+
+        <label className={fieldLabelClass}>
+          Remarks
           <textarea
             value={remarks}
             onChange={(event) => setRemarks(event.target.value)}
             required={decision === 'return'}
             rows={3}
             placeholder={decision === 'return' ? 'Explain what attachment, information, or correction is required.' : 'Optional remarks'}
-            className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sfxc-green"
+            className={fieldControlClass}
           />
         </label>
+
+        {status === 'success' && receipt ? (
+          <ApprovalCodeReceipt
+            message={message}
+            approvalCode={receipt.approvalCode}
+            approvedAt={receipt.approvedAt}
+            onContinue={() => router.refresh()}
+          />
+        ) : status !== 'idle' ? (
+          <div className={`rounded-3xl border px-4 py-3 text-sm ${status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
+            {message}
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-slate-500">Approve, deny, or send the request back to the endorser with a required explanation.</div>
+      <PanelFooter hint="Approve, deny, or send the request back to the Endorser with a required explanation.">
         <button type="submit" disabled={status === 'saving' || status === 'success'} className="sfxc-button">
           {status === 'saving' ? 'Submitting...' : 'Submit Approval'}
         </button>
-      </div>
-
-      {status === 'success' && receipt ? (
-        <ApprovalCodeReceipt
-          message={message}
-          approvalCode={receipt.approvalCode}
-          approvedAt={receipt.approvedAt}
-          onContinue={() => router.refresh()}
-        />
-      ) : status !== 'idle' ? (
-        <div className={`mt-4 rounded-3xl border px-4 py-3 text-sm ${status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
-          {message}
-        </div>
-      ) : null}
+      </PanelFooter>
     </form>
   );
 }

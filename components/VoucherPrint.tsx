@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { buildVoucherExcelXml } from '@/lib/voucher-excel';
+import { PanelHeader, panelClass } from './WorkflowPanel';
 
 interface Signatory {
   slot: string;
@@ -47,12 +48,6 @@ interface VoucherPrintProps {
   signatories: Signatory[];
   roleNames: { jca?: string; jmapc?: string };
   canEdit?: boolean;
-  /**
-   * Renders the Print / Excel toolbar inline instead of pinned to the viewport.
-   * The fixed toolbar sits above everything, which collides with the controls
-   * of any dialog the voucher is shown inside.
-   */
-  embedded?: boolean;
   fundAccountOptions?: { id: string; name: string; mainAccountName: string }[];
   selectedFundSourceId?: string;
   onFundSourceChange?: (id: string) => void;
@@ -133,7 +128,7 @@ function Signature({
 }
 
 export default function VoucherPrint({
-  request, signatories, roleNames, canEdit = false, embedded = false, fundAccountOptions,
+  request, signatories, roleNames, canEdit = false, fundAccountOptions,
   selectedFundSourceId, onFundSourceChange, selectedAccountName, selectedFundName
 }: VoucherPrintProps) {
   const [payTo, setPayTo] = useState(request.voucherPayTo ?? request.requestedBy.name);
@@ -230,167 +225,196 @@ export default function VoucherPrint({
   };
 
   return (
-    <div className="mx-auto max-w-[900px] overflow-x-auto text-[12px] text-black">
-      <div className="voucher-sheet bg-white p-4 print:p-0">
-        <div className="grid grid-cols-[90px_1fr_90px] items-center border border-black p-2 text-center">
-          <img src="/sfxc_icon.png" alt="SFXC logo" className="mx-auto h-16 w-16 object-contain" />
-          <div>
-            <p className="text-base font-bold">ST. FRANCIS XAVIER COLLEGE</p>
-            <p>San Francisco, Agusan del Sur</p>
-            <p className="mt-2 text-sm font-bold">DISBURSEMENT VOUCHER</p>
-          </div>
-          <div />
-        </div>
-
-        <div className="grid grid-cols-[1fr_225px] border-x border-black">
-          <div className="border-r border-black p-2">
-            <div className="flex items-center gap-2">Pay to:
+    <div className="space-y-4">
+      {/* The card stays unpositioned: the print stylesheet pins .voucher-sheet
+          with position:absolute, which must resolve against the page or the
+          dialog rather than this frame. */}
+      <section className={panelClass} aria-label="Disbursement voucher">
+        <PanelHeader
+          eyebrow="Disbursement Voucher"
+          title={`Voucher No. ${voucherNumber}`}
+          description={`${payee} · PHP ${amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
+          aside={
+            <div className="flex flex-wrap items-center gap-2 print:hidden">
               {canEdit ? (
-                <input required value={payTo} onChange={(event) => setPayTo(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 font-bold uppercase outline-none" />
-              ) : <span className="font-bold uppercase underline">{payee}</span>}
+                <button type="button" onClick={saveVoucher} disabled={saveStatus === 'saving'} className="sfxc-button">
+                  {saveStatus === 'saving' ? 'Saving...' : 'Save Voucher'}
+                </button>
+              ) : null}
+              <button type="button" onClick={() => window.print()} className="sfxc-button-secondary">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 8V3h10v5M7 17H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-2M7 14h10v7H7z" />
+                </svg>
+                Print
+              </button>
+              <button type="button" onClick={downloadExcel} className="sfxc-button-secondary">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+                </svg>
+                Download Excel
+              </button>
             </div>
-            <div className="mt-1 flex items-center gap-2">Address:
-              {canEdit ? (
-                <input required value={address} onChange={(event) => setAddress(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 font-bold uppercase outline-none" />
-              ) : <span className="font-bold uppercase underline">{address}</span>}
-            </div>
-          </div>
-          <div className="p-2">
-            <div className="flex items-center gap-2">Voucher No.:
-              {canEdit ? (
-                <input required value={voucherNumber} onChange={(event) => setVoucherNumber(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 text-right font-bold outline-none" />
-              ) : <span className="ml-auto font-bold">{voucherNumber}</span>}
-            </div>
-            <p className="mt-1">Date: <span className="float-right font-bold">{new Date(request.date).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</span></p>
-          </div>
-        </div>
-
-        <div className="border border-black p-3 text-center">
-          <p className="font-bold">PARTICULARS</p>
-          <p className="mt-5">To release an amount of <strong>{amountInWords(amount)},</strong></p>
-          {canEdit ? (
-            <textarea
-              required
-              rows={3}
-              value={voucherParticulars}
-              onChange={(event) => setVoucherParticulars(event.target.value)}
-              className="mx-auto mt-2 block w-full max-w-3xl resize-y border-b border-black bg-transparent p-1 text-center outline-none"
-            />
-          ) : <p className="mx-auto mt-2 max-w-3xl whitespace-pre-wrap">{voucherParticulars},</p>}
-          <p>as per attached approved request.</p>
-        </div>
-
-        <div className="grid grid-cols-[1fr_220px]">
-          <div className="border-x border-b border-black">
-            <p className="border-b border-black py-1 text-center font-bold">Accounts (For Accounting Use only)</p>
-            <div className="grid grid-cols-[1fr_110px_110px] text-[10px] font-semibold uppercase">
-              <span />
-              <span className="border-l border-black px-2 py-1 text-center">Debit</span>
-              <span className="border-l border-black px-2 py-1 text-center">Credit</span>
-            </div>
-            <div className="grid min-h-[58px] grid-cols-[1fr_110px_110px]">
-              <div className="p-2 font-bold uppercase">
-                {fundAccountOptions && onFundSourceChange ? (
-                  <select
-                    required
-                    value={selectedFundSourceId ?? ''}
-                    onChange={(event) => onFundSourceChange(event.target.value)}
-                    className="w-full border border-slate-300 bg-white px-2 py-1 font-bold uppercase print:appearance-none print:border-0"
-                  >
-                    <option value="">Select sub-account</option>
-                    {fundAccountOptions.map((account) => (
-                      <option key={account.id} value={account.id}>{account.name}</option>
-                    ))}
-                  </select>
-                ) : fundName}
+          }
+        />
+        {saveMessage ? (
+          <p className={`border-b border-slate-100 px-5 py-3 text-sm print:hidden ${saveStatus === 'error' ? 'text-rose-700' : 'text-emerald-700'}`}>
+            {saveMessage}
+          </p>
+        ) : null}
+        <div className="overflow-x-auto p-4 sm:p-5">
+          <div className="voucher-sheet bg-white text-[12px] text-black">
+            <div className="grid grid-cols-[90px_1fr_90px] items-center border border-black p-2 text-center">
+              <img src="/sfxc_icon.png" alt="SFXC logo" className="mx-auto h-16 w-16 object-contain" />
+              <div>
+                <p className="text-base font-bold">ST. FRANCIS XAVIER COLLEGE</p>
+                <p>San Francisco, Agusan del Sur</p>
+                <p className="mt-2 text-sm font-bold">DISBURSEMENT VOUCHER</p>
               </div>
-              <div className="border-l border-black p-2 text-left font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
-              <div className="border-l border-black" />
+              <div />
             </div>
-            <div className="grid grid-cols-[1fr_110px_110px]">
-              <p className="p-2 text-center font-bold">VOUCHER PAYABLE</p>
-              <p className="border-l border-black" />
-              <p className="border-l border-black p-2 text-right font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
-            </div>
-          </div>
-          <div className="border-r border-b border-black">
-            <p className="border-b border-black py-1 text-center font-bold">Amount</p>
-            <p className="mt-12 px-3 text-right text-sm font-bold">PHP {amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-[230px_1fr] border-x border-b border-black">
-          <div className="border-r border-black p-2">
-            <p>Fund Type: <strong className="float-right uppercase">{accountName}</strong></p>
-            <p className="mt-2">Fund Name: <strong className="float-right uppercase">{fundName}</strong></p>
-            <p className="mt-2">Date Requested: <strong className="float-right">{new Date(request.date).toLocaleDateString()}</strong></p>
-          </div>
-          <div className="p-2 text-center">
-            <p className="text-left italic">Received the amount in payment of the above stated particulars:</p>
-            <p className="mt-5 font-bold uppercase underline">{payee}</p>
-            <p className="mt-1">Payee</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3">
-          <Signature label="PREPARED:" name={fundOfficer} title={setting('PREPARED_BY')?.title ?? 'Fund Officer'} approvalCode={fundOfficerApproval?.approvalCode} approvedAt={fundOfficerApproval?.createdAt} evidenceLabel="Prepared" />
-          <Signature label="CHECKED:" name={reviewer} title={setting('CHECKED_BY')?.title ?? 'Reviewer'} approvalCode={reviewerApproval?.approvalCode} approvedAt={reviewerApproval?.createdAt} evidenceLabel="Checked" />
-          <Signature label="VERIFIED:" name={endorser} title={setting('VERIFIED_BY')?.title ?? 'Endorser'} approvalCode={endorserApproval?.approvalCode} approvedAt={endorserApproval?.createdAt} evidenceLabel="Verified" />
-        </div>
-        <div className="grid grid-cols-3">
-          <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} approvalCode={jcaApproval?.approvalCode} approvedAt={jcaApproval?.createdAt} evidenceLabel="Recommended" />
-          <div className="col-span-2 border-y border-r border-black">
-            <p className="py-2 text-center text-[10px] italic">APPROVED:</p>
-            <div className="grid grid-cols-2">
-              <Signature label="" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} approvalCode={jmapcApproval?.approvalCode} approvedAt={jmapcApproval?.createdAt} lowerName className="border-0" />
-              <Signature label="" name={president?.name} title={president?.title ?? 'President'} lowerName className="border-0" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-left text-slate-900 print:hidden" aria-labelledby={`workflow-notes-${request.id}`}>
-        <h3 id={`workflow-notes-${request.id}`} className="text-sm font-semibold">Comments, Notes and Remarks</h3>
-        {remarksHistory.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No notes or remarks have been added yet.</p>
-        ) : (
-          <ol className="mt-3 space-y-3">
-            {remarksHistory.map((item) => (
-              <li key={item.key} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sfxc-green">
-                    {item.role.replace(/_/g, ' ')} · {item.action.replace(/_/g, ' ')}
-                  </p>
-                  <time className="text-xs text-slate-500" dateTime={new Date(item.createdAt).toISOString()}>
-                    {new Date(item.createdAt).toLocaleString()}
-                  </time>
+            <div className="grid grid-cols-[1fr_225px] border-x border-black">
+              <div className="border-r border-black p-2">
+                <div className="flex items-center gap-2">Pay to:
+                  {canEdit ? (
+                    <input required value={payTo} onChange={(event) => setPayTo(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 font-bold uppercase outline-none" />
+                  ) : <span className="font-bold uppercase underline">{payee}</span>}
                 </div>
-                <p className="mt-1 text-xs font-medium text-slate-600">{item.actor}</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800">{item.remarks}</p>
-              </li>
-            ))}
-          </ol>
-        )}
+                <div className="mt-1 flex items-center gap-2">Address:
+                  {canEdit ? (
+                    <input required value={address} onChange={(event) => setAddress(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 font-bold uppercase outline-none" />
+                  ) : <span className="font-bold uppercase underline">{address}</span>}
+                </div>
+              </div>
+              <div className="p-2">
+                <div className="flex items-center gap-2">Voucher No.:
+                  {canEdit ? (
+                    <input required value={voucherNumber} onChange={(event) => setVoucherNumber(event.target.value)} className="min-w-0 flex-1 border-b border-black bg-transparent px-1 text-right font-bold outline-none" />
+                  ) : <span className="ml-auto font-bold">{voucherNumber}</span>}
+                </div>
+                <p className="mt-1">Date: <span className="float-right font-bold">{new Date(request.date).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</span></p>
+              </div>
+            </div>
+
+            <div className="border border-black p-3 text-center">
+              <p className="font-bold">PARTICULARS</p>
+              <p className="mt-5">To release an amount of <strong>{amountInWords(amount)},</strong></p>
+              {canEdit ? (
+                <textarea
+                  required
+                  rows={3}
+                  value={voucherParticulars}
+                  onChange={(event) => setVoucherParticulars(event.target.value)}
+                  className="mx-auto mt-2 block w-full max-w-3xl resize-y border-b border-black bg-transparent p-1 text-center outline-none"
+                />
+              ) : <p className="mx-auto mt-2 max-w-3xl whitespace-pre-wrap">{voucherParticulars},</p>}
+              <p>as per attached approved request.</p>
+            </div>
+
+            <div className="grid grid-cols-[1fr_220px]">
+              <div className="border-x border-b border-black">
+                <p className="border-b border-black py-1 text-center font-bold">Accounts (For Accounting Use only)</p>
+                <div className="grid grid-cols-[1fr_110px_110px] text-[10px] font-semibold uppercase">
+                  <span />
+                  <span className="border-l border-black px-2 py-1 text-center">Debit</span>
+                  <span className="border-l border-black px-2 py-1 text-center">Credit</span>
+                </div>
+                <div className="grid min-h-[58px] grid-cols-[1fr_110px_110px]">
+                  <div className="p-2 font-bold uppercase">
+                    {fundAccountOptions && onFundSourceChange ? (
+                      <select
+                        required
+                        value={selectedFundSourceId ?? ''}
+                        onChange={(event) => onFundSourceChange(event.target.value)}
+                        className="w-full border border-slate-300 bg-white px-2 py-1 font-bold uppercase print:appearance-none print:border-0"
+                      >
+                        <option value="">Select sub-account</option>
+                        {fundAccountOptions.map((account) => (
+                          <option key={account.id} value={account.id}>{account.name}</option>
+                        ))}
+                      </select>
+                    ) : fundName}
+                  </div>
+                  <div className="border-l border-black p-2 text-left font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+                  <div className="border-l border-black" />
+                </div>
+                <div className="grid grid-cols-[1fr_110px_110px]">
+                  <p className="p-2 text-center font-bold">VOUCHER PAYABLE</p>
+                  <p className="border-l border-black" />
+                  <p className="border-l border-black p-2 text-right font-bold">{amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+              <div className="border-r border-b border-black">
+                <p className="border-b border-black py-1 text-center font-bold">Amount</p>
+                <p className="mt-12 px-3 text-right text-sm font-bold">PHP {amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-[230px_1fr] border-x border-b border-black">
+              <div className="border-r border-black p-2">
+                <p>Fund Type: <strong className="float-right uppercase">{accountName}</strong></p>
+                <p className="mt-2">Fund Name: <strong className="float-right uppercase">{fundName}</strong></p>
+                <p className="mt-2">Date Requested: <strong className="float-right">{new Date(request.date).toLocaleDateString()}</strong></p>
+              </div>
+              <div className="p-2 text-center">
+                <p className="text-left italic">Received the amount in payment of the above stated particulars:</p>
+                <p className="mt-5 font-bold uppercase underline">{payee}</p>
+                <p className="mt-1">Payee</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3">
+              <Signature label="PREPARED:" name={fundOfficer} title={setting('PREPARED_BY')?.title ?? 'Fund Officer'} approvalCode={fundOfficerApproval?.approvalCode} approvedAt={fundOfficerApproval?.createdAt} evidenceLabel="Prepared" />
+              <Signature label="CHECKED:" name={reviewer} title={setting('CHECKED_BY')?.title ?? 'Reviewer'} approvalCode={reviewerApproval?.approvalCode} approvedAt={reviewerApproval?.createdAt} evidenceLabel="Checked" />
+              <Signature label="VERIFIED:" name={endorser} title={setting('VERIFIED_BY')?.title ?? 'Endorser'} approvalCode={endorserApproval?.approvalCode} approvedAt={endorserApproval?.createdAt} evidenceLabel="Verified" />
+            </div>
+            <div className="grid grid-cols-3">
+              <Signature label="RECOMMENDING APPROVAL:" name={recommending} title={setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA'} approvalCode={jcaApproval?.approvalCode} approvedAt={jcaApproval?.createdAt} evidenceLabel="Recommended" />
+              <div className="col-span-2 border-y border-r border-black">
+                <p className="py-2 text-center text-[10px] italic">APPROVED:</p>
+                <div className="grid grid-cols-2">
+                  <Signature label="" name={approved} title={setting('APPROVED_BY')?.title ?? 'JMAPC'} approvalCode={jmapcApproval?.approvalCode} approvedAt={jmapcApproval?.createdAt} lowerName className="border-0" />
+                  <Signature label="" name={president?.name} title={president?.title ?? 'President'} lowerName className="border-0" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <div
-        className={`flex flex-wrap gap-1 sm:gap-2 print:hidden ${
-          embedded
-            ? 'mt-3 justify-start'
-            : 'fixed left-2 right-20 top-2 z-[60] justify-end sm:left-auto sm:right-24 sm:top-4'
-        }`}
-      >
-        {canEdit ? (
-          <button type="button" onClick={saveVoucher} disabled={saveStatus === 'saving'} className="sfxc-button">
-            {saveStatus === 'saving' ? 'Saving...' : 'Save Voucher'}
-          </button>
-        ) : null}
-        <button type="button" onClick={() => window.print()} className="sfxc-button">Print</button>
-        <button type="button" onClick={downloadExcel} className="rounded-2xl border border-sfxc-green px-4 py-3 text-sm font-semibold text-sfxc-green hover:bg-emerald-50">
-          Download Excel
-        </button>
-      </div>
-      {saveMessage ? <p className={`mt-2 text-sm print:hidden ${saveStatus === 'error' ? 'text-rose-700' : 'text-emerald-700'}`}>{saveMessage}</p> : null}
+      <section className={`${panelClass} print:hidden`} aria-label="Comments, notes and remarks">
+        <PanelHeader
+          eyebrow="Workflow History"
+          title="Comments, Notes and Remarks"
+          aside={
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              {remarksHistory.length} {remarksHistory.length === 1 ? 'entry' : 'entries'}
+            </span>
+          }
+        />
+        <div className="p-5">
+          {remarksHistory.length === 0 ? (
+            <p className="text-sm text-slate-500">No notes or remarks have been added yet.</p>
+          ) : (
+            <ol className="space-y-3">
+              {remarksHistory.map((item) => (
+                <li key={item.key} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sfxc-green">
+                      {item.role.replace(/_/g, ' ')} · {item.action.replace(/_/g, ' ')}
+                    </p>
+                    <time className="text-xs text-slate-500" dateTime={new Date(item.createdAt).toISOString()}>
+                      {new Date(item.createdAt).toLocaleString()}
+                    </time>
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-slate-600">{item.actor}</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800">{item.remarks}</p>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

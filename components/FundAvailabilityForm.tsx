@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 import ApprovalCodeReceipt from './ApprovalCodeReceipt';
+import WorkflowAttachments from './WorkflowAttachments';
+import { PanelFooter, PanelHeader, RoleBadge, fieldControlClass, fieldLabelClass, panelClass } from './WorkflowPanel';
 
 interface FundAvailabilityFormProps {
   requestId: string;
@@ -17,9 +19,13 @@ interface FundAvailabilityFormProps {
 export default function FundAvailabilityForm({
   requestId,
   request,
+  fundSources,
   showRequestDetails = true,
   selectedSub
 }: FundAvailabilityFormProps) {
+  // The sub-account itself is picked inside the voucher sheet; this only
+  // echoes the choice beside the decision it will be charged with.
+  const selectedFundName = fundSources.find((source) => source.id === selectedSub)?.name;
   const router = useRouter();
   const [available, setAvailable] = useState<'true' | 'false'>('true');
   const [remarks, setRemarks] = useState('');
@@ -68,72 +74,72 @@ export default function FundAvailabilityForm({
   };
 
   return (
-    <form className="sfxc-card grid gap-3 p-3 md:grid-cols-[180px_1fr_auto] md:items-end" onSubmit={handleSubmit}>
+    <form className={panelClass} onSubmit={handleSubmit}>
+      <PanelHeader
+        eyebrow="Your Decision"
+        title="Fund Availability"
+        description={request.particulars}
+        aside={<RoleBadge tone="amber">Fund Officer</RoleBadge>}
+      />
 
-      {showRequestDetails ? <RequestDetails request={request} /> : null}
+      <div className="space-y-5 p-5">
+        {showRequestDetails ? <RequestDetails request={request} /> : null}
 
-      <div className="md:col-span-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Attachments</p>
-        {request.attachments.length ? (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {request.attachments.map((attachment) => (
-              <a
-                key={attachment.id}
-                href={`/api/attachments/${attachment.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="max-w-full truncate rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-sfxc-green hover:border-sfxc-green"
-                title={attachment.fileName}
-              >
-                {attachment.fileName}
-              </a>
-            ))}
+        <WorkflowAttachments attachments={request.attachments} />
+
+        <div className="grid gap-5 md:grid-cols-2">
+          <label className={fieldLabelClass}>
+            Availability
+            <select
+              value={available}
+              onChange={(event) => setAvailable(event.target.value as 'true' | 'false')}
+              disabled={!canUpdate}
+              className={fieldControlClass}
+            >
+              <option value="true">Available</option>
+              <option value="false">Not Available</option>
+            </select>
+          </label>
+
+          <div className={fieldLabelClass}>
+            Fund Account
+            <p className={`${fieldControlClass} font-semibold ${selectedFundName ? '' : 'text-amber-700'}`}>
+              {selectedFundName ?? 'Select a sub-account in the voucher above'}
+            </p>
           </div>
-        ) : <p className="mt-1 text-sm text-slate-500">No attachments uploaded.</p>}
+        </div>
+
+        <label className={fieldLabelClass}>
+          Remarks
+          <textarea
+            value={remarks}
+            onChange={(event) => setRemarks(event.target.value)}
+            disabled={!canUpdate}
+            rows={3}
+            placeholder="Optional remarks"
+            className={fieldControlClass}
+          />
+        </label>
+
+        <div ref={resultRef}>
+          {status === 'success' && receipt ? (
+            <ApprovalCodeReceipt
+              message={message}
+              approvalCode={receipt.approvalCode}
+              approvedAt={receipt.approvedAt}
+              onContinue={() => router.refresh()}
+            />
+          ) : status === 'error' ? (
+            <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{message}</div>
+          ) : null}
+        </div>
       </div>
 
-      <label className="block space-y-1 text-sm text-slate-700">
-        Availability
-        <select
-          value={available}
-          onChange={(event) => setAvailable(event.target.value as 'true' | 'false')}
-          disabled={!canUpdate}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sfxc-green"
-        >
-          <option value="true">Available</option>
-          <option value="false">Not Available</option>
-        </select>
-      </label>
-
-      <label className="block text-sm text-slate-700">
-        Remarks
-        <textarea
-          value={remarks}
-          onChange={(event) => setRemarks(event.target.value)}
-          disabled={!canUpdate}
-          rows={1}
-          className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sfxc-green"
-        />
-      </label>
-
-      <div>
+      <PanelFooter hint="Confirm whether funds are available and charge the request to the selected sub-account.">
         <button type="submit" disabled={!canUpdate || !selectedSub || status === 'saving' || status === 'success'} className="sfxc-button">
           {status === 'saving' ? 'Updating...' : 'Update Availability'}
         </button>
-      </div>
-
-      <div ref={resultRef} className="md:col-span-3">
-        {status === 'success' && receipt ? (
-          <ApprovalCodeReceipt
-            message={message}
-            approvalCode={receipt.approvalCode}
-            approvedAt={receipt.approvedAt}
-            onContinue={() => router.refresh()}
-          />
-        ) : status === 'error' ? (
-          <div className="mt-4 rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{message}</div>
-        ) : null}
-      </div>
+      </PanelFooter>
     </form>
   );
 }

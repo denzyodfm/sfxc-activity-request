@@ -5,6 +5,7 @@ import MarkVoucherDoneButton from '@/components/MarkVoucherDoneButton';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import VoucherPrint from '@/components/VoucherPrint';
 import WorkflowAttachments from '@/components/WorkflowAttachments';
+import { PanelFooter, PanelHeader, panelClass } from '@/components/WorkflowPanel';
 
 export default async function ForVoucherPage() {
   const session = await getSession();
@@ -69,12 +70,17 @@ export default async function ForVoucherPage() {
 
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Open Voucher">
-                <div className="space-y-2">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} embedded />
-                  <div className="sfxc-card flex flex-col gap-4 p-4 sm:flex-row sm:items-end sm:justify-between">
-                    <WorkflowAttachments attachments={requestDetails.attachments} />
-                    <MarkVoucherDoneButton requestId={request.id} />
-                  </div>
+                <div className="space-y-4">
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <section className={panelClass}>
+                    <PanelHeader eyebrow="Next Step" title="Release Voucher" description={request.particulars} />
+                    <div className="p-5">
+                      <WorkflowAttachments attachments={requestDetails.attachments} />
+                    </div>
+                    <PanelFooter hint="Close the voucher once it has been printed and released.">
+                      <MarkVoucherDoneButton requestId={request.id} />
+                    </PanelFooter>
+                  </section>
                 </div>
               </RequestQueueItem>
             );

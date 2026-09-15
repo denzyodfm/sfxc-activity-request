@@ -58,8 +58,8 @@ export default async function EndorsementPage() {
 
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Endorse">
-                <div className="space-y-2">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} embedded />
+                <div className="space-y-4">
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
                   <EndorsementForm requestId={request.id} request={requestDetails} />
                 </div>
               </RequestQueueItem>

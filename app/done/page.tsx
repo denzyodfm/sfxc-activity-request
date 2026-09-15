@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import VoucherPrint from '@/components/VoucherPrint';
 import WorkflowAttachments from '@/components/WorkflowAttachments';
+import { PanelHeader, panelClass } from '@/components/WorkflowPanel';
 
 export default async function DonePage() {
   const session = await getSession();
@@ -69,11 +70,14 @@ export default async function DonePage() {
                 };
             return (
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="View">
-                <div className="space-y-2">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} embedded />
-                  <div className="sfxc-card p-4">
-                    <WorkflowAttachments attachments={requestDetails.attachments} />
-                  </div>
+                <div className="space-y-4">
+                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
+                  <section className={panelClass}>
+                    <PanelHeader eyebrow="Supporting Documents" title="Attachments" description={request.particulars} />
+                    <div className="p-5">
+                      <WorkflowAttachments attachments={requestDetails.attachments} />
+                    </div>
+                  </section>
                 </div>
               </RequestQueueItem>
             );
