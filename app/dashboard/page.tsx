@@ -93,6 +93,7 @@ export default async function DashboardPage() {
         requests={dashboardRequests}
         statusCounts={statusCounts}
         totalRequests={totalRequests}
+        userRole={session.role}
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">

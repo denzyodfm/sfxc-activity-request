@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 import StatusBadge from './StatusBadge';
 import VoucherPrint, { VoucherRequestData } from './VoucherPrint';
@@ -156,13 +157,29 @@ interface DashboardRequestBrowserProps {
   statusCounts: Record<string, number>;
   /** Exact total across every request the user may see. */
   totalRequests: number;
+  /** Determines which status card opens the user's actionable queue. */
+  userRole: string;
+}
+
+export function actionRoute(userRole: string, categoryKey: string) {
+  const roleRoutes: Record<string, { category: string; href: string }> = {
+    FUND_OFFICER: { category: 'FOR_FUND_AVAILABILITY', href: '/fund-availability' },
+    REVIEWER: { category: 'FOR_REVIEW', href: '/reviewer' },
+    ENDORSER: { category: 'FOR_ENDORSEMENT', href: '/endorsement' },
+    APPROVER_JMAPC: { category: 'FOR_APPROVAL', href: '/approval?approver=APPROVER_JMAPC' },
+    APPROVER_JCA: { category: 'FOR_APPROVAL', href: '/approval?approver=APPROVER_JCA' }
+  };
+  const route = roleRoutes[userRole];
+  return route?.category === categoryKey ? route.href : null;
 }
 
 export default function DashboardRequestBrowser({
   requests,
   statusCounts,
-  totalRequests
+  totalRequests,
+  userRole
 }: DashboardRequestBrowserProps) {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number] | null>(null);
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
   // Vouchers are fetched per request as rows are expanded, and kept so that
@@ -233,6 +250,11 @@ export default function DashboardRequestBrowser({
   const isTruncated = selectedTotal > selectedRequests.length;
 
   const openCategory = (category: (typeof categories)[number]) => {
+    const href = actionRoute(userRole, category.key);
+    if (href) {
+      router.push(href);
+      return;
+    }
     setSelectedCategory(category);
     setExpandedRequestId(null);
   };
@@ -255,6 +277,7 @@ export default function DashboardRequestBrowser({
             category.statuses.length === 0
               ? totalRequests
               : category.statuses.reduce((total, status) => total + (statusCounts[status] ?? 0), 0);
+          const href = actionRoute(userRole, category.key);
 
           return (
             <button
@@ -262,7 +285,7 @@ export default function DashboardRequestBrowser({
               type="button"
               onClick={() => openCategory(category)}
               className="group flex h-full flex-col sfxc-card p-6 text-left transition hover:-translate-y-0.5 hover:border-sfxc-green hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sfxc-green/40"
-              aria-label={`View ${category.title} requests`}
+              aria-label={href ? `Open ${category.title} action queue` : `View ${category.title} requests`}
             >
               {/* Title and icon share a flex row rather than the icon being
                   absolutely positioned over the title. Letter-spaced words like
@@ -282,6 +305,7 @@ export default function DashboardRequestBrowser({
               </div>
               <p className="min-h-[4.5rem] text-sm text-slate-500">{category.description}</p>
               <p className="mt-3 text-3xl font-semibold text-slate-900">{count}</p>
+              {href ? <span className="mt-3 text-xs font-semibold text-sfxc-green">Open action queue</span> : null}
             </button>
           );
         })}
