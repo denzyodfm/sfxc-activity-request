@@ -31,6 +31,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
           role: true,
           action: true,
           approvalCode: true,
+          remarks: true,
           createdAt: true,
           actor: { select: { name: true, role: true } }
         }
@@ -73,6 +74,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
       voucherAddress: activityRequest.voucherAddress,
       voucherNumber: activityRequest.voucherNumber,
       voucherParticulars: activityRequest.voucherParticulars,
+      preApprovalNotes: activityRequest.preApprovalNotes,
       department: activityRequest.department,
       requestedBy: activityRequest.requestedBy,
       fundSource: activityRequest.fundSource,
@@ -80,6 +82,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
         role: approval.role,
         action: approval.action,
         approvalCode: approval.approvalCode,
+        remarks: approval.remarks,
         createdAt: approval.createdAt.toISOString(),
         actor: approval.actor
       }))

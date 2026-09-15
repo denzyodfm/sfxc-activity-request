@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { buildVoucherExcelXml } from '@/lib/voucher-excel';
 
 interface Signatory {
   slot: string;
@@ -27,6 +28,7 @@ export interface VoucherRequestData {
   voucherAddress: string | null;
   voucherNumber: string | null;
   voucherParticulars: string | null;
+  preApprovalNotes?: string | null;
   department: { name: string };
   requestedBy: { name: string };
   fundSource?: { name: string; parent?: { name: string } | null } | null;
@@ -34,6 +36,7 @@ export interface VoucherRequestData {
     role: string;
     action: string;
     approvalCode: string | null;
+    remarks: string | null;
     createdAt: Date | string;
     actor: { name: string; role: string };
   }[];
@@ -91,10 +94,6 @@ function amountInWords(amount: number) {
   });
   if (remainder) parts.push(wordsBelowThousand(remainder));
   return `${parts.join(' ').toUpperCase()} PESOS ONLY`;
-}
-
-function escapeXml(value: string) {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function Signature({
@@ -161,45 +160,48 @@ export default function VoucherPrint({
   const payee = payTo;
   const accountName = selectedAccountName ?? request.fundSource?.parent?.name ?? request.fundSource?.name ?? 'UNASSIGNED FUND';
   const fundName = selectedFundName ?? (request.fundSource?.parent ? request.fundSource.name : request.fundSource?.name ?? 'UNASSIGNED');
+  const remarksHistory = [
+    ...(request.preApprovalNotes?.trim()
+      ? [{
+          key: 'request-notes',
+          role: 'REQUESTOR',
+          action: 'REQUEST_SUBMITTED',
+          actor: request.requestedBy.name,
+          remarks: request.preApprovalNotes,
+          createdAt: request.date
+        }]
+      : []),
+    ...request.approvals
+      .filter((item) => item.remarks?.trim())
+      .map((item, index) => ({
+        key: `${item.role}-${item.action}-${new Date(item.createdAt).toISOString()}-${index}`,
+        role: item.role,
+        action: item.action,
+        actor: item.actor.name,
+        remarks: item.remarks as string,
+        createdAt: item.createdAt
+      }))
+  ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const downloadExcel = () => {
-    const rows: Array<[string, string | number]> = [
-      ['DISBURSEMENT VOUCHER', ''],
-      ['Pay To', payee],
-      ['Address', address],
-      ['Voucher / Control No.', voucherNumber],
-      ['Date', new Date(request.date).toISOString()],
-      ['Particulars', voucherParticulars],
-      ['Amount in Words', amountInWords(amount)],
-      ['Main Account', accountName],
-      ['Fund / Sub-Account', fundName],
-      ['Amount', amount],
-      ['Payee', payee],
-      ['Prepared By', fundOfficer ?? ''],
-      ['Checked By', reviewer ?? ''],
-      ['Verified By', endorser ?? ''],
-      ['Recommending Approval', recommending ?? ''],
-      ['Approved By - JMAPC', approved ?? ''],
-      ['Approved By - President', president?.name ?? '']
-    ];
-    const xmlRows = rows.map((row, index) =>
-      `<Row>${row.map((cell, column) => {
-        const isAmount = index === 9 && column === 1;
-        const isDate = index === 4 && column === 1;
-        return `<Cell ss:StyleID="${index === 0 ? 'Title' : column === 0 ? 'Label' : isAmount ? 'Amount' : isDate ? 'Date' : 'Body'}"><Data ss:Type="${isAmount ? 'Number' : isDate ? 'DateTime' : 'String'}">${escapeXml(String(cell))}</Data></Cell>`;
-      }).join('')}</Row>`
-    ).join('');
-    const workbook = `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Title"><Font ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/><Interior ss:Color="#065F46" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="Label"><Font ss:Bold="1"/><Interior ss:Color="#E2E8F0" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="Body"><Alignment ss:Vertical="Top" ss:WrapText="1"/></Style>
-  <Style ss:ID="Amount"><NumberFormat ss:Format="&quot;PHP&quot; #,##0.00"/></Style>
-  <Style ss:ID="Date"><NumberFormat ss:Format="mmmm d, yyyy"/></Style>
- </Styles>
- <Worksheet ss:Name="Voucher"><Table><Column ss:Width="175"/><Column ss:Width="420"/>${xmlRows}</Table></Worksheet>
-</Workbook>`;
+    const workbook = buildVoucherExcelXml({
+      payee,
+      address,
+      voucherNumber,
+      date: request.date,
+      particulars: voucherParticulars,
+      amount,
+      amountInWords: amountInWords(amount),
+      accountName,
+      fundName,
+      signatures: {
+        prepared: { name: fundOfficer, title: setting('PREPARED_BY')?.title ?? 'Fund Officer', approval: fundOfficerApproval },
+        checked: { name: reviewer, title: setting('CHECKED_BY')?.title ?? 'Reviewer', approval: reviewerApproval },
+        verified: { name: endorser, title: setting('VERIFIED_BY')?.title ?? 'Endorser', approval: endorserApproval },
+        recommending: { name: recommending, title: setting('RECOMMENDING_APPROVAL')?.title ?? 'JCA', approval: jcaApproval },
+        approved: { name: approved, title: setting('APPROVED_BY')?.title ?? 'JMAPC', approval: jmapcApproval },
+        president: { name: president?.name, title: president?.title ?? 'President' }
+      }
+    });
     const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -346,6 +348,30 @@ export default function VoucherPrint({
           </div>
         </div>
       </div>
+
+      <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-left text-slate-900 print:hidden" aria-labelledby={`workflow-notes-${request.id}`}>
+        <h3 id={`workflow-notes-${request.id}`} className="text-sm font-semibold">Comments, Notes and Remarks</h3>
+        {remarksHistory.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">No notes or remarks have been added yet.</p>
+        ) : (
+          <ol className="mt-3 space-y-3">
+            {remarksHistory.map((item) => (
+              <li key={item.key} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sfxc-green">
+                    {item.role.replace(/_/g, ' ')} · {item.action.replace(/_/g, ' ')}
+                  </p>
+                  <time className="text-xs text-slate-500" dateTime={new Date(item.createdAt).toISOString()}>
+                    {new Date(item.createdAt).toLocaleString()}
+                  </time>
+                </div>
+                <p className="mt-1 text-xs font-medium text-slate-600">{item.actor}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800">{item.remarks}</p>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
 
       <div
         className={`flex flex-wrap gap-1 sm:gap-2 print:hidden ${
