@@ -65,6 +65,7 @@ export default async function DashboardPage() {
     particulars: request.particulars,
     amount: Number(request.amount),
     status: request.status,
+    finalApprover: request.finalApprover,
     fundSourceName: request.fundSource?.name,
     attachments: request.attachments.map((attachment) => ({
       id: attachment.id,

@@ -10,6 +10,14 @@ import { formatMoney } from '@/lib/money';
 export interface DashboardRequestData extends RequestDetailsData {
   id: string;
   createdAt: string;
+  /** Set by the Endorser; null until then and again if final approval sends it back. */
+  finalApprover?: string | null;
+}
+
+/** "APPROVER_JMAPC" → "JMAPC"; anything unassigned stays null. */
+export function finalApproverLabel(finalApprover: string | null | undefined) {
+  const labels: Record<string, string> = { APPROVER_JMAPC: 'JMAPC', APPROVER_JCA: 'JCA' };
+  return finalApprover ? labels[finalApprover] ?? null : null;
 }
 
 interface VoucherPayload {
@@ -248,6 +256,9 @@ export default function DashboardRequestBrowser({
     : selectedCategory.statuses.reduce((total, status) => total + (statusCounts[status] ?? 0), 0);
 
   const isTruncated = selectedTotal > selectedRequests.length;
+  // Only lists that hold an endorsed request get the column, so the earlier
+  // stages keep their layout instead of a column of dashes.
+  const showFinalApprover = selectedRequests.some((request) => finalApproverLabel(request.finalApprover));
 
   const openCategory = (category: (typeof categories)[number]) => {
     const href = actionRoute(userRole, category.key);
@@ -344,7 +355,13 @@ export default function DashboardRequestBrowser({
 
                   return (
                     <article key={request.id} className="overflow-hidden rounded-2xl border border-slate-200">
-                      <div className="grid gap-4 p-4 text-sm md:grid-cols-[140px_1fr_1fr_130px_auto_auto] md:items-center">
+                      <div
+                        className={`grid gap-4 p-4 text-sm md:items-center ${
+                          showFinalApprover
+                            ? 'md:grid-cols-[140px_1fr_1fr_130px_110px_auto_auto]'
+                            : 'md:grid-cols-[140px_1fr_1fr_130px_auto_auto]'
+                        }`}
+                      >
                         <div>
                           <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Request No.</p>
                           <p className="mt-1 font-semibold text-slate-900">{request.controlNumber}</p>
@@ -361,6 +378,12 @@ export default function DashboardRequestBrowser({
                           <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Amount</p>
                           <p className="mt-1 font-semibold text-slate-900">{formatMoney(request.amount)}</p>
                         </div>
+                        {showFinalApprover ? (
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Final Approver</p>
+                            <p className="mt-1 font-semibold text-slate-900">{finalApproverLabel(request.finalApprover) ?? '—'}</p>
+                          </div>
+                        ) : null}
                         <StatusBadge status={request.status} />
                         <button
                           type="button"
@@ -377,12 +400,8 @@ export default function DashboardRequestBrowser({
 
                           {VOUCHER_STATUSES.includes(request.status) ? (
                             <div className="mt-5">
-                              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                                Disbursement Voucher
-                              </p>
-
                               {voucherErrors[request.id] ? (
-                                <div className="mt-2 flex flex-wrap items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                                <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                                   <span>{voucherErrors[request.id]}</span>
                                   <button
                                     type="button"
@@ -393,16 +412,13 @@ export default function DashboardRequestBrowser({
                                   </button>
                                 </div>
                               ) : vouchers[request.id] ? (
-                                <div className="mt-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3">
-                                  <VoucherPrint
-                                    request={vouchers[request.id].request}
-                                    signatories={vouchers[request.id].signatories}
-                                    roleNames={vouchers[request.id].roleNames}
-                                    embedded
-                                  />
-                                </div>
+                                <VoucherPrint
+                                  request={vouchers[request.id].request}
+                                  signatories={vouchers[request.id].signatories}
+                                  roleNames={vouchers[request.id].roleNames}
+                                />
                               ) : (
-                                <p className="mt-2 text-sm text-slate-500">
+                                <p className="text-sm text-slate-500">
                                   {loadingVoucherId === request.id
                                     ? 'Loading voucher...'
                                     : 'Preparing voucher...'}
