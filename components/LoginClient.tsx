@@ -16,6 +16,7 @@ export default function LoginClient({ demoAccounts }: { demoAccounts: DemoAccoun
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [showDemoAccounts, setShowDemoAccounts] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -83,12 +84,14 @@ export default function LoginClient({ demoAccounts }: { demoAccounts: DemoAccoun
   };
 
   // Fills the form rather than signing straight in, so the credentials being
-  // demonstrated are the ones actually submitted.
+  // demonstrated are the ones actually submitted. The list closes again so
+  // Sign In is back in view without scrolling up past it.
   const fillDemoAccount = (account: DemoAccount) => {
     setEmail(account.email);
     setPassword(account.password);
     setStatus('idle');
     setMessage('');
+    setShowDemoAccounts(false);
   };
 
   return (
@@ -188,30 +191,55 @@ export default function LoginClient({ demoAccounts }: { demoAccounts: DemoAccoun
         </form>
 
         {demoAccounts.length > 0 ? (
-          <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-amber-800">Demo Accounts</p>
-            <p className="mt-1 text-xs text-amber-800">
-              Anyone who opens this page can read these. Turn the panel off in Admin Settings → Demo &amp; Data before
-              this system carries real requests.
-            </p>
-            <ul className="mt-3 space-y-1">
-              {demoAccounts.map((account) => (
-                <li key={account.email}>
-                  <button
-                    type="button"
-                    onClick={() => fillDemoAccount(account)}
-                    className="flex w-full flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-xl px-2 py-1.5 text-left transition hover:bg-amber-100"
-                    title="Fill the form with these credentials"
-                  >
-                    <span className="font-mono text-xs text-slate-800">{account.email}</span>
-                    <span className="font-mono text-xs font-semibold text-slate-900">{account.password}</span>
-                    {account.role ? (
-                      <span className="ml-auto text-[10px] uppercase tracking-wide text-amber-700">{account.role}</span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <div className="rounded-3xl border border-amber-200 bg-amber-50">
+            <button
+              type="button"
+              onClick={() => setShowDemoAccounts((current) => !current)}
+              aria-expanded={showDemoAccounts}
+              aria-controls="demo-accounts-list"
+              className="flex w-full items-center justify-between gap-3 rounded-3xl px-4 py-3 text-left transition hover:bg-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+            >
+              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-amber-800">
+                Demo Accounts ({demoAccounts.length})
+              </span>
+              <span className="flex items-center gap-1 text-xs font-medium text-amber-800">
+                {showDemoAccounts ? 'Hide' : 'Show'}
+                <svg
+                  className={`h-4 w-4 transition-transform ${showDemoAccounts ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
+            </button>
+            <div id="demo-accounts-list" hidden={!showDemoAccounts} className="px-4 pb-4">
+              <p className="text-xs text-amber-800">
+                Anyone who opens this page can read these. Turn the panel off in Admin Settings → Demo &amp; Data before
+                this system carries real requests.
+              </p>
+              <ul className="mt-3 space-y-1">
+                {demoAccounts.map((account) => (
+                  <li key={account.email}>
+                    <button
+                      type="button"
+                      onClick={() => fillDemoAccount(account)}
+                      className="flex w-full flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-xl px-2 py-1.5 text-left transition hover:bg-amber-100"
+                      title="Fill the form with these credentials"
+                    >
+                      <span className="font-mono text-xs text-slate-800">{account.email}</span>
+                      <span className="font-mono text-xs font-semibold text-slate-900">{account.password}</span>
+                      {account.role ? (
+                        <span className="ml-auto text-[10px] uppercase tracking-wide text-amber-700">{account.role}</span>
+                      ) : null}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         ) : null}
       </div>
