@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { XLSX_MIME_TYPE, buildXlsx } from '@/lib/xlsx';
 
 export interface ActivityLogRow {
   id: string;
@@ -13,13 +14,13 @@ export interface ActivityLogRow {
   details: string;
 }
 
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+/**
+ * Excel dates carry no time zone, so the export writes the Manila wall-clock
+ * time the page itself shows. The Philippines has no daylight saving, so a
+ * fixed +8 hours is exact.
+ */
+function manilaWallClock(isoTimestamp: string) {
+  return new Date(Date.parse(isoTimestamp) + 8 * 60 * 60 * 1000);
 }
 
 export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] }) {
@@ -98,45 +99,31 @@ export default function ActivityLogsClient({ logs }: { logs: ActivityLogRow[] })
       log.requestNumber === '—' ? '' : log.requestNumber,
       log.details
     ]);
-    const worksheetRows = [headers, ...rows]
-      .map(
-        (row, rowIndex) =>
-          `<Row>${row
-            .map(
-              (cell, columnIndex) =>
-                `<Cell ss:StyleID="${rowIndex === 0 ? 'Header' : columnIndex === 0 ? 'Date' : 'Body'}"><Data ss:Type="${
-                  rowIndex > 0 && columnIndex === 0 ? 'DateTime' : 'String'
-                }">${escapeXml(cell)}</Data></Cell>`
-            )
-            .join('')}</Row>`
-      )
-      .join('');
-    const workbook = `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Body"><Alignment ss:Vertical="Top" ss:WrapText="1"/></Style>
-  <Style ss:ID="Header"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#065F46" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="Date"><NumberFormat ss:Format="m/d/yyyy h:mm AM/PM"/></Style>
- </Styles>
- <Worksheet ss:Name="Activity Logs">
-  <Table>
-   <Column ss:Width="140"/><Column ss:Width="130"/><Column ss:Width="170"/>
-   <Column ss:Width="110"/><Column ss:Width="140"/><Column ss:Width="145"/><Column ss:Width="300"/>
-   ${worksheetRows}
-  </Table>
-  <AutoFilter x:Range="R1C1:R${rows.length + 1}C7" xmlns="urn:schemas-microsoft-com:office:excel"/>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane></WorksheetOptions>
- </Worksheet>
-</Workbook>`;
-    const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const workbook = buildXlsx({
+      name: 'Activity Logs',
+      columns: [25, 23, 31, 19, 25, 26, 55],
+      styles: {
+        Header: { font: { bold: true, color: 'FFFFFF' }, fill: '065F46', vertical: 'center' },
+        Date: { vertical: 'top', horizontal: 'left', numberFormat: 'm/d/yyyy h:mm AM/PM' },
+        Body: { vertical: 'top', wrap: true }
+      },
+      rows: [
+        { cells: headers.map((value) => ({ value, style: 'Header' })) },
+        ...rows.map((row) => ({
+          cells: row.map((value, columnIndex) => ({
+            value: columnIndex === 0 ? manilaWallClock(value) : value,
+            style: columnIndex === 0 ? 'Date' : 'Body'
+          }))
+        }))
+      ],
+      frozenRows: 1,
+      autoFilter: `A1:G${rows.length + 1}`
+    });
+    const blob = new Blob([workbook], { type: XLSX_MIME_TYPE });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `activity-logs-${new Date().toISOString().slice(0, 10)}.xls`;
+    link.download = `activity-logs-${new Date().toISOString().slice(0, 10)}.xlsx`;
     link.click();
     URL.revokeObjectURL(url);
   };

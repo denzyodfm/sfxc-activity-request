@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { buildVoucherExcelXml } from '@/lib/voucher-excel';
+import { buildVoucherXlsx } from '@/lib/voucher-excel';
+import { XLSX_MIME_TYPE } from '@/lib/xlsx';
 import { PanelHeader, panelClass } from './WorkflowPanel';
 
 interface Signatory {
@@ -178,7 +179,7 @@ export default function VoucherPrint({
       }))
   ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const downloadExcel = () => {
-    const workbook = buildVoucherExcelXml({
+    const workbook = buildVoucherXlsx({
       payee,
       address,
       voucherNumber,
@@ -197,11 +198,11 @@ export default function VoucherPrint({
         president: { name: president?.name, title: president?.title ?? 'President' }
       }
     });
-    const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const blob = new Blob([workbook], { type: XLSX_MIME_TYPE });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `voucher-${voucherNumber}.xls`;
+    link.download = `voucher-${voucherNumber}.xlsx`;
     link.click();
     URL.revokeObjectURL(url);
   };
