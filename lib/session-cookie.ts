@@ -6,11 +6,9 @@ export function getSessionCookieOptions() {
   return {
     maxAge: SESSION_TTL_SECONDS,
     httpOnly: true,
-    // Secure by default in production. Set SESSION_COOKIE_SECURE explicitly to
-    // override (e.g. "false" for local http://localhost development).
-    secure: process.env.SESSION_COOKIE_SECURE
-      ? process.env.SESSION_COOKIE_SECURE === 'true'
-      : process.env.NODE_ENV === 'production',
+    // Raw-IP deployments may be served over HTTP, where browsers reject Secure
+    // cookies entirely. Opt in once the deployment is HTTPS-only.
+    secure: process.env.SESSION_COOKIE_SECURE === 'true',
     sameSite: 'lax' as const,
     path: '/'
   };

@@ -211,10 +211,9 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
 
 interface SidebarProps {
   className?: string;
-  onNavigate?: () => void;
 }
 
-export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
+export default function Sidebar({ className = '' }: SidebarProps) {
   const { user } = useSession();
   const pathname = usePathname();
 
@@ -239,7 +238,6 @@ export default function Sidebar({ className = '', onNavigate }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={onNavigate}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-sfxc-green transition ${
                   active ? 'bg-emerald-100 text-emerald-900' : 'hover:bg-emerald-50 hover:text-emerald-800'
                 }`}

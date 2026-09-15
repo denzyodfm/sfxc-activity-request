@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import LogoMark from '@/components/LogoMark';
 import { useSession } from '@/lib/session-context';
 import { DemoAccount } from '@/lib/demo-accounts';
@@ -10,7 +9,6 @@ import { DemoAccount } from '@/lib/demo-accounts';
 const REMEMBERED_EMAIL_KEY = 'sfxc.rememberedEmail';
 
 export default function LoginClient({ demoAccounts }: { demoAccounts: DemoAccount[] }) {
-  const router = useRouter();
   const { setUser } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -76,7 +74,9 @@ export default function LoginClient({ demoAccounts }: { demoAccounts: DemoAccoun
         APPROVER_JCA: '/approval?approver=APPROVER_JCA'
       };
       const destination = roleDestinations[data.user.role] ?? '/';
-      router.replace(destination);
+      // A full navigation guarantees that server components read the session
+      // cookie written by the login response instead of reusing a cached route.
+      window.location.replace(destination);
     } catch (error) {
       setStatus('error');
       setMessage('Authentication service unavailable.');

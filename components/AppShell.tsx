@@ -39,7 +39,7 @@ export default function AppShell({ children, branding }: { children: React.React
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:hidden'
         }`}
       >
-        <Sidebar onNavigate={() => setIsSidebarOpen(false)} />
+        <Sidebar />
       </div>
       <main className="flex min-h-screen min-w-0 flex-1 flex-col px-3 py-4 print:min-h-0 print:p-0 sm:p-6 lg:px-10 lg:py-8">
         <div className="mb-6 flex flex-col items-start gap-3 print:hidden sm:mb-8 sm:flex-row sm:justify-between sm:gap-4">
