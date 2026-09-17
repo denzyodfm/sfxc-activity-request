@@ -32,6 +32,7 @@ export interface VoucherRequestData {
   voucherNumber: string | null;
   voucherParticulars: string | null;
   scheduledReleaseDate?: Date | string | null;
+  actualReleaseDate?: Date | string | null;
   preApprovalNotes?: string | null;
   department: { name: string };
   requestedBy: { name: string };
@@ -166,6 +167,7 @@ export default function VoucherPrint({
       voucherNumber,
       date: request.date,
       scheduledReleaseDate: request.scheduledReleaseDate,
+      actualReleaseDate: request.actualReleaseDate,
       particulars: voucherParticulars,
       amount,
       amountInWords: amountInWords(amount),
@@ -339,6 +341,7 @@ export default function VoucherPrint({
                 <p className="mt-2">Fund Name: <strong className="float-right uppercase">{fundName}</strong></p>
                 <p className="mt-2">Date Requested: <strong className="float-right">{new Date(request.date).toLocaleDateString()}</strong></p>
                 <p className="mt-2">Scheduled Release: <strong className="float-right">{request.scheduledReleaseDate ? new Date(request.scheduledReleaseDate).toLocaleDateString('en-PH', { timeZone: 'UTC' }) : 'Not scheduled'}</strong></p>
+                <p className="mt-2">Actual Release: <strong className="float-right">{request.actualReleaseDate ? new Date(request.actualReleaseDate).toLocaleDateString('en-PH', { timeZone: 'UTC' }) : 'Not released'}</strong></p>
               </div>
               <div className="p-2 text-center">
                 <p className="text-left italic">Received the amount in payment of the above stated particulars:</p>

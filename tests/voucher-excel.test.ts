@@ -9,6 +9,8 @@ describe('buildVoucherXlsx', () => {
       address: 'Main <Campus>',
       voucherNumber: 'DV-001',
       date: '2026-09-15T00:00:00.000Z',
+      scheduledReleaseDate: '2026-09-20T00:00:00.000Z',
+      actualReleaseDate: '2026-09-21T00:00:00.000Z',
       particulars: 'Supplies & materials',
       amount: 1250.5,
       amountInWords: 'ONE THOUSAND TWO HUNDRED FIFTY PESOS ONLY',
@@ -34,6 +36,8 @@ describe('buildVoucherXlsx', () => {
     expect(sheet).toContain('Accounts (For Accounting Use only)');
     expect(sheet).toContain('RECOMMENDING APPROVAL:');
     expect(sheet).toContain('Approval Code: ABC123');
+    expect(sheet).toContain('Scheduled Release: September 20, 2026');
+    expect(sheet).toContain('Actual Release: September 21, 2026');
     expect(sheet).toContain('JUAN &amp; SONS');
     expect(sheet).toContain('MAIN &lt;CAMPUS&gt;');
     expect(sheet).toContain('<v>1250.5</v>');

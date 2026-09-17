@@ -11,9 +11,11 @@ interface RequestQueueItemProps {
   children?: ReactNode;
   tabs?: { label: string; content: ReactNode }[];
   defaultTab?: number;
+  dateLabel?: string;
+  dateValue?: string;
 }
 
-export default function RequestQueueItem({ request, actionLabel = 'View Request', children, tabs, defaultTab = 0 }: RequestQueueItemProps) {
+export default function RequestQueueItem({ request, actionLabel = 'View Request', children, tabs, defaultTab = 0, dateLabel = 'Request Date', dateValue }: RequestQueueItemProps) {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const allTabs = tabs ? [{ label: 'Request Details', content: <RequestDetails request={request} /> }, ...tabs] : null;
@@ -23,8 +25,8 @@ export default function RequestQueueItem({ request, actionLabel = 'View Request'
       <article className="sfxc-card overflow-hidden">
         <div className="grid gap-4 p-5 text-sm md:grid-cols-[130px_140px_1fr_1fr_140px_auto] md:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Request Date</p>
-            <p className="mt-1 font-semibold text-slate-900">{new Date(request.date).toLocaleDateString()}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{dateLabel}</p>
+            <p className="mt-1 font-semibold text-slate-900">{dateValue ?? new Date(request.date).toLocaleDateString()}</p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Request No.</p>

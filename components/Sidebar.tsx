@@ -112,6 +112,12 @@ function MenuIcon({ href }: { href: string }) {
     );
   }
 
+  if (href.startsWith('/fund-release-schedule')) {
+    return <svg {...common}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16v15H4V6Zm4-3v6m8-6v6M4 11h16m-12 4h3m3 0h2m-8 3h3" />
+    </svg>;
+  }
+
   if (href.startsWith('/done')) {
     return (
       <svg {...common}>
@@ -154,6 +160,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/fund-availability', label: 'Fund Availability' },
     { href: '/funds', label: 'Source of Fund' },
     { href: '/for-voucher', label: 'For Voucher' },
+    { href: '/fund-release-schedule', label: 'Fund Release Schedule' },
     { href: '/done', label: 'Completed' },
     { href: '/reports', label: 'Reports' },
     { href: '/manual', label: 'User Manual' }
@@ -163,6 +170,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/profile', label: 'Profile' },
     { href: '/reviewer', label: 'Reviewer' },
     { href: '/for-voucher', label: 'For Voucher' },
+    { href: '/fund-release-schedule', label: 'Fund Release Schedule' },
     { href: '/done', label: 'Completed' },
     { href: '/reports', label: 'Reports' },
     { href: '/manual', label: 'User Manual' }
@@ -201,6 +209,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/approval', label: 'Final Approval' },
     { href: '/attachments', label: 'Attachments' },
     { href: '/for-voucher', label: 'For Voucher' },
+    { href: '/fund-release-schedule', label: 'Fund Release Schedule' },
     { href: '/done', label: 'Completed' },
     { href: '/reports', label: 'Reports' },
     { href: '/activity-logs', label: 'Activity Logs' },

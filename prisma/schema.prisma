@@ -92,6 +92,7 @@ model ActivityRequest {
   voucherNumber           String?
   voucherParticulars      String?
   scheduledReleaseDate    DateTime?           @db.Date
+  actualReleaseDate       DateTime?           @db.Date
   approvedBy              User?               @relation("ApprovedBy", fields: [approvedById], references: [id])
   approvedById            String?
   createdAt               DateTime            @default(now())

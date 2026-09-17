@@ -1,5 +1,4 @@
 import prisma from '@/lib/prisma';
-import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import FundAvailabilityVoucherReview from '@/components/FundAvailabilityVoucherReview';
@@ -73,8 +72,7 @@ export default async function FundAvailabilityPage() {
               };
 
             return (
-              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Review Funds" defaultTab={1} tabs={[{
-                label: 'Fund Review', content: <FundAvailabilityVoucherReview
+              <FundAvailabilityVoucherReview key={request.id}
                     request={request}
                     requestDetails={requestDetails}
                     signatories={signatories}
@@ -86,7 +84,6 @@ export default async function FundAvailabilityPage() {
                       balance: Number(source.ledgerEntries[0]?.balanceAfter ?? 0)
                     }))}
                   />
-              }]} />
             );
           })
         )}

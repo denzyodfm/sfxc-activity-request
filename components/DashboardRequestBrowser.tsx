@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import RequestDetails, { RequestDetailsData } from './RequestDetails';
 import StatusBadge from './StatusBadge';
 import VoucherPrint, { VoucherRequestData } from './VoucherPrint';
+import WorkflowHistory from './WorkflowHistory';
 import { formatMoney } from '@/lib/money';
 
 export interface DashboardRequestData extends RequestDetailsData {
@@ -190,6 +191,7 @@ export default function DashboardRequestBrowser({
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number] | null>(null);
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  const [activeDetailsTab, setActiveDetailsTab] = useState<'details' | 'voucher' | 'history'>('details');
   // Vouchers are fetched per request as rows are expanded, and kept so that
   // collapsing and reopening the same row does not refetch.
   const [vouchers, setVouchers] = useState<Record<string, VoucherPayload>>({});
@@ -387,7 +389,7 @@ export default function DashboardRequestBrowser({
                         <StatusBadge status={request.status} />
                         <button
                           type="button"
-                          onClick={() => setExpandedRequestId(expanded ? null : request.id)}
+                          onClick={() => { setActiveDetailsTab('details'); setExpandedRequestId(expanded ? null : request.id); }}
                           className="rounded-xl border border-sfxc-green px-4 py-2 text-sm font-semibold text-sfxc-green hover:bg-emerald-50"
                         >
                           {expanded ? 'Hide Details' : 'View Details'}
@@ -396,10 +398,13 @@ export default function DashboardRequestBrowser({
 
                       {expanded ? (
                         <div className="border-t border-slate-200 bg-slate-50 p-4">
-                          <RequestDetails request={request} />
+                          {VOUCHER_STATUSES.includes(request.status) ? <div role="tablist" aria-label={`${request.controlNumber} information`} className="mb-4 flex gap-2 overflow-x-auto border-b border-slate-200 pb-3">
+                            {([['details', 'Request Details'], ['voucher', 'Voucher'], ['history', 'History']] as const).map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={activeDetailsTab === id} onClick={() => setActiveDetailsTab(id)} className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sfxc-green ${activeDetailsTab === id ? 'bg-sfxc-green text-white' : 'bg-white text-slate-700 hover:bg-emerald-50'}`}>{label}</button>)}
+                          </div> : null}
+                          {activeDetailsTab === 'details' || !VOUCHER_STATUSES.includes(request.status) ? <RequestDetails request={request} /> : null}
 
-                          {VOUCHER_STATUSES.includes(request.status) ? (
-                            <div className="mt-5">
+                          {VOUCHER_STATUSES.includes(request.status) && activeDetailsTab !== 'details' ? (
+                            <div role="tabpanel">
                               {voucherErrors[request.id] ? (
                                 <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                                   <span>{voucherErrors[request.id]}</span>
@@ -411,12 +416,15 @@ export default function DashboardRequestBrowser({
                                     Try again
                                   </button>
                                 </div>
-                              ) : vouchers[request.id] ? (
+                              ) : vouchers[request.id] && activeDetailsTab === 'voucher' ? (
                                 <VoucherPrint
                                   request={vouchers[request.id].request}
                                   signatories={vouchers[request.id].signatories}
                                   roleNames={vouchers[request.id].roleNames}
+                                  showHistory={false}
                                 />
+                              ) : vouchers[request.id] && activeDetailsTab === 'history' ? (
+                                <WorkflowHistory request={vouchers[request.id].request} />
                               ) : (
                                 <p className="text-sm text-slate-500">
                                   {loadingVoucherId === request.id

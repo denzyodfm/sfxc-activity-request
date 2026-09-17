@@ -8,3 +8,7 @@ export function parseReleaseDate(value: unknown): Date | null | undefined {
 export function releaseDateInputValue(value: Date | string | null | undefined): string {
   return value ? new Date(value).toISOString().slice(0, 10) : '';
 }
+
+export function hasBothReleaseDates(value: { scheduledReleaseDate: Date | null; actualReleaseDate: Date | null }): boolean {
+  return Boolean(value.scheduledReleaseDate && value.actualReleaseDate);
+}

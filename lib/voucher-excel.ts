@@ -17,6 +17,7 @@ export interface VoucherExcelData {
   voucherNumber: string;
   date: Date | string;
   scheduledReleaseDate?: Date | string | null;
+  actualReleaseDate?: Date | string | null;
   particulars: string;
   amount: number;
   amountInWords: string;
@@ -71,6 +72,9 @@ export function buildVoucherXlsx(data: VoucherExcelData) {
   const scheduledReleaseDate = data.scheduledReleaseDate
     ? new Date(data.scheduledReleaseDate).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
     : 'Not scheduled';
+  const actualReleaseDate = data.actualReleaseDate
+    ? new Date(data.actualReleaseDate).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+    : 'Not released';
   const merges: string[] = [];
   const cols = 'ABCDEF';
 
@@ -101,9 +105,9 @@ export function buildVoucherXlsx(data: VoucherExcelData) {
     row(10, [[`${data.accountName}\n${data.fundName}`, 'Bold', 2], [data.amount, 'Number'], [null, 'Body'], [data.amount, 'Money', 2]], 34),
     row(11, [['VOUCHER PAYABLE', 'CenteredBold', 2], [null, 'Body'], [data.amount, 'Number'], [null, 'Body', 2]]),
     row(12, [
-      [`Fund Type: ${data.accountName}\nFund Name: ${data.fundName}\nDate Requested: ${date}\nScheduled Release: ${scheduledReleaseDate}`, 'Body', 3],
+      [`Fund Type: ${data.accountName}\nFund Name: ${data.fundName}\nDate Requested: ${date}\nScheduled Release: ${scheduledReleaseDate}\nActual Release: ${actualReleaseDate}`, 'Body', 3],
       [`Received the amount in payment of the above stated particulars:\n\n${data.payee.toUpperCase()}\nPayee`, 'Centered', 3]
-    ], 64),
+    ], 78),
     row(13, [
       [signatureText('PREPARED:', data.signatures.prepared), 'Signature', 2],
       [signatureText('CHECKED:', data.signatures.checked), 'Signature', 2],

@@ -1,13 +1,12 @@
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import MarkVoucherDoneButton from '@/components/MarkVoucherDoneButton';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import VoucherPrint from '@/components/VoucherPrint';
 import WorkflowAttachments from '@/components/WorkflowAttachments';
 import ScheduledReleaseDate from '@/components/ScheduledReleaseDate';
 import WorkflowHistory from '@/components/WorkflowHistory';
-import { PanelFooter, PanelHeader, panelClass } from '@/components/WorkflowPanel';
+import { PanelHeader, panelClass } from '@/components/WorkflowPanel';
 
 export default async function ForVoucherPage() {
   const session = await getSession();
@@ -28,7 +27,7 @@ export default async function ForVoucherPage() {
 
   const [requests, signatories, jca, jmapc] = await Promise.all([
     prisma.activityRequest.findMany({
-      where: { status: 'APPROVED' },
+      where: { status: 'APPROVED', scheduledReleaseDate: null },
       orderBy: { date: 'desc' },
       include: {
         department: true, requestedBy: true, attachments: true,
@@ -46,7 +45,7 @@ export default async function ForVoucherPage() {
       <div>
         <p className="text-sm uppercase tracking-[0.3em] text-slate-500">For Voucher</p>
         <h1 className="mt-2 text-3xl font-semibold text-slate-900">Approved Requests for Voucher Printing</h1>
-        <p className="mt-3 max-w-2xl text-slate-600">Only requests completed with final approval appear here.</p>
+        <p className="mt-3 max-w-2xl text-slate-600">Print the voucher and set its release schedule. Scheduled vouchers move to Fund Release Schedule.</p>
       </div>
 
       <div className="grid gap-6">
@@ -74,17 +73,14 @@ export default async function ForVoucherPage() {
               <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Open Voucher" defaultTab={3} tabs={[
                 { label: 'Voucher', content: <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} showHistory={false} /> },
                 { label: 'History', content: <WorkflowHistory request={request} /> },
-                { label: 'Release & Complete', content: <section className={panelClass}>
-                    <PanelHeader eyebrow="Next Step" title="Release Voucher" description={request.particulars} />
+                { label: 'Schedule Release', content: <section className={panelClass}>
+                    <PanelHeader eyebrow="Next Step" title="Schedule Fund Release" description={request.particulars} />
                     <div className="p-5">
                       <ScheduledReleaseDate requestId={request.id} initialDate={request.scheduledReleaseDate} />
                       <div className="mt-5">
                       <WorkflowAttachments attachments={requestDetails.attachments} />
                       </div>
                     </div>
-                    <PanelFooter hint="Close the voucher once it has been printed and released.">
-                      <MarkVoucherDoneButton requestId={request.id} />
-                    </PanelFooter>
                   </section> }
               ]} />
             );

@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { spendFromFund, lockFundSource } from '@/lib/fund-ledger';
 import { formatMoney } from '@/lib/money';
+import { hasBothReleaseDates } from '@/lib/release-date';
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -30,6 +31,9 @@ export async function POST(request: NextRequest) {
   if (existing.status !== 'APPROVED') {
     return NextResponse.json({ error: 'Only requests for voucher can be marked completed.' }, { status: 400 });
   }
+  if (!hasBothReleaseDates(existing)) {
+    return NextResponse.json({ error: 'Save both the scheduled and actual fund release dates before completing this voucher.' }, { status: 422 });
+  }
 
   // The status re-check, the balance check, and the ledger write all happen
   // inside one transaction. Previously the balance was checked outside it, so
@@ -46,11 +50,14 @@ export async function POST(request: NextRequest) {
 
     const stillApproved = await tx.activityRequest.findUnique({
       where: { id: requestId },
-      select: { status: true }
+      select: { status: true, scheduledReleaseDate: true, actualReleaseDate: true }
     });
 
     if (stillApproved?.status !== 'APPROVED') {
       return { error: 'This request was already completed.', status: 409 as const };
+    }
+    if (!hasBothReleaseDates(stillApproved)) {
+      return { error: 'Save both fund release dates before completing this voucher.', status: 422 as const };
     }
 
     if (existing.fundSourceId) {
