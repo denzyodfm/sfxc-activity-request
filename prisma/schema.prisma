@@ -91,6 +91,7 @@ model ActivityRequest {
   voucherAddress          String?
   voucherNumber           String?
   voucherParticulars      String?
+  scheduledReleaseDate    DateTime?           @db.Date
   approvedBy              User?               @relation("ApprovedBy", fields: [approvedById], references: [id])
   approvedById            String?
   createdAt               DateTime            @default(now())
@@ -176,4 +177,17 @@ model AppSetting {
   key       String   @id
   value     String   @db.Text
   updatedAt DateTime @updatedAt
+}
+
+model SystemRevision {
+  id            String    @id @default(cuid())
+  label         String
+  snapshot      String    @db.LongText
+  codeCommit    String?
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime  @default(now())
+  restoredAt    DateTime?
+
+  @@index([createdAt])
 }

@@ -4,6 +4,7 @@ import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import VoucherPrint from '@/components/VoucherPrint';
+import WorkflowHistory from '@/components/WorkflowHistory';
 
 interface ApprovalPageProps {
   searchParams: { approver?: string };
@@ -81,16 +82,15 @@ export default async function ApprovalPage({ searchParams }: ApprovalPageProps) 
               };
 
             return (
-              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Approve">
-                <div className="space-y-4">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
-                  <ApprovalForm
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Approve" defaultTab={3} tabs={[
+                { label: 'Voucher', content: <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} showHistory={false} /> },
+                { label: 'History', content: <WorkflowHistory request={request} /> },
+                { label: 'Approval Decision', content: <ApprovalForm
                     requestId={request.id}
                     request={requestDetails}
                     finalApproverLabel={approverLabels[request.finalApprover ?? 'APPROVER_JMAPC'] ?? 'TBD'}
-                  />
-                </div>
-              </RequestQueueItem>
+                  /> }
+              ]} />
             );
           })
         )}

@@ -16,6 +16,7 @@ export interface VoucherExcelData {
   address: string;
   voucherNumber: string;
   date: Date | string;
+  scheduledReleaseDate?: Date | string | null;
   particulars: string;
   amount: number;
   amountInWords: string;
@@ -67,6 +68,9 @@ function signatureText(label: string, signature: SignatureData) {
 /** Creates an .xlsx workbook that mirrors the printed voucher form on six columns. */
 export function buildVoucherXlsx(data: VoucherExcelData) {
   const date = new Date(data.date).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' });
+  const scheduledReleaseDate = data.scheduledReleaseDate
+    ? new Date(data.scheduledReleaseDate).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+    : 'Not scheduled';
   const merges: string[] = [];
   const cols = 'ABCDEF';
 
@@ -97,7 +101,7 @@ export function buildVoucherXlsx(data: VoucherExcelData) {
     row(10, [[`${data.accountName}\n${data.fundName}`, 'Bold', 2], [data.amount, 'Number'], [null, 'Body'], [data.amount, 'Money', 2]], 34),
     row(11, [['VOUCHER PAYABLE', 'CenteredBold', 2], [null, 'Body'], [data.amount, 'Number'], [null, 'Body', 2]]),
     row(12, [
-      [`Fund Type: ${data.accountName}\nFund Name: ${data.fundName}\nDate Requested: ${date}`, 'Body', 3],
+      [`Fund Type: ${data.accountName}\nFund Name: ${data.fundName}\nDate Requested: ${date}\nScheduled Release: ${scheduledReleaseDate}`, 'Body', 3],
       [`Received the amount in payment of the above stated particulars:\n\n${data.payee.toUpperCase()}\nPayee`, 'Centered', 3]
     ], 64),
     row(13, [

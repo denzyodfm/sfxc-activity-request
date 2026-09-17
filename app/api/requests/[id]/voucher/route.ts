@@ -74,6 +74,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
       voucherAddress: activityRequest.voucherAddress,
       voucherNumber: activityRequest.voucherNumber,
       voucherParticulars: activityRequest.voucherParticulars,
+      scheduledReleaseDate: activityRequest.scheduledReleaseDate?.toISOString() ?? null,
       preApprovalNotes: activityRequest.preApprovalNotes,
       department: activityRequest.department,
       requestedBy: activityRequest.requestedBy,

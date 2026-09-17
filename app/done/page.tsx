@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import VoucherPrint from '@/components/VoucherPrint';
+import WorkflowHistory from '@/components/WorkflowHistory';
 import WorkflowAttachments from '@/components/WorkflowAttachments';
 import { PanelHeader, panelClass } from '@/components/WorkflowPanel';
 
@@ -69,17 +70,16 @@ export default async function DonePage() {
                   }))
                 };
             return (
-              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="View">
-                <div className="space-y-4">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
-                  <section className={panelClass}>
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="View" tabs={[
+                { label: 'Voucher', content: <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} showHistory={false} /> },
+                { label: 'History', content: <WorkflowHistory request={request} /> },
+                { label: 'Attachments', content: <section className={panelClass}>
                     <PanelHeader eyebrow="Supporting Documents" title="Attachments" description={request.particulars} />
                     <div className="p-5">
                       <WorkflowAttachments attachments={requestDetails.attachments} />
                     </div>
-                  </section>
-                </div>
-              </RequestQueueItem>
+                  </section> }
+              ]} />
             );
           })
         )}

@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { getBranding } from '@/lib/branding';
 import { getDemoAccountSettings } from '@/lib/demo-accounts';
 import { redirect } from 'next/navigation';
+import { ensureBaselineRevision } from '@/lib/system-revisions';
 
 /**
  * The same tally the Demo & Data panel's delete button reports, read on the
@@ -27,6 +28,8 @@ export default async function AdminPage() {
   if (!session || session.role !== 'ADMIN') {
     redirect('/login');
   }
+
+  await ensureBaselineRevision({ id: session.id, name: session.name });
 
   const [
     users,

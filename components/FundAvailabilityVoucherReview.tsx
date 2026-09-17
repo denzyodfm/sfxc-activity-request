@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import VoucherPrint from './VoucherPrint';
 import FundAvailabilityForm from './FundAvailabilityForm';
+import WorkflowHistory from './WorkflowHistory';
 import { RequestDetailsData } from './RequestDetails';
 
 interface FundSourceOption {
@@ -33,6 +34,7 @@ export default function FundAvailabilityVoucherReview({
     : fundSources.find((source) => source.parentId === initialMain)?.id ?? '';
   const [selectedMain, setSelectedMain] = useState(initialMain);
   const [selectedSub, setSelectedSub] = useState(initialSub);
+  const [activeTab, setActiveTab] = useState<'voucher' | 'history' | 'decision'>('decision');
   const selectedFund = fundSources.find((source) => source.id === selectedSub);
   const selectedParent = mainAccounts.find((source) => source.id === selectedFund?.parentId);
 
@@ -44,6 +46,12 @@ export default function FundAvailabilityVoucherReview({
 
   return (
     <div className="space-y-4">
+      <div role="tablist" aria-label="Fund review sections" className="flex gap-2 overflow-x-auto border-b border-slate-200 pb-3">
+        {([['voucher', 'Voucher'], ['history', 'History'], ['decision', 'Fund Decision']] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={activeTab === id} onClick={() => setActiveTab(id)} className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold ${activeTab === id ? 'bg-sfxc-green text-white' : 'bg-slate-100 text-slate-700 hover:bg-emerald-50'}`}>{label}</button>
+        ))}
+      </div>
+      <div role="tabpanel" hidden={activeTab !== 'voucher'}>
       <VoucherPrint
         request={request}
         signatories={signatories}
@@ -58,7 +66,11 @@ export default function FundAvailabilityVoucherReview({
         onFundSourceChange={selectSubAccount}
         selectedAccountName={selectedParent?.name}
         selectedFundName={selectedFund?.name}
+        showHistory={false}
       />
+      </div>
+      <div role="tabpanel" hidden={activeTab !== 'history'}><WorkflowHistory request={request} /></div>
+      <div role="tabpanel" hidden={activeTab !== 'decision'}>
       <FundAvailabilityForm
         requestId={request.id}
         request={requestDetails}
@@ -67,6 +79,7 @@ export default function FundAvailabilityVoucherReview({
         fundSources={fundSources}
         selectedSub={selectedSub}
       />
+      </div>
     </div>
   );
 }

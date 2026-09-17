@@ -5,6 +5,7 @@ import FundSourceManager, { FundSourceSummary } from './FundSourceManager';
 import VoucherSignatoryManager, { VoucherSignatoryData } from './VoucherSignatoryManager';
 import BrandingManager from './BrandingManager';
 import DemoDataManager from './DemoDataManager';
+import SystemRollbackManager from './SystemRollbackManager';
 import { Branding } from '@/lib/branding';
 import { DemoAccountSettings } from '@/lib/demo-accounts';
 
@@ -75,7 +76,7 @@ export default function AdminFormClient({
   demoSettings,
   sampleDataCounts
 }: AdminFormProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds' | 'voucher' | 'branding' | 'demo'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'departments' | 'funds' | 'voucher' | 'branding' | 'demo' | 'rollback'>('users');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
@@ -351,7 +352,7 @@ export default function AdminFormClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-4 border-b border-slate-200">
+      <div className="flex flex-wrap gap-x-4 border-b border-slate-200">
         <button
           onClick={() => setActiveTab('users')}
           className={`px-4 py-2 text-sm font-semibold ${activeTab === 'users' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
@@ -387,6 +388,12 @@ export default function AdminFormClient({
           className={`px-4 py-2 text-sm font-semibold ${activeTab === 'demo' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
         >
           Demo &amp; Data
+        </button>
+        <button
+          onClick={() => setActiveTab('rollback')}
+          className={`px-4 py-2 text-sm font-semibold ${activeTab === 'rollback' ? 'border-b-2 border-sfxc-green text-sfxc-green' : 'text-slate-600'}`}
+        >
+          Backups &amp; Rollback
         </button>
       </div>
 
@@ -544,7 +551,7 @@ export default function AdminFormClient({
                         Account active
                       </label>
                       <label className="block text-sm text-slate-700">
-                        Reset Password
+                        Set New Password (admin)
                         <input
                           type="password"
                           value={editingUserNewPassword}
@@ -554,7 +561,7 @@ export default function AdminFormClient({
                           className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sfxc-green"
                         />
                         <span className="mt-1 block text-xs text-slate-500">
-                          Setting a password signs the user out of every device.
+                          No current password is needed. Leave blank to keep the existing password. Setting a new password signs the user out of every device.
                         </span>
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -751,6 +758,7 @@ export default function AdminFormClient({
       {activeTab === 'demo' && (
         <DemoDataManager initialSettings={demoSettings} initialCounts={sampleDataCounts} />
       )}
+      {activeTab === 'rollback' && <SystemRollbackManager />}
     </div>
   );
 }

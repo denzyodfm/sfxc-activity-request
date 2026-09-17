@@ -4,6 +4,7 @@ import RequestQueueItem from '@/components/RequestQueueItem';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import VoucherPrint from '@/components/VoucherPrint';
+import WorkflowHistory from '@/components/WorkflowHistory';
 
 export default async function EndorsementPage() {
   const session = await getSession();
@@ -57,12 +58,11 @@ export default async function EndorsementPage() {
               };
 
             return (
-              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Endorse">
-                <div className="space-y-4">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
-                  <EndorsementForm requestId={request.id} request={requestDetails} />
-                </div>
-              </RequestQueueItem>
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Endorse" defaultTab={3} tabs={[
+                { label: 'Voucher', content: <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} showHistory={false} /> },
+                { label: 'History', content: <WorkflowHistory request={request} /> },
+                { label: 'Endorsement Decision', content: <EndorsementForm requestId={request.id} request={requestDetails} /> }
+              ]} />
             );
           })
         )}

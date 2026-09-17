@@ -5,6 +5,8 @@ import MarkVoucherDoneButton from '@/components/MarkVoucherDoneButton';
 import RequestQueueItem from '@/components/RequestQueueItem';
 import VoucherPrint from '@/components/VoucherPrint';
 import WorkflowAttachments from '@/components/WorkflowAttachments';
+import ScheduledReleaseDate from '@/components/ScheduledReleaseDate';
+import WorkflowHistory from '@/components/WorkflowHistory';
 import { PanelFooter, PanelHeader, panelClass } from '@/components/WorkflowPanel';
 
 export default async function ForVoucherPage() {
@@ -69,20 +71,22 @@ export default async function ForVoucherPage() {
             };
 
             return (
-              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Open Voucher">
-                <div className="space-y-4">
-                  <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} />
-                  <section className={panelClass}>
+              <RequestQueueItem key={request.id} request={requestDetails} actionLabel="Open Voucher" defaultTab={3} tabs={[
+                { label: 'Voucher', content: <VoucherPrint request={request} signatories={signatories} roleNames={{ jca: jca?.name, jmapc: jmapc?.name }} showHistory={false} /> },
+                { label: 'History', content: <WorkflowHistory request={request} /> },
+                { label: 'Release & Complete', content: <section className={panelClass}>
                     <PanelHeader eyebrow="Next Step" title="Release Voucher" description={request.particulars} />
                     <div className="p-5">
+                      <ScheduledReleaseDate requestId={request.id} initialDate={request.scheduledReleaseDate} />
+                      <div className="mt-5">
                       <WorkflowAttachments attachments={requestDetails.attachments} />
+                      </div>
                     </div>
                     <PanelFooter hint="Close the voucher once it has been printed and released.">
                       <MarkVoucherDoneButton requestId={request.id} />
                     </PanelFooter>
-                  </section>
-                </div>
-              </RequestQueueItem>
+                  </section> }
+              ]} />
             );
           })
         )}

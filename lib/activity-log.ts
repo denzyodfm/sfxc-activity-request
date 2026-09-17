@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import { saveRevisionForAdminAction } from '@/lib/system-revisions';
 
 export async function recordActivity({
   userId,
@@ -11,7 +12,7 @@ export async function recordActivity({
   action: string;
   details?: string | null;
 }) {
-  return prisma.auditLog.create({
+  const log = await prisma.auditLog.create({
     data: {
       userId: userId ?? null,
       requestId: requestId ?? null,
@@ -19,4 +20,7 @@ export async function recordActivity({
       details: details ?? null
     }
   });
+
+  await saveRevisionForAdminAction(action, details, userId);
+  return log;
 }
