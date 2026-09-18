@@ -150,6 +150,7 @@ const roleMenus: Record<string, Array<{ href: string; label: string }>> = {
     { href: '/profile', label: 'Profile' },
     { href: '/requests/new', label: 'Make Request' },
     { href: '/attachments', label: 'Attachments' },
+    { href: '/fund-release-schedule', label: 'Fund Release Schedule' },
     { href: '/done', label: 'Completed' },
     { href: '/reports', label: 'Reports' },
     { href: '/manual', label: 'User Manual' }
